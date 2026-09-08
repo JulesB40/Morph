@@ -8,6 +8,22 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MorphNetworkTest {
+    @Test void healthConversionRoundTripAndBoundedDecode() {
+        var buffer = new FriendlyByteBuf(Unpooled.buffer());
+        try {
+            var health = new MorphNetwork.Health(new me.ichun.mods.morph.ability.HealthSnapshot(18, 5.4F));
+            MorphNetwork.Health.CODEC.encode(buffer, health);
+            assertEquals(8, buffer.readableBytes());
+            assertEquals(health, MorphNetwork.Health.CODEC.decode(buffer));
+            assertFalse(buffer.isReadable());
+            for (float invalid : new float[] {Float.NaN, Float.POSITIVE_INFINITY, -1, 0, 1_000_001}) {
+                buffer.clear(); buffer.writeFloat(invalid); buffer.writeFloat(6);
+                assertThrows(IllegalArgumentException.class, () -> MorphNetwork.Health.CODEC.decode(buffer));
+                buffer.clear(); buffer.writeFloat(20); buffer.writeFloat(invalid);
+                assertThrows(IllegalArgumentException.class, () -> MorphNetwork.Health.CODEC.decode(buffer));
+            }
+        } finally { buffer.release(); }
+    }
     @Test void transitionRoundTripIncludesBothFormsAndServerDuration() {
         for (String destination : List.of("minecraft:bat", "")) {
             var buffer = new FriendlyByteBuf(Unpooled.buffer());

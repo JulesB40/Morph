@@ -30,6 +30,7 @@ public final class MorphService {
         NeoForge.EVENT_BUS.addListener(MorphService::onStartTracking);
         NeoForge.EVENT_BUS.addListener(MorphService::tickAbilities);
         NeoForge.EVENT_BUS.addListener(MorphService::onFall);
+        NeoForge.EVENT_BUS.addListener(MorphService::onIncomingDamage);
         NeoForge.EVENT_BUS.addListener(MorphService::onLogout);
     }
 
@@ -55,7 +56,10 @@ public final class MorphService {
             case NOT_OWNED -> fail(player, "Acquire that form before selecting it.");
             case COOLDOWN -> fail(player, "Wait one second between morph selections.");
             case UNCHANGED -> { requestCollection(player); yield true; }
-            case CHANGED -> { data(player).setDirty(); sync(player); transform(player, previous); yield true; }
+            case CHANGED -> {
+                me.ichun.mods.morph.ability.MorphAttributes.begin(player, form);
+                data(player).setDirty(); sync(player); transform(player, previous); yield true;
+            }
         };
     }
 
@@ -64,6 +68,7 @@ public final class MorphService {
             return fail(player, "Move somewhere with enough room to return to player form.");
         String previous = collection(player).activeForm();
         boolean changed = collection(player).reset();
+        if (changed && player.isAlive()) me.ichun.mods.morph.ability.MorphAttributes.begin(player, "");
         if (changed) data(player).setDirty();
         sync(player);
         if (changed && player.isAlive()) transform(player, previous);
@@ -134,6 +139,12 @@ public final class MorphService {
     private static void onFall(net.neoforged.neoforge.event.entity.living.LivingFallEvent event) {
         if (event.getEntity() instanceof ServerPlayer player
                 && me.ichun.mods.morph.ability.MorphAbilities.preventsFallDamage(collection(player).activeForm()))
+            event.setCanceled(true);
+    }
+
+    private static void onIncomingDamage(net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && player.isAlive()
+                && me.ichun.mods.morph.ability.MorphTraits.preventsDamage(player, collection(player).activeForm(), event.getSource()))
             event.setCanceled(true);
     }
 

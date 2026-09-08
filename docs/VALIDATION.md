@@ -13,7 +13,7 @@ Both builds use published dependencies without `mavenLocal()`. The legacy source
 
 ## Automated checks
 
-NeoForge alpha.2: **16 JUnit tests**, **12 Morph GameTests** and one vanilla control passed. Fabric alpha.2: **8 shared JUnit tests**, **4 Morph GameTests** and one Fabric control passed. Shared model tests run on both targets; these counts are not all distinct test cases.
+NeoForge alpha.3: **21 JUnit tests**, **18 Morph GameTests** and one vanilla control passed. Fabric alpha.3: **12 shared JUnit tests**, **10 Morph GameTests** and one Fabric control passed. Shared model tests run on both targets; these counts are not all distinct test cases.
 
 - Ownership rules, duplicate/bounded collections, one-second cooldown, reset behavior, and versioned restore.
 - NeoForge packet round trips and rejection of oversized IDs/invalid collection lengths.
@@ -55,7 +55,7 @@ NeoForge client startup and resource loading passed. In a new local survival wor
 
 Not yet verified: two real clients on a dedicated server, late tracking/reconnect across all dimensions, Vulkan rendering, resource packs/shaders, all vanilla renderers, mod interoperability, or a standalone launcher loading the produced JAR outside development. No claim of full release readiness is made.
 
-Still missing: individual variants, favorites/deletion, player forms, modded entities, exact legacy part/box animation correspondence, mob first-person hands, complete traits and active abilities, biomass progression, alternate modes, legacy editors, public addon compatibility, and 1.16.5 save import. Special poses retain vanilla player geometry; only standing and crouching use form dimensions. Overlapping flight grants from other mods require the explicit integration contract in ABILITIES.md.
+Still missing: individual variants, favorites/deletion, player forms, modded entities, exact legacy part/box animation correspondence, mob first-person hands, variant-dependent traits, saddle prerequisites and upgrades, biomass progression, alternate modes, legacy editors, public addon compatibility, and 1.16.5 save import. Special poses retain vanilla player geometry; only standing and crouching use form dimensions. Overlapping flight grants from other mods require the explicit integration contract in ABILITIES.md.
 
 Next release gate: complete the two-client matrix and remaining renderer/ability cases before labeling this a playable release rather than a development alpha.
 
@@ -66,3 +66,15 @@ Both loaders now use explicit transformation payloads, a 100-tick visual timelin
 Fabric manual checks verified human-to-pig and pig-to-human black transitions and final appearances. NeoForge manual checks verified a persisted pig appearance and the black return-to-human transition, ending on the normal player model. The intermediate geometry was captured with the local test world's tick rate temporarily reduced to 5, then restored to 20: [Fabric transition screenshot](screenshots/fabric-transformation.png). No missing sound/texture or transition renderer errors appeared in either client log. Sound scheduling and asset loading were verified; this automated session did not record/listen to speaker output.
 
 The new mesh interpolation approximates the legacy box/part algorithm. First-person hands remain vanilla, collision dimensions switch at server selection, and item/block/custom geometry features are omitted during the fully black middle phase. A late observer receives the current destination appearance without replaying the transition. Real two-client visual/audio synchronization remains unverified.
+
+## Alpha.3 health, attributes and Classic traits
+
+Both loaders share the original default attribute policy and trait mappings documented in ABILITIES.md. Health transitions preserve injury ratio. Autosaves normalize health into unmorphed units and omit owned transient attribute modifiers, with a real save/load regression check. Tests cover pig/bat health, the original 20-point cap, zombie combat values, external modifiers, death safety, and animated select/reset.
+
+Passive/action integration checks exercise actual loaded-player damage, climbing, undead effect rejection, attack effects, fish dryness versus turtle safety, flap validation, hostile target refusal and retaliation, and player mounting/ejection. Intimidation runs as a priority 1 movement goal and is tested with a real creeper fleeing a cat disguise on an isolated platform. The mock network fixtures now mark clients loaded so login protection cannot mask damage failures.
+
+NeoForge manual validation observed 10 human hearts becoming 5 pig hearts and returning to 10: [pig health screenshot](screenshots/neoforge-pig-health.png). This exposed a false damage flash from vanilla health packets during rescaling. The fix sends the changed maximum attribute before an explicit health conversion message, preserving real pending damage while suppressing conversion-only hurt animation.
+
+Health and attributes use vanilla default species values, not captured individual variants. The original default health cap is 20, so boss forms do not gain their uncapped boss health. Legacy Forge reach has no direct shared equivalent and is not copied; swimming uses shared movement hooks. Two-client packet latency, all mob-specific environments, and mod compatibility still require broader release testing.
+
+Final Fabric client check verified persisted pig form at five hearts, reset to ten hearts, and a new pig conversion finishing at five hearts without the earlier camera tilt/false hurt flash. All health/attribute packet registrations loaded successfully. The flight/flap keyboard path and every special environment were not manually exercised; authoritative flap behavior and damage rules are covered by the integration tests above.

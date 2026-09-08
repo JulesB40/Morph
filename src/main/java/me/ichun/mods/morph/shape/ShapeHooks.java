@@ -29,6 +29,10 @@ public final class ShapeHooks {
         return MorphDimensions.forPose(player.level(), resolver.apply(player), pose, vanilla);
     }
 
+    public static String form(Player player) {
+        return (player.level().isClientSide() ? clientFormResolver : formResolver).apply(player);
+    }
+
     public static void refresh(Player player) {
         READY.put(player, Boolean.TRUE);
         player.refreshDimensions();

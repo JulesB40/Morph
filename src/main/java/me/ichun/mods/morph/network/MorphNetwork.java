@@ -19,9 +19,13 @@ public final class MorphNetwork {
     private MorphNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("2");
+        var registrar = event.registrar("4");
+        registrar.playToServer(Flap.TYPE, Flap.CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) me.ichun.mods.morph.ability.MorphActions.flap(player);
+        });
         registrar.playToClient(State.TYPE, State.CODEC);
         registrar.playToClient(Transition.TYPE, Transition.CODEC);
+        registrar.playToClient(Health.TYPE, Health.CODEC);
         registrar.playToClient(Collection.TYPE, Collection.CODEC);
         registrar.playToServer(Select.TYPE, Select.CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player) {
@@ -37,6 +41,28 @@ public final class MorphNetwork {
     public static void sendState(ServerPlayer recipient, UUID subject, String formId) {
         if (recipient.connection != null && recipient.connection.hasChannel(State.TYPE))
             PacketDistributor.sendToPlayer(recipient, new State(subject, formId));
+    }
+
+    public static void sendHealth(ServerPlayer recipient, me.ichun.mods.morph.ability.HealthSnapshot health) {
+        if (recipient.connection == null || !recipient.connection.hasChannel(Health.TYPE)) return;
+        // Ordered on the same connection: raise/lower the full maximum (including other
+        // mods' modifiers) before assigning health so setHealth cannot clamp to a stale max.
+        recipient.connection.send(new net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket(
+                recipient.getId(), List.of(recipient.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH))));
+        PacketDistributor.sendToPlayer(recipient, new Health(health));
+    }
+
+    public record Health(me.ichun.mods.morph.ability.HealthSnapshot value) implements CustomPacketPayload {
+        public static final Type<Health> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "health"));
+        public static final StreamCodec<FriendlyByteBuf, Health> CODEC = new StreamCodec<>() {
+            public Health decode(FriendlyByteBuf buf) {
+                return new Health(new me.ichun.mods.morph.ability.HealthSnapshot(buf.readFloat(), buf.readFloat()));
+            }
+            public void encode(FriendlyByteBuf buf, Health value) {
+                buf.writeFloat(value.value().before()); buf.writeFloat(value.value().after());
+            }
+        };
+        public Type<Health> type() { return TYPE; }
     }
 
     public static void broadcastState(ServerPlayer subject, String formId) {
@@ -118,6 +144,12 @@ public final class MorphNetwork {
             public void encode(FriendlyByteBuf buf, Select value) { buf.writeUtf(value.formId(), MAX_ID_LENGTH); }
         };
         public Type<Select> type() { return TYPE; }
+    }
+
+    public record Flap() implements CustomPacketPayload {
+        public static final Type<Flap> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "flap"));
+        public static final StreamCodec<FriendlyByteBuf, Flap> CODEC = StreamCodec.unit(new Flap());
+        public Type<Flap> type() { return TYPE; }
     }
 
     public record RequestCollection() implements CustomPacketPayload {

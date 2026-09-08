@@ -34,10 +34,13 @@ public final class MorphAbilities {
             return;
         }
         FormTraits traits = FormTraits.forForm(activeForm);
-        if (traits.waterBreathing() && player.isUnderWater()) player.setAirSupply(player.getMaxAirSupply());
+        MorphAttributes.tick(player, activeForm);
+        MorphTraits.tick(player, activeForm);
+        // A weakness can kill the player and trigger a nested death/reset event.
+        if (!player.isAlive()) { cleanup(player); return; }
         if (traits.fallImmunity()) player.resetFallDistance();
         if (!traits.flight()) {
-            cleanup(player);
+            cleanupFlight(player);
             return;
         }
         if (hasExternalFlight(player)) {
@@ -70,6 +73,12 @@ public final class MorphAbilities {
 
     /** Call immediately on form reset/change, death and logout; never revoke a pre-existing grant. */
     public static void cleanup(ServerPlayer player) {
+        MorphAttributes.cleanup(player);
+        MorphTraits.cleanup(player);
+        cleanupFlight(player);
+    }
+
+    private static void cleanupFlight(ServerPlayer player) {
         FlightLease lease = FLIGHT.remove(player);
         if (lease == null || !lease.owned || hasExternalFlight(player)) return;
         Abilities abilities = player.getAbilities();

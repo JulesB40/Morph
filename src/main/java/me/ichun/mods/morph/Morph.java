@@ -18,6 +18,7 @@ public final class Morph {
                 player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
                         ? me.ichun.mods.morph.server.MorphService.collection(serverPlayer).activeForm() : null);
         modBus.addListener(me.ichun.mods.morph.network.MorphNetwork::register);
+        me.ichun.mods.morph.ability.MorphAttributes.setHealthSync(me.ichun.mods.morph.network.MorphNetwork::sendHealth);
         me.ichun.mods.morph.server.MorphService.initialize();
         LogUtils.getLogger().info("Morph 26.2 development port loaded");
     }

@@ -11,7 +11,8 @@ Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraf
 - Collections persist per player UUID in the world's Morph saved data. Death resets appearance while retaining the collection.
 - `/morph list`, `/morph select minecraft:pig`, and `/morph reset` are available to players. Operators can grant a test form with `/morph grant minecraft:pig` on NeoForge or `/morph grant @s minecraft:pig` on Fabric.
 - Standing/crouching hitbox and eye height follow the form, with collision checks before expansion.
-- Bat, bee, and parrot forms can fly and negate fall damage; supported aquatic forms breathe underwater. See [the trait table](docs/ABILITIES.md).
+- Health, damage, armor, movement, knockback and jump attributes follow the form, preserving injuries and original default caps.
+- Original Classic traits include flight/flapping, climbing, swimming, immunities and weaknesses, attack effects, hostile disguises, intimidation and eligible rideable forms. See [abilities and controls](docs/ABILITIES.md).
 
 There is a one-second selection cooldown and a maximum of 256 collected entity types. Returning to the player requires sufficient space. No arbitrary entity NBT is accepted from clients.
 
@@ -34,7 +35,7 @@ On Linux/macOS use `./gradlew` in the corresponding directory. The configured to
 
 ## Development status and limitations
 
-The first milestone focuses on the classic acquisition/selection loop. It currently uses default entity appearances: individual variants, favorites/deletion, player forms, modded mobs, exact legacy part/box interpolation, first-person mob hands, biomass progression, complete trait/ability parity, and the legacy editors are unfinished. Only the traits explicitly listed above are implemented. Rendering and multiplayer runtime results are tracked in [the validation report](docs/VALIDATION.md).
+The first milestone focuses on the classic acquisition/selection loop. It currently uses default entity appearances: individual variants, favorites/deletion, player forms, modded mobs, exact legacy part/box interpolation, first-person mob hands, biomass progression, variant-dependent traits and upgrade parity, and the legacy editors are unfinished. Only the traits explicitly listed above are implemented. Rendering and multiplayer runtime results are tracked in [the validation report](docs/VALIDATION.md).
 
 The new versioned save format is separate from the legacy `morph_save` data. **There is no 1.16.5 save importer yet.** Test with a new world or a copy; this port does not promise legacy world migration.
 

@@ -15,6 +15,8 @@ import org.lwjgl.glfw.GLFW;
 public final class MorphUi {
     private static net.minecraft.client.multiplayer.ClientLevel lastLevel;
     private static int ticks;
+    private static boolean jumpHeld;
+    private static boolean wasGrounded = true;
     private static final KeyMapping OPEN = new KeyMapping("key.morph.select", GLFW.GLFW_KEY_LEFT_BRACKET,
             KeyMapping.Category.GAMEPLAY);
 
@@ -30,6 +32,8 @@ public final class MorphUi {
     private static void registerKeys(RegisterKeyMappingsEvent event) { event.register(OPEN); }
 
     private static void registerPayloads(RegisterClientPayloadHandlersEvent event) {
+        event.register(MorphNetwork.Health.TYPE, (payload, context) ->
+                me.ichun.mods.morph.client.health.MorphHealthSync.apply(payload.value()));
         event.register(MorphNetwork.State.TYPE, (payload, context) ->
                 ClientMorphState.update(payload.playerId(), payload.formId()));
         event.register(MorphNetwork.Transition.TYPE, (payload, context) ->
@@ -43,6 +47,13 @@ public final class MorphUi {
 
     private static void tick(ClientTickEvent.Post event) {
         var minecraft = Minecraft.getInstance();
+        boolean jump = minecraft.options.keyJump.isDown();
+        if (minecraft.player != null && minecraft.gui.screen() == null && jump && !jumpHeld && !wasGrounded
+                && !minecraft.player.onGround() && !minecraft.player.isPassenger()
+                && me.ichun.mods.morph.ability.MorphActions.flapImpulse(ClientMorphState.lookup(minecraft.player.getUUID())) > 0)
+            ClientPacketDistributor.sendToServer(new MorphNetwork.Flap());
+        jumpHeld = jump;
+        wasGrounded = minecraft.player == null || minecraft.player.onGround();
         if (minecraft.level != lastLevel) {
             me.ichun.mods.morph.client.MorphRenderSnapshots.clear();
             lastLevel = minecraft.level;

@@ -4,6 +4,11 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.authlib.GameProfile;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.UUID;
+import me.ichun.mods.morph.ability.MorphAttributes;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.level.storage.TagValueInput;
+
 import java.util.function.Consumer;
 import me.ichun.mods.morph.server.MorphSavedData;
 import me.ichun.mods.morph.server.MorphService;
@@ -41,6 +46,12 @@ public final class MorphGameTests {
     public static void registerFunctions(RegisterEvent event) {
         if (!Boolean.getBoolean("morph.enableGameTests")) return;
         event.register(Registries.TEST_FUNCTION, helper -> {
+            helper.register(id("attribute_defaults_and_persistence"), MorphGameTests::attributeDefaultsAndPersistence);
+            helper.register(id("external_attributes_survive_morph"), MorphGameTests::externalAttributesSurviveMorph);
+            helper.register(id("animated_health_selection_and_reset"), MorphGameTests::animatedHealthSelectionAndReset);
+            helper.register(id("passive_trait_hooks"), MorphGameTests::passiveTraitHooks);
+            helper.register(id("intimidation_moves_creeper"), MorphGameTests::intimidationMovesCreeper);
+            helper.register(id("hostility_and_riding_hooks"), MorphGameTests::hostilityAndRidingHooks);
             helper.register(id("selection_rules"), MorphGameTests::selectionRules);
             helper.register(id("transformation_sound_lifecycle"), MorphGameTests::transformationSoundLifecycle);
             helper.register(id("kill_acquires_pig"), MorphGameTests::killAcquiresPig);
@@ -60,13 +71,13 @@ public final class MorphGameTests {
     public static void registerTests(RegisterGameTestsEvent event) {
         if (!Boolean.getBoolean("morph.enableGameTests")) return;
         var environment = event.registerEnvironment(id("smoke"));
-        for (String name : new String[] {"selection_rules", "transformation_sound_lifecycle", "kill_acquires_pig", "saved_data_round_trip",
+        for (String name : new String[] {"intimidation_moves_creeper", "hostility_and_riding_hooks", "passive_trait_hooks", "attribute_defaults_and_persistence", "external_attributes_survive_morph", "animated_health_selection_and_reset", "selection_rules", "transformation_sound_lifecycle", "kill_acquires_pig", "saved_data_round_trip",
                 "pig_geometry_and_reset", "ceiling_rejects_tall_form", "crouch_cannot_stand_through_ceiling",
                 "flight_cleanup_and_player_save", "external_flight_preserved", "aquatic_air_on_actual_tick",
                 "fall_event_immunity_and_cleanup", "flight_survives_game_mode_change"}) {
             ResourceKey<Consumer<GameTestHelper>> function = ResourceKey.create(Registries.TEST_FUNCTION, id(name));
             event.registerTest(id(name), new FunctionGameTestInstance(function,
-                    new TestData<>(environment, Identifier.withDefaultNamespace("empty"), 100, 0, true)));
+                    new TestData<>(environment, Identifier.withDefaultNamespace("empty"), 250, 0, true)));
         }
     }
 
@@ -235,8 +246,8 @@ public final class MorphGameTests {
         player.setGameMode(GameType.SURVIVAL);
         helper.assertFalse(player.getAbilities().mayfly, "Survival baseline has no flight grant");
         helper.assertFalse(player.getAbilities().flying, "Survival baseline is not flying");
-        MorphService.collection(player).unlock("minecraft:bat");
-        helper.assertTrue(MorphService.select(player, "minecraft:bat"), "Select flying bat");
+        MorphService.collection(player).unlock("minecraft:blaze");
+        helper.assertTrue(MorphService.select(player, "minecraft:blaze"), "Select flying blaze");
         helper.assertTrue(player.getAbilities().mayfly, "Selection grants flight immediately");
         helper.assertFalse(player.getAbilities().flying, "Selecting flight must not force takeoff");
         player.getAbilities().flying = true;
@@ -257,9 +268,9 @@ public final class MorphGameTests {
         player.setGameMode(GameType.SURVIVAL);
         player.getAbilities().mayfly = true;
         player.getAbilities().flying = true;
-        MorphService.collection(player).unlock("minecraft:bee");
-        helper.assertTrue(MorphService.select(player, "minecraft:bee"), "Select bee with external flight already granted");
-        helper.assertTrue(MorphService.reset(player), "Reset bee with external grant");
+        MorphService.collection(player).unlock("minecraft:ghast");
+        helper.assertTrue(MorphService.select(player, "minecraft:ghast"), "Select ghast with external flight already granted");
+        helper.assertTrue(MorphService.reset(player), "Reset ghast with external grant");
         helper.assertTrue(player.getAbilities().mayfly && player.getAbilities().flying, "Morph must preserve preexisting flight flags");
         var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, helper.getLevel().registryAccess());
         player.saveWithoutId(output);
@@ -288,8 +299,9 @@ public final class MorphGameTests {
             helper.assertTrue(player.isUnderWater(), "Fixture must actually submerge the player's eyes");
             player.setAirSupply(10);
             helper.runAfterDelay(1, () -> {
-                helper.assertTrue(player.getAirSupply() >= player.getMaxAirSupply() - 2,
-                        "Registered pre-tick hook must replenish aquatic air before drowning");
+                helper.assertTrue(player.getAirSupply() > 10 && player.getAirSupply() <= 14,
+                        "Registered pre-tick hook adds original four air before vanilla consumption");
+                near(helper, player.getHealth(), player.getMaxHealth(), "Aquatic breath prevents drowning damage");
                 helper.assertTrue(MorphService.reset(player), "Reset aquatic form while underwater");
                 player.setAirSupply(10);
                 helper.runAfterDelay(2, () -> {
@@ -317,15 +329,212 @@ public final class MorphGameTests {
     private static void flightSurvivesGameModeChange(GameTestHelper helper) {
         var player = connectedPlayer(helper);
         player.setGameMode(GameType.SURVIVAL);
-        MorphService.collection(player).unlock("minecraft:bat");
-        helper.assertTrue(MorphService.select(player, "minecraft:bat"), "Select bat before game mode change");
-        helper.assertTrue(player.getAbilities().mayfly, "Bat flight initially granted");
+        MorphService.collection(player).unlock("minecraft:blaze");
+        helper.assertTrue(MorphService.select(player, "minecraft:blaze"), "Select blaze before game mode change");
+        helper.assertTrue(player.getAbilities().mayfly, "Blaze flight initially granted");
         player.setGameMode(GameType.ADVENTURE);
         player.doTick();
-        helper.assertTrue(player.getAbilities().mayfly, "Actual player tick must restore bat flight after adventure mode updates vanilla flags");
-        helper.assertTrue(MorphService.reset(player), "Reset bat after changing game mode");
+        helper.assertTrue(player.getAbilities().mayfly, "Actual player tick must restore blaze flight after adventure mode updates vanilla flags");
+        helper.assertTrue(MorphService.reset(player), "Reset blaze after changing game mode");
         helper.assertFalse(player.getAbilities().mayfly, "Cleanup must still revoke Morph-owned permission after game mode change");
         helper.succeed();
+    }
+
+    private static void attributeDefaultsAndPersistence(GameTestHelper helper) {
+        var player = connectedPlayer(helper);
+        player.setHealth(10.0F);
+        MorphAttributes.tick(player, "minecraft:pig");
+        near(helper, player.getMaxHealth(), 10.0F, "Pig has ten health");
+        near(helper, player.getHealth(), 5.0F, "Morph preserves half health");
+        near(helper, (float) player.getAttributeValue(Attributes.MOVEMENT_SPEED), 0.1F, "Original movement speed cap");
+        MorphAttributes.tick(player, "minecraft:bat");
+        near(helper, player.getMaxHealth(), 6.0F, "Bat has six health");
+        near(helper, player.getHealth(), 3.0F, "Switching form preserves half health");
+        MorphAttributes.tick(player, "minecraft:iron_golem");
+        near(helper, player.getMaxHealth(), 20.0F, "Original maximum health cap");
+        MorphAttributes.tick(player, "minecraft:zombie");
+        near(helper, (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE), 3.0F, "Zombie attack strength");
+        near(helper, (float) player.getAttributeValue(Attributes.ARMOR), 2.0F, "Zombie natural armor");
+        MorphAttributes.tick(player, "minecraft:pig");
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, helper.getLevel().registryAccess());
+        player.saveWithoutId(output);
+        var saved = output.buildResult();
+        near(helper, saved.getFloat("Health").orElseThrow(), 10.0F, "Save normalizes health to human units");
+        helper.assertFalse(saved.toString().contains("morph:form_attribute"), "Save excludes owned transient attribute modifiers");
+        near(helper, player.getHealth(), 5.0F, "Saving leaves live health unchanged");
+        var restored = connectedPlayer(helper);
+        restored.load(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), saved));
+        near(helper, restored.getHealth(), 10.0F, "Actual player load restores normalized health");
+        MorphAttributes.tick(restored, "minecraft:pig");
+        near(helper, restored.getHealth(), 5.0F, "Reapplying persisted form restores health ratio");
+        MorphAttributes.tick(player, "");
+        near(helper, player.getMaxHealth(), 20.0F, "Reset restores human maximum");
+        near(helper, player.getHealth(), 10.0F, "Reset preserves half health");
+        player.setHealth(0.0F);
+        MorphAttributes.tick(player, "minecraft:bat");
+        MorphAttributes.cleanup(player);
+        near(helper, player.getHealth(), 0.0F, "Attribute updates never revive dead players");
+        helper.succeed();
+    }
+
+    private static void externalAttributesSurviveMorph(GameTestHelper helper) {
+        var player = connectedPlayer(helper);
+        var maxHealth = player.getAttribute(Attributes.MAX_HEALTH);
+        var external = Identifier.fromNamespaceAndPath("morph_test", "external_health");
+        maxHealth.setBaseValue(24.0);
+        maxHealth.addPermanentModifier(new AttributeModifier(external, 4.0, AttributeModifier.Operation.ADD_VALUE));
+        player.setHealth(14.0F);
+        MorphAttributes.tick(player, "minecraft:pig");
+        near(helper, player.getMaxHealth(), 14.0F, "External health bonus remains on pig");
+        near(helper, player.getHealth(), 7.0F, "External health keeps injury ratio");
+        var output = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, helper.getLevel().registryAccess());
+        player.saveWithoutId(output);
+        near(helper, output.buildResult().getFloat("Health").orElseThrow(), 14.0F, "Save includes external baseline health");
+        helper.assertTrue(output.buildResult().toString().contains("morph_test:external_health"), "External permanent modifier remains saveable");
+        MorphAttributes.cleanup(player);
+        near(helper, (float) maxHealth.getBaseValue(), 24.0F, "Cleanup preserves custom base health");
+        helper.assertTrue(maxHealth.hasModifier(external), "Cleanup preserves external modifier identity");
+        near(helper, player.getMaxHealth(), 28.0F, "Cleanup restores baseline plus external bonus");
+        near(helper, player.getHealth(), 14.0F, "Cleanup preserves injury ratio");
+        helper.succeed();
+    }
+
+    private static void animatedHealthSelectionAndReset(GameTestHelper helper) {
+        var player = connectedPlayer(helper);
+        player.setHealth(10.0F);
+        MorphService.collection(player).unlock("minecraft:pig");
+        helper.assertTrue(MorphService.select(player, "minecraft:pig"), "Select pig through service");
+        near(helper, player.getMaxHealth(), 20.0F, "Selection starts at previous maximum");
+        helper.onEachTick(() -> MorphAttributes.tick(player, MorphService.collection(player).activeForm()));
+        helper.runAfterDelay(50, () -> {
+            helper.assertTrue(player.getMaxHealth() > 10.0F && player.getMaxHealth() < 20.0F, "Health interpolates during black transition");
+            near(helper, player.getHealth() / player.getMaxHealth(), 0.5F, "Transition preserves injury ratio");
+        });
+        helper.runAfterDelay(101, () -> {
+            near(helper, player.getMaxHealth(), 10.0F, "Completed selection has pig maximum");
+            near(helper, player.getHealth(), 5.0F, "Completed selection keeps half health");
+            helper.assertTrue(MorphService.reset(player), "Reset through service");
+        });
+        helper.runAfterDelay(202, () -> {
+            near(helper, player.getMaxHealth(), 20.0F, "Animated reset restores human maximum");
+            near(helper, player.getHealth(), 10.0F, "Animated reset keeps half health");
+            helper.succeed();
+        });
+    }
+
+    private static void passiveTraitHooks(GameTestHelper helper) {
+        var spider = connectedPlayer(helper);
+        var spiderForms = MorphService.collection(spider);
+        spiderForms.unlock("minecraft:spider");
+        spiderForms.select("minecraft:spider", 0);
+        spider.horizontalCollision = true;
+        helper.assertTrue(spider.onClimbable(), "Spider wall contact activates actual climb hook");
+        spider.horizontalCollision = false;
+        helper.assertFalse(spider.onClimbable(), "Spider cannot climb without wall contact");
+        var zombie = connectedPlayer(helper);
+        var zombieForms = MorphService.collection(zombie);
+        zombieForms.unlock("minecraft:zombie");
+        zombieForms.select("minecraft:zombie", 0);
+        helper.assertFalse(zombie.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 100)), "Undead hook rejects poison");
+        helper.assertFalse(zombie.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.REGENERATION, 100)), "Undead hook rejects regeneration");
+        zombieForms.reset();
+        helper.assertTrue(zombie.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.POISON, 100)), "Reset removes undead effect immunity");
+        spiderForms.unlock("minecraft:cave_spider");
+        spiderForms.select("minecraft:cave_spider", 100);
+        var victim = helper.spawn(EntityTypes.PIG, 2, 2, 2);
+        victim.hurtServer(helper.getLevel(), spider.damageSources().playerAttack(spider), 1.0F);
+        var poison = victim.getEffect(net.minecraft.world.effect.MobEffects.POISON);
+        helper.assertTrue(poison != null && poison.getDuration() == 140, "Actual cave spider melee applies original poison duration");
+        spiderForms.unlock("minecraft:wither_skeleton");
+        spiderForms.select("minecraft:wither_skeleton", 200);
+        var secondVictim = helper.spawn(EntityTypes.PIG, 3, 2, 2);
+        secondVictim.hurtServer(helper.getLevel(), spider.damageSources().playerAttack(spider), 1.0F);
+        var wither = secondVictim.getEffect(net.minecraft.world.effect.MobEffects.WITHER);
+        helper.assertTrue(wither != null && wither.getDuration() == 200, "Actual wither skeleton melee applies original wither duration");
+        helper.assertTrue(me.ichun.mods.morph.ability.MorphTraits.preventsDamage(spider, "minecraft:blaze", spider.damageSources().lava()), "Blaze resists lava");
+        helper.assertFalse(me.ichun.mods.morph.ability.MorphTraits.preventsDamage(spider, "minecraft:blaze", spider.damageSources().generic()), "Fire immunity does not grant general invulnerability");
+        helper.assertTrue(me.ichun.mods.morph.ability.MorphAbilities.preventsFallDamage("minecraft:chicken"), "Chicken has original fall immunity");
+        spiderForms.unlock("minecraft:bat");
+        spiderForms.select("minecraft:bat", 300);
+        spider.setOnGround(false);
+        spider.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+        helper.assertTrue(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Airborne bat accepts flap action");
+        helper.assertTrue(spider.getDeltaMovement().y > 0.4, "Flap applies upward impulse");
+        helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Repeated same tick flap is rate limited");
+        helper.assertFalse(spider.getAbilities().mayfly, "Bat flap does not grant creative-style flight");
+        spiderForms.reset();
+        helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Human form cannot flap");
+        var fish = connectedPlayer(helper);
+        float startHealth = fish.getHealth();
+        for (int tick = 0; tick < 301; tick++) me.ichun.mods.morph.ability.MorphTraits.tick(fish, "minecraft:cod");
+        helper.assertTrue(fish.getHealth() < startHealth, "Fish dries out after air allowance expires");
+        var turtle = connectedPlayer(helper);
+        float turtleHealth = turtle.getHealth();
+        for (int tick = 0; tick < 301; tick++) me.ichun.mods.morph.ability.MorphTraits.tick(turtle, "minecraft:turtle");
+        near(helper, turtle.getHealth(), turtleHealth, "Amphibious turtle remains healthy on land");
+        helper.succeed();
+    }
+
+    private static void hostilityAndRidingHooks(GameTestHelper helper) {
+        var mount = connectedPlayer(helper);
+        var forms = MorphService.collection(mount);
+        forms.unlock("minecraft:zombie");
+        forms.select("minecraft:zombie", 0);
+        var hostile = helper.spawn(EntityTypes.ZOMBIE, 2, 2, 2);
+        hostile.setTarget(mount);
+        helper.assertTrue(hostile.getTarget() == null, "Hostile disguise rejects actual mob target assignment");
+        hostile.hurtServer(helper.getLevel(), mount.damageSources().playerAttack(mount), 1.0F);
+        helper.assertTrue(hostile.getLastHurtByMob() == mount, "Actual attack records revenge target");
+        hostile.setTarget(mount);
+        helper.assertTrue(hostile.getTarget() == mount, "Disguise never suppresses retaliation");
+        forms.unlock("minecraft:horse");
+        forms.select("minecraft:horse", 100);
+        var rider = connectedPlayer(helper);
+        rider.interactOn(mount, net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO);
+        helper.assertTrue(rider.getVehicle() == mount, "Actual player interaction mounts horse form without saddle");
+        mount.setShiftKeyDown(true);
+        me.ichun.mods.morph.ability.MorphInteractions.tick(mount, "minecraft:horse");
+        helper.assertFalse(rider.isPassenger(), "Mount crouch ejects passenger");
+        mount.setShiftKeyDown(false);
+        rider.interactOn(mount, net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO);
+        helper.assertTrue(rider.getVehicle() == mount, "Horse can accept passenger again");
+        forms.reset();
+        me.ichun.mods.morph.ability.MorphInteractions.tick(mount, "");
+        helper.assertFalse(rider.isPassenger(), "Reset to human ejects passenger");
+        rider.interactOn(mount, net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.phys.Vec3.ZERO);
+        helper.assertFalse(rider.isPassenger(), "Human cannot be mounted");
+        helper.succeed();
+    }
+
+    private static void intimidationMovesCreeper(GameTestHelper helper) {
+        var player = connectedPlayer(helper);
+
+        var forms = MorphService.collection(player);
+        forms.unlock("minecraft:cat");
+        forms.select("minecraft:cat", 0);
+        // Isolated high platform avoids affecting the neighboring smoke-test structures.
+        var center = helper.absolutePos(new net.minecraft.core.BlockPos(3, 180, 3));
+        var floor = new java.util.ArrayList<net.minecraft.core.BlockPos>();
+        for (int x = -16; x <= 16; x++) for (int z = -16; z <= 16; z++) {
+            var pos = center.offset(x, -1, z);
+            floor.add(pos);
+            helper.getLevel().setBlock(pos, net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+        }
+        player.setPos(center.getX() + .5, center.getY(), center.getZ() + .5);
+        var creeper = net.minecraft.world.entity.EntityTypes.CREEPER.create(helper.getLevel(), net.minecraft.world.entity.EntitySpawnReason.LOAD);
+        helper.assertTrue(creeper != null, "Create creeper");
+        creeper.setPos(center.getX() + 3.5, center.getY(), center.getZ() + .5);
+        helper.getLevel().addFreshEntity(creeper);
+        double initial = creeper.distanceToSqr(player);
+        helper.runAfterDelay(100, () -> {
+            boolean fled = creeper.distanceToSqr(player) > initial + 9;
+            forms.reset();
+            creeper.discard();
+            player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(.5, 2, .5)));
+            for (var pos : floor) helper.getLevel().setBlock(pos, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), 3);
+            helper.assertTrue(fled, "Actual creeper AI walks away from cat form over normal server ticks");
+            helper.succeed();
+        });
     }
 
     private static void near(GameTestHelper helper, float actual, float expected, String label) {
@@ -343,6 +552,8 @@ public final class MorphGameTests {
         NetworkRegistry.configureMockConnection(connection);
         helper.getLevel().getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
         player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(0.5, 2.0, 0.5)));
+        player.setGameMode(GameType.SURVIVAL);
+        player.connection.markClientLoaded();
         return player;
     }
 

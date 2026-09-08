@@ -6,7 +6,7 @@ This is a separate Fabric build of the community Morph port, not the old Forge J
 
 From this directory, run `./gradlew build` (Windows: `gradlew.bat build`). From the repository root use `fabric/gradlew -p fabric build`. Java 25 is provisioned by Gradle if necessary. The Fabric wrapper uses Gradle 9.5.1 because Loom 1.17.20 requires Gradle 9.5 or newer; the root NeoForge wrapper is independent.
 
-Output: `build/libs/Morph-Fabric-26.2-11.0.0-alpha.2.jar`.
+Output: `build/libs/Morph-Fabric-26.2-11.0.0-alpha.3.jar`.
 
 Pinned official dependencies, checked 2026-09-08:
 
@@ -26,7 +26,7 @@ Kill a supported vanilla living entity to unlock its type. Press `[` to open the
 
 Ownership and the selected form persist by UUID in overworld SavedData, surviving logout and dimension changes. Death resets the selected appearance while retaining owned forms. Appearance updates go to connected clients and joining clients receive current player appearances. Collection data is sent only to its owner. There is no client payload capable of granting ownership.
 
-Bat, bee, and parrot forms grant flight and fall immunity; aquatic forms replenish air underwater. Flight is temporary, is excluded from saved player abilities, and is removed on reset, death, and logout. Pre-existing flight permissions are preserved; other mods granting flight during a Morph flight lease should use the shared external-flight integration hook.
+Forms now change health and combat/movement attributes with the original default caps. Blaze, ghast and wither grant full flight; bat, bee, parrot and other original flap forms use fresh jump presses in the air. Aquatic, climbing, environmental, attack-effect, disguise and riding traits are shared with NeoForge; see [the complete table](../docs/ABILITIES.md). Flight is temporary, is excluded from saved player abilities, and is removed on reset, death, and logout. Pre-existing flight permissions are preserved; other mods granting flight during a Morph flight lease should use the shared external-flight integration hook.
 
 The Fabric build shares the loader-independent ownership model, vanilla SavedData codec, selector screen, and renderer extraction adapter with the NeoForge build. Fabric supplies native events, payload registration, key binding, and client-only renderer mixins.
 
@@ -34,7 +34,7 @@ Both builds share the five-second black transformation effect and the original s
 
 ## Scope and remaining validation
 
-This is an early development prototype, not original-mod feature parity. Morphs use default vanilla entity appearances; variants/NBT, custom mod entities, first-person arms, exact legacy part/box interpolation, the remaining original abilities, and original UI behavior remain to be ported. Unsupported render extraction falls back to the player. Standing/crouching hitbox and eye height follow the default entity shape, with collision checks before selection/reset. Other movement and combat retain player rules.
+This is an early development prototype, not original-mod feature parity. Morphs use default vanilla entity appearances; variants/NBT, custom mod entities, first-person arms, exact legacy part/box interpolation, variant-dependent traits and upgrades, and original UI behavior remain to be ported. Unsupported render extraction falls back to the player. Standing/crouching hitbox and eye height follow the default entity shape, with collision checks before selection/reset. Other movement and combat retain player rules.
 
 Automated `build` runs shared ownership unit tests and a dedicated Fabric GameTest server. Run only the integration server with `gradlew runGameTest`. Tests cover acquisition through a lethal attack, command parsing/ownership/cooldown, geometry/reset, save isolation, and flight/fall cleanup. Runtime smoke checks verified the native selector, active-form marker, and pig rendering in both third-person views; see `../docs/screenshots/fabric-pig.png`. Before release, complete two-client observation/late-join checks and the remaining gameplay cases: logout/rejoin, death/respawn, dimension changes, world save/restart, and non-operator grant rejection. These manual gameplay checks are not implied by a successful compilation or title-screen launch.
 

@@ -64,6 +64,12 @@ public final class MorphFabric implements ModInitializer {
         return 1;
     }
     @Override public void onInitialize() {
+        me.ichun.mods.morph.ability.MorphAttributes.setHealthSync((player, health) -> {
+            if (player.connection == null || !ServerPlayNetworking.canSend(player, MorphHealth.TYPE)) return;
+            player.connection.send(new net.minecraft.network.protocol.game.ClientboundUpdateAttributesPacket(player.getId(),
+                    java.util.List.of(player.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH))));
+            ServerPlayNetworking.send(player, new MorphHealth(health));
+        });
         net.minecraft.core.Registry.register(BuiltInRegistries.SOUND_EVENT,
                 me.ichun.mods.morph.model.MorphSounds.ID, me.ichun.mods.morph.model.MorphSounds.EVENT);
         me.ichun.mods.morph.shape.ShapeHooks.setFormResolver(player -> player instanceof ServerPlayer serverPlayer ? forms(serverPlayer).activeForm() : null);
@@ -74,10 +80,14 @@ public final class MorphFabric implements ModInitializer {
             }
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !(entity instanceof ServerPlayer player
-            && player.isAlive() && source.is(net.minecraft.tags.DamageTypeTags.IS_FALL)
-            && me.ichun.mods.morph.ability.MorphAbilities.preventsFallDamage(forms(player).activeForm())));
+            && player.isAlive()
+            && me.ichun.mods.morph.ability.MorphTraits.preventsDamage(player, forms(player).activeForm(), source)));
+        PayloadTypeRegistry.serverboundPlay().register(MorphAction.TYPE, MorphAction.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(MorphAction.TYPE, (payload, context) ->
+                me.ichun.mods.morph.ability.MorphActions.flap(context.player()));
         PayloadTypeRegistry.clientboundPlay().register(MorphAppearance.TYPE, MorphAppearance.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MorphTransition.TYPE, MorphTransition.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MorphHealth.TYPE, MorphHealth.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MorphOwned.TYPE, MorphOwned.CODEC);
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer player) {
@@ -125,6 +135,7 @@ public final class MorphFabric implements ModInitializer {
                         var result = forms(player).select(form, player.level().getServer().overworld().getGameTime());
                         return switch (result) {
                             case CHANGED -> {
+                                me.ichun.mods.morph.ability.MorphAttributes.begin(player, form);
                                 data(ctx.getSource().getServer()).setDirty();
                                 sync(player);
                                 transform(player, previous);
@@ -146,6 +157,7 @@ public final class MorphFabric implements ModInitializer {
                     if (!me.ichun.mods.morph.shape.ShapeHooks.canFit(player, "")) { ctx.getSource().sendFailure(Component.literal("Not enough room to return to player form")); return 0; }
                     String previous = forms(player).activeForm();
                     boolean changed = forms(player).reset();
+                    if (changed && player.isAlive()) me.ichun.mods.morph.ability.MorphAttributes.begin(player, "");
                     if (changed) data(ctx.getSource().getServer()).setDirty();
                     sync(player);
                     if (changed && player.isAlive()) transform(player, previous);
