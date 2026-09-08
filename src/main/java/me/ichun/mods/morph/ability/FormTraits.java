@@ -5,7 +5,8 @@ import java.util.Set;
 /** Explicit vanilla traits, retaining unknown/modded forms' normal player behavior. */
 public record FormTraits(boolean flight, boolean waterBreathing, boolean fallImmunity) {
     private static final FormTraits NONE = new FormTraits(false, false, false);
-    private static final Set<String> FLYERS = Set.of("minecraft:blaze", "minecraft:ghast", "minecraft:wither");
+    private static final Set<String> FLYERS = Set.of("minecraft:bat", "minecraft:bee",
+            "minecraft:blaze", "minecraft:ghast", "minecraft:wither");
     private static final Set<String> NO_FALL = Set.of("minecraft:bat", "minecraft:bee", "minecraft:parrot",
             "minecraft:phantom", "minecraft:vex", "minecraft:ender_dragon", "minecraft:chicken",
             "minecraft:cat", "minecraft:ocelot", "minecraft:iron_golem", "minecraft:magma_cube");

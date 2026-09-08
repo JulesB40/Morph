@@ -17,7 +17,7 @@ public final class MorphActions {
     public static double flapImpulse(String form) {
         if (form == null) return 0;
         return switch (form) {
-            case "minecraft:bat", "minecraft:bee", "minecraft:parrot", "minecraft:vex" -> 0.42;
+            case "minecraft:parrot", "minecraft:vex" -> 0.42;
             case "minecraft:phantom" -> 0.52;
             case "minecraft:ender_dragon" -> 1.2;
             default -> 0;

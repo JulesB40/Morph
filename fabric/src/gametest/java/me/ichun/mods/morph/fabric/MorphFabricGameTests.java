@@ -257,14 +257,34 @@ public final class MorphFabricGameTests {
         helper.assertTrue(me.ichun.mods.morph.ability.MorphTraits.preventsDamage(spider, "minecraft:blaze", spider.damageSources().lava()), "Blaze resists lava");
         helper.assertFalse(me.ichun.mods.morph.ability.MorphTraits.preventsDamage(spider, "minecraft:blaze", spider.damageSources().generic()), "Fire immunity does not grant general invulnerability");
         helper.assertTrue(me.ichun.mods.morph.ability.MorphAbilities.preventsFallDamage("minecraft:chicken"), "Chicken has original fall immunity");
-        spiderForms.unlock("minecraft:bat");
-        spiderForms.select("minecraft:bat", 300);
+        long flightSelectionTick = 300;
+        for (String flyingForm : java.util.List.of("minecraft:bat", "minecraft:bee")) {
+            spiderForms.unlock(flyingForm);
+            spiderForms.select(flyingForm, flightSelectionTick);
+            flightSelectionTick += 40;
+            helper.assertTrue(spiderForms.activeForm().equals(flyingForm), "Flight form was selected");
+            me.ichun.mods.morph.ability.MorphAbilities.tick(spider, flyingForm);
+            helper.assertTrue(spider.getAbilities().mayfly, flyingForm + " grants sustained flight");
+            spider.setOnGround(false);
+            spider.getAbilities().flying = true;
+            for (int tick = 0; tick < 20; tick++) {
+                me.ichun.mods.morph.ability.MorphAbilities.tick(spider, flyingForm);
+                helper.assertTrue(spider.getAbilities().flying, flyingForm + " keeps flight active");
+            }
+            helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Flight form rejects flap packets");
+            spiderForms.reset();
+            me.ichun.mods.morph.ability.MorphAbilities.tick(spider, "");
+            helper.assertFalse(spider.getAbilities().mayfly, "Reset removes Morph flight permission");
+            helper.assertFalse(spider.getAbilities().flying, "Reset stops Morph flight");
+        }
+        spiderForms.unlock("minecraft:parrot");
+        spiderForms.select("minecraft:parrot", 400);
         spider.setOnGround(false);
         spider.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
-        helper.assertTrue(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Airborne bat accepts flap action");
+        helper.assertTrue(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Airborne parrot accepts flap action");
         helper.assertTrue(spider.getDeltaMovement().y > 0.4, "Flap applies upward impulse");
         helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Repeated same tick flap is rate limited");
-        helper.assertFalse(spider.getAbilities().mayfly, "Bat flap does not grant creative-style flight");
+        helper.assertFalse(spider.getAbilities().mayfly, "Parrot flap does not grant creative-style flight");
         spiderForms.reset();
         helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Human form cannot flap");
         var fish = player(helper);

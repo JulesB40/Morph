@@ -12,8 +12,8 @@ The collection currently stores species IDs rather than individual acquired vari
 
 | Forms | Behavior |
 | --- | --- |
-| Blaze, ghast, wither | Full flight; double-tap jump uses normal flight controls |
-| Bat, bee, parrot, vex, phantom, dragon | Press jump again while airborne to flap; each fresh press adds the original impulse |
+| Bat, bee, blaze, ghast, wither | Full flight; double-tap jump uses normal flight controls |
+| Parrot, vex, phantom, dragon | Press jump again while airborne to flap; each fresh press adds the original impulse |
 | Spider, cave spider | Climb walls through horizontal collision |
 | Chicken | Slow falling and fall protection |
 | Cat, ocelot, iron golem, magma cube | Fall protection; flight/flap forms also avoid fall damage |
@@ -36,7 +36,7 @@ The collection currently stores species IDs rather than individual acquired vari
 | Original intimidating forms | Relevant nearby creatures flee using original species/range/speed mappings |
 | Horse, llama, skeleton horse, trader llama, zombie horse | Another player can right-click to ride; sneaking or demorphing ejects Morph-owned passengers |
 
-Full flight does not force takeoff, change flight speed, grant invulnerability or alter build permissions. Flapping follows the original Classic default rather than the previous alpha's full-flight substitute. The server chooses and validates flap strength; a client cannot request an arbitrary velocity.
+Full flight does not force takeoff, change flight speed, grant invulnerability or alter build permissions. Bat and bee use sustained flight as requested; the remaining flap forms retain Classic impulses. The server chooses and validates flap strength; a client cannot request an arbitrary velocity.
 
 The hit-effect durations follow the intended original configuration (cave spider/husk 140 ticks, pufferfish 60, wither skeleton 200), fixing an original copy bug that discarded configured durations. There is no creeper explosion, enderman teleport or blaze/ghast projectile ability in the original vanilla mappings, so none is added here.
 
