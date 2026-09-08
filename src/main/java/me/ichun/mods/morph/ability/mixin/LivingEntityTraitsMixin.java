@@ -20,6 +20,42 @@ import net.minecraft.world.phys.Vec3;
 abstract class LivingEntityTraitsMixin {
     @Shadow protected boolean jumping;
 
+    @Inject(method = "isInvertedHealAndHarm", at = @At("HEAD"), cancellable = true)
+    private void morph$undeadHealing(CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this instanceof Player player && morph$hasTag(player, net.minecraft.tags.EntityTypeTags.INVERTED_HEALING_AND_HARM))
+            cir.setReturnValue(true);
+    }
+
+    @Inject(method = "canFreeze", at = @At("HEAD"), cancellable = true)
+    private void morph$freezeImmunity(CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this instanceof Player player && ("minecraft:skeleton".equals(ShapeHooks.form(player))
+                || morph$hasTag(player, net.minecraft.tags.EntityTypeTags.FREEZE_IMMUNE_ENTITY_TYPES)))
+            cir.setReturnValue(false);
+    }
+
+    @Inject(method = "canBreatheUnderwater", at = @At("HEAD"), cancellable = true)
+    private void morph$underwaterBreathing(CallbackInfoReturnable<Boolean> cir) {
+        if ((Object) this instanceof Player player && me.ichun.mods.morph.ability.FormTraits.forForm(ShapeHooks.form(player)).waterBreathing())
+            cir.setReturnValue(true);
+    }
+
+    @org.spongepowered.asm.mixin.Unique
+    private static boolean morph$hasTag(Player player, net.minecraft.tags.TagKey<net.minecraft.world.entity.EntityType<?>> tag) {
+        String form = ShapeHooks.form(player);
+        var id = form == null ? null : net.minecraft.resources.Identifier.tryParse(form);
+        return id != null && net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.get(id)
+                .map(holder -> holder.is(tag)).orElse(false);
+    }
+
+    @Inject(method = "getDamageAfterMagicAbsorb", at = @At("RETURN"), cancellable = true)
+    private void morph$witchResistance(DamageSource source, float amount, CallbackInfoReturnable<Float> cir) {
+        if ((Object) this instanceof Player player && "minecraft:witch".equals(ShapeHooks.form(player))) {
+            if (source.getEntity() == player) cir.setReturnValue(0F);
+            else if (source.is(net.minecraft.tags.DamageTypeTags.WITCH_RESISTANT_TO))
+                cir.setReturnValue(cir.getReturnValueF() * .15F);
+        }
+    }
+
     @Redirect(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;jumping:Z", opcode = 180))
     private boolean morph$voluntaryWaterJump(LivingEntity entity) {
         return jumping && (!(entity instanceof Player player)

@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.20'
     id 'maven-publish'
 }
-version = '11.0.0-alpha.7'
+version = '11.0.0-alpha.8'
 group = 'me.ichun.mods.morph'
 base { archivesName = 'Morph-Fabric-26.2' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
@@ -62,4 +62,9 @@ fabricApi {
 }
 
 // Stable development identity makes save/rejoin testing repeatable.
+sourceSets.gametest.java {
+    srcDir '../src/main/java'
+    include 'me/ichun/mods/morph/fabric/**'
+    include 'me/ichun/mods/morph/gametest/NativeAttributeChecks.java'
+}
 loom.runs.client { programArgs '--username', 'MorphTester' }

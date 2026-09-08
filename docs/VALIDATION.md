@@ -105,3 +105,11 @@ Use alpha.5 on client and server: NeoForge's protocol is now 5 and Fabric's appe
 ## Alpha 6: Wither side-head rotation
 
 The shared morph snapshot now supplies world-space side-head yaw from the copied body yaw plus relative look yaw, and copies look pitch. Unticked adapter head arrays previously stayed at zero, making the heads face south. This applies to both loaders and transition snapshots. A regression test runs the vanilla Wither model across 63 body/look/pitch combinations and asserts that both side heads match the center head. No new in-game visual verification is claimed for this fix.
+
+## Alpha.8 native mob attributes and passive traits
+
+A GPT-5.6 Luna subagent with high reasoning audited species mappings; integration review and registry tests corrected additional omissions. Both loaders now pass checks across all 91 supported vanilla living forms: copied native attributes, every registered potion effect's eligibility, fire/freezing immunity, underwater breathing and instant healing/harming inversion. The generated values are in [MOB_ATTRIBUTES.csv](MOB_ATTRIBUTES.csv), and [MOB_TRAITS_AUDIT.md](MOB_TRAITS_AUDIT.md) records source evidence and remaining stateful behavior gaps.
+
+Final validation: NeoForge build, 44 unit tests and 20 server GameTests passed; Fabric build, 37 unit tests and 12 server GameTests passed. Server checks additionally verify health ratios across every form, cleanup, native witch magic damage reduction, powered Wither arrow immunity, closed-shell shulker armor/arrow immunity, and grants/cleanup for all 11 flying forms. A Fabric client run passed three scenarios: pig sprint-swimming, nametag controls, and actual bat/bee double-jump takeoff and sustained hovering with live animation states. That client run preceded the final Wither/shulker defense additions; their final server tests and builds passed, while powered Wither visual verification remains pending.
+
+This is species-default parity for the tested attributes and passive rules, not parity for every mob AI action or captured individual variant. Flight continues to use player flight speed and controls. Client tests do not cover every mob visually or third-party mod combinations.

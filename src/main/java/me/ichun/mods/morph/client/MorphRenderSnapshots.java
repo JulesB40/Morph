@@ -82,6 +82,8 @@ public final class MorphRenderSnapshots {
             if (!(extracted instanceof LivingEntityRenderState target)) return null;
             copyPlayerMotion(source, target);
             me.ichun.mods.morph.client.animation.MorphWitherHeads.apply(target);
+            if (target instanceof net.minecraft.client.renderer.entity.state.WitherRenderState wither)
+                wither.isPowered = avatar.getHealth() <= avatar.getMaxHealth() * .5F;
             me.ichun.mods.morph.client.animation.MorphFlyingAnimation.apply(target,
                     avatar.onGround() && avatar.getDeltaMovement().lengthSqr() < 1.0E-7);
             MorphEquipmentRendering.finish(avatar, source, target);

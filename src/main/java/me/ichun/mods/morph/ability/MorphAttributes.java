@@ -17,18 +17,26 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
-/** Original default attribute policy, using owned transient modifiers rather than changing player bases. */
+/** Native species attributes, using owned transient modifiers rather than changing player bases. */
 public final class MorphAttributes {
     public static final Identifier MODIFIER = Identifier.fromNamespaceAndPath("morph", "form_attribute");
     private static final List<Holder<Attribute>> SUPPORTED = List.of(Attributes.MAX_HEALTH,
             Attributes.KNOCKBACK_RESISTANCE, Attributes.MOVEMENT_SPEED, Attributes.ATTACK_DAMAGE,
             Attributes.ATTACK_KNOCKBACK, Attributes.ATTACK_SPEED, Attributes.ARMOR, Attributes.LUCK,
-            Attributes.JUMP_STRENGTH);
+            Attributes.JUMP_STRENGTH, Attributes.ARMOR_TOUGHNESS,
+            Attributes.EXPLOSION_KNOCKBACK_RESISTANCE, Attributes.GRAVITY,
+            Attributes.SAFE_FALL_DISTANCE, Attributes.FALL_DAMAGE_MULTIPLIER,
+            Attributes.STEP_HEIGHT, Attributes.MOVEMENT_EFFICIENCY,
+            Attributes.WATER_MOVEMENT_EFFICIENCY, Attributes.OXYGEN_BONUS,
+            Attributes.BURNING_TIME, Attributes.MAX_ABSORPTION, Attributes.BOUNCINESS,
+            Attributes.AIR_DRAG_MODIFIER, Attributes.FRICTION_MODIFIER);
     private static final Map<Level, Map<String, Map<Holder<Attribute>, Double>>> DEFAULTS = new WeakHashMap<>();
     private static final Map<ServerPlayer, Transition> TRANSITIONS = new WeakHashMap<>();
     private record Transition(String form, long start, Map<Holder<Attribute>, Double> amounts) {}
     private static java.util.function.BiConsumer<ServerPlayer, HealthSnapshot> healthSync = (player, health) -> {};
     private MorphAttributes() {}
+
+    public static List<Holder<Attribute>> copiedAttributes() { return SUPPORTED; }
 
     public static void setHealthSync(java.util.function.BiConsumer<ServerPlayer, HealthSnapshot> sender) {
         healthSync = java.util.Objects.requireNonNull(sender);
@@ -125,13 +133,23 @@ public final class MorphAttributes {
                 return Map.of();
             }
             if (!(entity instanceof LivingEntity living) || living instanceof Avatar) return Map.of();
+            // LOAD construction omits spawn-time size initialization. Use the same
+            // default size as the render adapter, without spawning mobs or random gear.
+            if (living instanceof net.minecraft.world.entity.monster.cubemob.AbstractCubeMob cube)
+                cube.setSize(cube.getSize(), false);
+            if (living instanceof net.minecraft.world.entity.monster.Phantom phantom)
+                phantom.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(6 + phantom.getPhantomSize());
+            if (living instanceof net.minecraft.world.entity.monster.skeleton.WitherSkeleton)
+                living.getAttribute(Attributes.ATTACK_DAMAGE).setBaseValue(4);
             Map<Holder<Attribute>, Double> values = new HashMap<>();
             for (var attribute : SUPPORTED) {
                 var instance = living.getAttribute(attribute);
                 if (instance == null) continue;
                 double value = instance.getBaseValue();
-                if (attribute == Attributes.MAX_HEALTH) value = Math.min(value, 20.0);
-                if (attribute == Attributes.MOVEMENT_SPEED) value = Math.min(value, 0.1);
+                // Morph's shulker adapter stays closed; vanilla applies +20 covered
+                // armor when closing its shell in AI, which this adapter never ticks.
+                if (living instanceof net.minecraft.world.entity.monster.Shulker && attribute == Attributes.ARMOR)
+                    value += 20;
                 if (Double.isFinite(value)) values.put(attribute, value);
             }
             return Map.copyOf(values);

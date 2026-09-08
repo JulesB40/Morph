@@ -15,7 +15,7 @@ public final class MorphActions {
     public static void cleanup(ServerPlayer player) { LAST_FLAP.remove(player); }
 
     public static double flapImpulse(String form) {
-        if (form == null) return 0;
+        if (form == null || FormTraits.forForm(form).flight()) return 0;
         return switch (form) {
             case "minecraft:parrot", "minecraft:vex" -> 0.42;
             case "minecraft:phantom" -> 0.52;

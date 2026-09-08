@@ -31,6 +31,7 @@ public final class MorphService {
         NeoForge.EVENT_BUS.addListener(MorphService::tickAbilities);
         NeoForge.EVENT_BUS.addListener(MorphService::onFall);
         NeoForge.EVENT_BUS.addListener(MorphService::onIncomingDamage);
+        NeoForge.EVENT_BUS.addListener(MorphService::onDamageReduction);
         NeoForge.EVENT_BUS.addListener(MorphService::onLogout);
     }
 
@@ -154,6 +155,18 @@ public final class MorphService {
         if (event.getEntity() instanceof ServerPlayer player && player.isAlive()
                 && me.ichun.mods.morph.ability.MorphTraits.preventsDamage(player, collection(player).activeForm(), event.getSource()))
             event.setCanceled(true);
+    }
+
+    private static void onDamageReduction(net.neoforged.neoforge.event.entity.living.LivingDamageEvent.Pre event) {
+        // NeoForge ignores getDamageAfterMagicAbsorb's return value and uses this
+        // container instead. The shared vanilla return hook supplies Fabric's path.
+        if (event.getEntity() instanceof ServerPlayer player && "minecraft:witch".equals(collection(player).activeForm())) {
+            float fraction = event.getSource().getEntity() == player ? 1F
+                    : event.getSource().is(net.minecraft.tags.DamageTypeTags.WITCH_RESISTANT_TO) ? .85F : 0F;
+            if (fraction > 0) event.getContainer().setReduction(
+                    net.neoforged.neoforge.common.damagesource.DamageContainer.Reduction.INNATE_RESISTANCE,
+                    event.getNewDamage() * fraction);
+        }
     }
 
     private static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {

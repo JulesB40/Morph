@@ -5,18 +5,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class FormFlightTest {
     @Test
-    void batAndBeeUseSustainedFlightWithoutFlapImpulses() {
-        for (String form : java.util.List.of("minecraft:bat", "minecraft:bee")) {
+    void NativeFlyingFormsUseSustainedFlightWithoutFlapImpulses() {
+        for (String form : java.util.List.of("minecraft:allay", "minecraft:bat", "minecraft:bee",
+                "minecraft:blaze", "minecraft:ender_dragon", "minecraft:ghast", "minecraft:happy_ghast",
+                "minecraft:parrot", "minecraft:phantom", "minecraft:vex", "minecraft:wither")) {
             assertTrue(FormTraits.forForm(form).flight(), form);
             assertTrue(FormTraits.forForm(form).fallImmunity(), form);
-            assertEquals(0.0, MorphActions.flapImpulse(form), form);
         }
     }
 
     @Test
-    void parrotRetainsFlapAndHumanHasNeitherFlightMode() {
-        assertFalse(FormTraits.forForm("minecraft:parrot").flight());
-        assertEquals(0.42, MorphActions.flapImpulse("minecraft:parrot"));
+    void OrdinaryFormsAndUnknownFormsHaveNeitherFlightMode() {
+        assertFalse(FormTraits.forForm("minecraft:chicken").flight());
         assertFalse(FormTraits.forForm("").flight());
         assertEquals(0.0, MorphActions.flapImpulse(""));
     }

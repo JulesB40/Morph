@@ -119,12 +119,12 @@ public final class MorphFabricGameTests {
         MorphAttributes.tick(player, "minecraft:pig");
         near(helper, player.getMaxHealth(), 10.0F, "Pig has ten health");
         near(helper, player.getHealth(), 5.0F, "Morph preserves half health");
-        near(helper, (float) player.getAttributeValue(Attributes.MOVEMENT_SPEED), 0.1F, "Original movement speed cap");
+        near(helper, (float) player.getAttributeValue(Attributes.MOVEMENT_SPEED), 0.25F, "Native pig movement speed");
         MorphAttributes.tick(player, "minecraft:bat");
         near(helper, player.getMaxHealth(), 6.0F, "Bat has six health");
         near(helper, player.getHealth(), 3.0F, "Switching form preserves half health");
         MorphAttributes.tick(player, "minecraft:iron_golem");
-        near(helper, player.getMaxHealth(), 20.0F, "Original maximum health cap");
+        near(helper, player.getMaxHealth(), 100.0F, "Native iron golem health");
         MorphAttributes.tick(player, "minecraft:zombie");
         near(helper, (float) player.getAttributeValue(Attributes.ATTACK_DAMAGE), 3.0F, "Zombie attack strength");
         near(helper, (float) player.getAttributeValue(Attributes.ARMOR), 2.0F, "Zombie natural armor");
@@ -143,6 +143,8 @@ public final class MorphFabricGameTests {
         MorphAttributes.tick(player, "");
         near(helper, player.getMaxHealth(), 20.0F, "Reset restores human maximum");
         near(helper, player.getHealth(), 10.0F, "Reset preserves half health");
+        me.ichun.mods.morph.gametest.NativeAttributeChecks.verify(helper, player,
+                MorphFabric.data(helper.getLevel().getServer()).collection(player.getUUID()));
         player.setHealth(0.0F);
         MorphAttributes.tick(player, "minecraft:bat");
         MorphAttributes.cleanup(player);
@@ -258,7 +260,9 @@ public final class MorphFabricGameTests {
         helper.assertFalse(me.ichun.mods.morph.ability.MorphTraits.preventsDamage(spider, "minecraft:blaze", spider.damageSources().generic()), "Fire immunity does not grant general invulnerability");
         helper.assertTrue(me.ichun.mods.morph.ability.MorphAbilities.preventsFallDamage("minecraft:chicken"), "Chicken has original fall immunity");
         long flightSelectionTick = 300;
-        for (String flyingForm : java.util.List.of("minecraft:bat", "minecraft:bee")) {
+        for (String flyingForm : java.util.List.of("minecraft:allay", "minecraft:bat", "minecraft:bee", "minecraft:blaze",
+                "minecraft:ender_dragon", "minecraft:ghast", "minecraft:happy_ghast", "minecraft:parrot",
+                "minecraft:phantom", "minecraft:vex", "minecraft:wither")) {
             spiderForms.unlock(flyingForm);
             spiderForms.select(flyingForm, flightSelectionTick);
             flightSelectionTick += 40;
@@ -278,13 +282,11 @@ public final class MorphFabricGameTests {
             helper.assertFalse(spider.getAbilities().flying, "Reset stops Morph flight");
         }
         spiderForms.unlock("minecraft:parrot");
-        spiderForms.select("minecraft:parrot", 400);
+        spiderForms.select("minecraft:parrot", 1000);
         spider.setOnGround(false);
         spider.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
-        helper.assertTrue(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Airborne parrot accepts flap action");
-        helper.assertTrue(spider.getDeltaMovement().y > 0.4, "Flap applies upward impulse");
-        helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Repeated same tick flap is rate limited");
-        helper.assertFalse(spider.getAbilities().mayfly, "Parrot flap does not grant creative-style flight");
+        helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Old flap packets cannot add parrot air jumps");
+        helper.assertValueEqual(spider.getDeltaMovement(), net.minecraft.world.phys.Vec3.ZERO, "Rejected flap leaves velocity unchanged");
         spiderForms.reset();
         helper.assertFalse(me.ichun.mods.morph.ability.MorphActions.flap(spider), "Human form cannot flap");
         var fish = player(helper);
