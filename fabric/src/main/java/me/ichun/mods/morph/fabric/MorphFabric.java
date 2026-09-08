@@ -29,10 +29,19 @@ public final class MorphFabric implements ModInitializer {
         me.ichun.mods.morph.shape.ShapeHooks.refresh(player);
         me.ichun.mods.morph.ability.MorphAbilities.tick(player, forms(player).activeForm());
         owned(player);
-        var payload = new MorphAppearance(player.getUUID(), forms(player).activeForm());
+        var payload = new MorphAppearance(player.getUUID(), forms(player).activeForm(), data(player.level().getServer()).showNametag(player.getUUID()));
         for (var observer : player.level().getServer().getPlayerList().getPlayers()) {
             if (ServerPlayNetworking.canSend(observer, MorphAppearance.TYPE)) ServerPlayNetworking.send(observer, payload);
         }
+    }
+    private static int nametag(ServerPlayer player, Boolean visible) {
+        var saved = data(player.level().getServer());
+        saved.setShowNametag(player.getUUID(), visible == null ? !saved.showNametag(player.getUUID()) : visible);
+        var payload = new MorphAppearance(player.getUUID(), forms(player).activeForm(), saved.showNametag(player.getUUID()));
+        for (var observer : player.level().getServer().getPlayerList().getPlayers())
+            if (ServerPlayNetworking.canSend(observer, MorphAppearance.TYPE)) ServerPlayNetworking.send(observer, payload);
+        player.sendSystemMessage(Component.translatable(saved.showNametag(player.getUUID()) ? "morph.nametag.shown" : "morph.nametag.hidden"));
+        return 1;
     }
     private static void owned(ServerPlayer player) {
         if (ServerPlayNetworking.canSend(player, MorphOwned.TYPE)) ServerPlayNetworking.send(player, new MorphOwned(forms(player).ownedForms(), forms(player).activeForm()));
@@ -102,7 +111,7 @@ public final class MorphFabric implements ModInitializer {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             for (var player : server.getPlayerList().getPlayers()) {
                 if (ServerPlayNetworking.canSend(handler.player, MorphAppearance.TYPE)) {
-                    ServerPlayNetworking.send(handler.player, new MorphAppearance(player.getUUID(), forms(player).activeForm()));
+                    ServerPlayNetworking.send(handler.player, new MorphAppearance(player.getUUID(), forms(player).activeForm(), data(player.level().getServer()).showNametag(player.getUUID())));
                 }
             }
             sync(handler.player);
@@ -117,6 +126,10 @@ public final class MorphFabric implements ModInitializer {
         });
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> dispatcher.register(
             Commands.literal("morph")
+                .then(Commands.literal("nametag").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), null))
+                    .then(Commands.literal("toggle").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), null)))
+                    .then(Commands.literal("on").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), true)))
+                    .then(Commands.literal("off").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), false))))
                 .then(Commands.literal("menu").executes(ctx -> { owned(ctx.getSource().getPlayerOrException()); return 1; }))
                 .then(Commands.literal("list").executes(ctx -> {
                     var player = ctx.getSource().getPlayerOrException();

@@ -10,7 +10,8 @@
       "me.ichun.mods.morph.fabric.StabilityGameTests"
     ],
     "fabric-client-gametest": [
-      "me.ichun.mods.morph.fabric.MorphSwimmingClientGameTest"
+      "me.ichun.mods.morph.fabric.MorphSwimmingClientGameTest",
+      "me.ichun.mods.morph.fabric.MorphNametagClientGameTest"
     ]
   }
 }

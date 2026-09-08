@@ -25,14 +25,25 @@ public final class MorphSavedData extends SavedData {
     public static final Codec<MorphSavedData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.intRange(MorphCollection.CURRENT_SCHEMA, MorphCollection.CURRENT_SCHEMA)
                     .fieldOf("schema_version").forGetter(data -> MorphCollection.CURRENT_SCHEMA),
-            Codec.unboundedMap(UUIDUtil.STRING_CODEC, COLLECTION_CODEC).fieldOf("players").forGetter(data -> data.players)
-    ).apply(instance, (version, players) -> new MorphSavedData(players)));
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, COLLECTION_CODEC).fieldOf("players").forGetter(data -> data.players),
+            Codec.unboundedMap(UUIDUtil.STRING_CODEC, Codec.BOOL).optionalFieldOf("nametags", Map.of()).forGetter(data -> data.nametags)
+    ).apply(instance, (version, players, nametags) -> new MorphSavedData(players, nametags)));
     public static final SavedDataType<MorphSavedData> TYPE = new SavedDataType<>(
             Identifier.fromNamespaceAndPath("morph", "collections"), MorphSavedData::new, CODEC, null);
     private final Map<UUID, MorphCollection> players;
 
-    public MorphSavedData() { this(Map.of()); }
-    private MorphSavedData(Map<UUID, MorphCollection> players) { this.players = new HashMap<>(players); }
+    private final Map<UUID, Boolean> nametags;
+    public MorphSavedData() { this(Map.of(), Map.of()); }
+    private MorphSavedData(Map<UUID, MorphCollection> players, Map<UUID, Boolean> nametags) {
+        this.players = new HashMap<>(players);
+        this.nametags = new HashMap<>(nametags);
+    }
+    public boolean showNametag(UUID player) { return nametags.getOrDefault(player, true); }
+    public void setShowNametag(UUID player, boolean visible) {
+        if (showNametag(player) == visible) return;
+        if (visible) nametags.remove(player); else nametags.put(player, false);
+        setDirty();
+    }
     public MorphCollection collection(UUID player) {
         return players.computeIfAbsent(player, ignored -> new MorphCollection());
     }

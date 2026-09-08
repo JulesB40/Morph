@@ -35,7 +35,8 @@ public final class MorphUi {
         event.register(MorphNetwork.Health.TYPE, (payload, context) ->
                 me.ichun.mods.morph.client.health.MorphHealthSync.apply(payload.value()));
         event.register(MorphNetwork.State.TYPE, (payload, context) ->
-                ClientMorphState.update(payload.playerId(), payload.formId()));
+                { ClientMorphState.update(payload.playerId(), payload.formId());
+                  me.ichun.mods.morph.client.nametag.MorphNameTags.update(payload.playerId(), payload.showNametag()); });
         event.register(MorphNetwork.Transition.TYPE, (payload, context) ->
                 me.ichun.mods.morph.client.MorphTransitions.start(payload.playerId(), payload.fromForm(),
                         payload.toForm(), payload.durationTicks()));

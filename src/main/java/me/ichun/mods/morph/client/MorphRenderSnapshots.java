@@ -43,7 +43,9 @@ public final class MorphRenderSnapshots {
     }
 
     public static LivingEntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId) {
-        if (formId == null || source.isSpectator || FAILED_FORMS.contains(formId)) return null;
+        if (formId == null || formId.isEmpty()) return null;
+        me.ichun.mods.morph.client.nametag.MorphNameTags.apply(avatar.getUUID(), source);
+        if (source.isSpectator || FAILED_FORMS.contains(formId)) return null;
         var id = Identifier.tryParse(formId);
         if (id == null || !id.getNamespace().equals("minecraft")) return null;
         var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);

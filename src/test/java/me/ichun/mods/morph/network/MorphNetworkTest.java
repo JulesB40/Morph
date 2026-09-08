@@ -51,7 +51,7 @@ class MorphNetworkTest {
     @Test void stateRoundTripIncludesSubjectAndReset() {
         var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {
-            var state = new MorphNetwork.State(UUID.randomUUID(), "");
+            var state = new MorphNetwork.State(UUID.randomUUID(), "", false);
             MorphNetwork.State.CODEC.encode(buffer, state);
             assertEquals(state, MorphNetwork.State.CODEC.decode(buffer));
             assertFalse(buffer.isReadable());

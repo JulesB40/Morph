@@ -15,6 +15,7 @@ public final class MorphScreen extends Screen {
     private boolean loaded;
     private int page;
     private int pageSize = 6;
+    private Button nametagButton;
 
     public MorphScreen(Consumer<String> select) {
         super(Component.translatable("morph.selector.title"));
@@ -30,7 +31,7 @@ public final class MorphScreen extends Screen {
 
     @Override
     protected void init() {
-        pageSize = Math.max(1, Math.min(10, (height - 130) / 24));
+        pageSize = Math.max(1, Math.min(10, (height - 155) / 24));
         int pages = Math.max(1, (forms.size() + pageSize - 1) / pageSize);
         page = Math.min(page, pages - 1);
         int left = Math.max(4, width / 2 - 140);
@@ -41,7 +42,7 @@ public final class MorphScreen extends Screen {
             addRenderableWidget(Button.builder(Component.literal(label), b -> select.accept(id))
                     .bounds(left, 55 + (i % pageSize) * 24, buttonWidth, 20).build());
         }
-        int footer = Math.max(80, height - 65);
+        int footer = Math.max(80, height - 90);
         var previous = addRenderableWidget(Button.builder(Component.translatable("morph.selector.previous"), b -> {
             page--; rebuildWidgets();
         }).bounds(left, footer, buttonWidth / 2 - 2, 20).build());
@@ -50,11 +51,21 @@ public final class MorphScreen extends Screen {
             page++; rebuildWidgets();
         }).bounds(left + buttonWidth / 2 + 2, footer, buttonWidth / 2 - 2, 20).build());
         next.active = page + 1 < pages;
+        nametagButton = addRenderableWidget(Button.builder(nametagLabel(), b -> {
+            if (minecraft.player != null) minecraft.player.connection.sendCommand("morph nametag " +
+                    (me.ichun.mods.morph.client.nametag.MorphNameTags.visible(minecraft.player.getUUID()) ? "off" : "on"));
+        }).bounds(left, footer + 25, buttonWidth, 20).build());
         addRenderableWidget(Button.builder(Component.translatable("morph.selector.reset"), b -> select.accept(""))
-                .bounds(left, footer + 25, buttonWidth / 2 - 2, 20).build());
+                .bounds(left, footer + 50, buttonWidth / 2 - 2, 20).build());
         addRenderableWidget(Button.builder(Component.translatable("gui.done"), b -> onClose())
-                .bounds(left + buttonWidth / 2 + 2, footer + 25, buttonWidth / 2 - 2, 20).build());
+                .bounds(left + buttonWidth / 2 + 2, footer + 50, buttonWidth / 2 - 2, 20).build());
     }
+
+    private Component nametagLabel() {
+        boolean visible = minecraft.player == null || me.ichun.mods.morph.client.nametag.MorphNameTags.visible(minecraft.player.getUUID());
+        return Component.translatable(visible ? "morph.nametag.button.shown" : "morph.nametag.button.hidden");
+    }
+    public void refreshNametag() { if (nametagButton != null) nametagButton.setMessage(nametagLabel()); }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {

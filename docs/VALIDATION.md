@@ -92,3 +92,12 @@ Visual review caught a double rotation on illagers: their state inherits `Humano
 A focused pillager/villager/drowned client rerun passed after the rotation fix. It checks the actual renderer pose matrix for a horizontal pillager/villager body; drowned deliberately retains its native swimming lean. Corrected captures: [pillager](screenshots/swimming/0003_morph-fast-swim-pillager.png), [villager](screenshots/swimming/0002_morph-fast-swim-villager.png), [pig](screenshots/swimming/0000_morph-fast-swim-pig.png), [squid](screenshots/swimming/0012_morph-fast-swim-squid.png). The same source rig provides both editable Blockbench clips.
 
 See [swimming coverage](SWIMMING_COVERAGE.md) for family-specific behavior and remaining visual gaps, and [stability measurements](STABILITY.md) for the measured interpolation allocation/CPU changes. The test matrix does not cover every mob variant, two real networked clients, shaders or arbitrary mod combinations.
+
+
+## Alpha.5 nametag toggle
+
+Added the selector's **Morphed nametag: Shown/Hidden** button and `/morph nametag on|off|toggle`. The preference is authoritative, saved per player in the overworld data, and included in appearance synchronization for the subject and observers (including initial tracking/join). Missing fields in older saves default to shown. Hiding also suppresses below-name score text during morph rendering and transformation endpoints; returning fully to player form restores vanilla behavior. Shown continues to respect vanilla visibility/team rules.
+
+Both builds passed: NeoForge 37 unit tests and 20 server GameTests; Fabric 30 unit tests and 12 server GameTests. The Fabric live client scenario exercised command-to-packet synchronization, renderer snapshots with observer-style name/score fields, both selector-button directions, and reset. A pig sprint-swim regression also passed. [Selector screenshot](screenshots/nametag-toggle.png). Shared codec tests cover old-save defaults and independent player preference persistence. A real two-client nametag session was not performed.
+
+Use alpha.5 on client and server: NeoForge's protocol is now 5 and Fabric's appearance channel is versioned as `appearance_v2` to avoid decoding the old packet layout as the new one.

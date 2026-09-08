@@ -38,6 +38,14 @@ public final class MorphService {
         return player.level().getServer().overworld().getDataStorage().computeIfAbsent(MorphSavedData.TYPE);
     }
 
+    public static boolean showNametag(ServerPlayer player) { return data(player).showNametag(player.getUUID()); }
+    private static int nametag(ServerPlayer player, Boolean visible) {
+        data(player).setShowNametag(player.getUUID(), visible == null ? !showNametag(player) : visible);
+        MorphNetwork.broadcastState(player, collection(player).activeForm());
+        player.sendSystemMessage(Component.translatable(showNametag(player) ? "morph.nametag.shown" : "morph.nametag.hidden"));
+        return 1;
+    }
+
     public static MorphCollection collection(ServerPlayer player) { return data(player).collection(player.getUUID()); }
 
     private static boolean validForm(ServerPlayer player, String form) {
@@ -162,7 +170,7 @@ public final class MorphService {
     }
     private static void onStartTracking(PlayerEvent.StartTracking event) {
         if (event.getEntity() instanceof ServerPlayer observer && event.getTarget() instanceof ServerPlayer subject) {
-            MorphNetwork.sendState(observer, subject.getUUID(), collection(subject).activeForm());
+            MorphNetwork.sendState(observer, subject.getUUID(), collection(subject).activeForm(), showNametag(subject));
         }
     }
 
@@ -170,6 +178,10 @@ public final class MorphService {
 
     public static void registerCommands(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("morph")
+                .then(Commands.literal("nametag").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), null))
+                    .then(Commands.literal("toggle").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), null)))
+                    .then(Commands.literal("on").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), true)))
+                    .then(Commands.literal("off").executes(ctx -> nametag(ctx.getSource().getPlayerOrException(), false))))
                 .then(Commands.literal("list").executes(context -> {
                     ServerPlayer player = context.getSource().getPlayerOrException();
                     var forms = collection(player).ownedForms();

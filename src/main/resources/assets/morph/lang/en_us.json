@@ -5,7 +5,11 @@
   "morph.selector.previous": "Previous",
   "morph.selector.next": "Next",
   "morph.selector.reset": "Return to player",
-  "morph.selector.loading": "Loading your collection…",
+  "morph.selector.loading": "Loading your collection\u2026",
   "morph.selector.empty": "Kill a mob to acquire your first form.",
-  "morph.selector.count": "%s forms · Page %s / %s"
+  "morph.selector.count": "%s forms \u00b7 Page %s / %s",
+  "morph.nametag.button.shown": "Morphed nametag: Shown",
+  "morph.nametag.button.hidden": "Morphed nametag: Hidden",
+  "morph.nametag.shown": "Your nametag is shown while morphed.",
+  "morph.nametag.hidden": "Your nametag is hidden while morphed."
 }

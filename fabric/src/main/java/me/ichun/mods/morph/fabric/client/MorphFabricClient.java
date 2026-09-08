@@ -55,6 +55,7 @@ public final class MorphFabricClient implements ClientModInitializer {
         ClientPlayNetworking.registerGlobalReceiver(MorphAppearance.TYPE, (payload, context) -> context.client().execute(() -> {
             me.ichun.mods.morph.client.MorphTransitions.reconcile(payload.player(), payload.form());
             if (payload.form().isEmpty()) FORMS.remove(payload.player()); else FORMS.put(payload.player(), payload.form());
+            me.ichun.mods.morph.client.nametag.MorphNameTags.update(payload.player(), payload.showNametag());
             MorphRenderSnapshots.invalidate(payload.player());
             if (context.client().level != null) {
                 var player = context.client().level.getPlayerByUUID(payload.player());
@@ -63,6 +64,6 @@ public final class MorphFabricClient implements ClientModInitializer {
         }));
         ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphTransition.TYPE, (payload, context) -> context.client().execute(() ->
                 me.ichun.mods.morph.client.MorphTransitions.start(payload.player(), payload.fromForm(), payload.toForm(), payload.durationTicks())));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { FORMS.clear(); MorphRenderSnapshots.clear(); });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { FORMS.clear(); me.ichun.mods.morph.client.nametag.MorphNameTags.clear(); MorphRenderSnapshots.clear(); });
     }
 }

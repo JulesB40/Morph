@@ -19,7 +19,7 @@ public final class MorphNetwork {
     private MorphNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("4");
+        var registrar = event.registrar("5");
         registrar.playToServer(Flap.TYPE, Flap.CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player) me.ichun.mods.morph.ability.MorphActions.flap(player);
         });
@@ -38,9 +38,9 @@ public final class MorphNetwork {
         });
     }
 
-    public static void sendState(ServerPlayer recipient, UUID subject, String formId) {
+    public static void sendState(ServerPlayer recipient, UUID subject, String formId, boolean showNametag) {
         if (recipient.connection != null && recipient.connection.hasChannel(State.TYPE))
-            PacketDistributor.sendToPlayer(recipient, new State(subject, formId));
+            PacketDistributor.sendToPlayer(recipient, new State(subject, formId, showNametag));
     }
 
     public static void sendHealth(ServerPlayer recipient, me.ichun.mods.morph.ability.HealthSnapshot health) {
@@ -66,8 +66,8 @@ public final class MorphNetwork {
     }
 
     public static void broadcastState(ServerPlayer subject, String formId) {
-        PacketDistributor.sendToPlayersTrackingEntity(subject, new State(subject.getUUID(), formId));
-        sendState(subject, subject.getUUID(), formId);
+        PacketDistributor.sendToPlayersTrackingEntity(subject, new State(subject.getUUID(), formId, MorphService.showNametag(subject)));
+        sendState(subject, subject.getUUID(), formId, MorphService.showNametag(subject));
     }
 
     public static void sendCollection(ServerPlayer recipient, List<String> forms, String activeForm) {
@@ -102,13 +102,15 @@ public final class MorphNetwork {
         public Type<Transition> type() { return TYPE; }
     }
 
-    public record State(UUID playerId, String formId) implements CustomPacketPayload {
+    public record State(UUID playerId, String formId, boolean showNametag) implements CustomPacketPayload {
+        public State(UUID playerId, String formId) { this(playerId, formId, true); }
         public static final Type<State> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "state"));
         public static final StreamCodec<FriendlyByteBuf, State> CODEC = new StreamCodec<>() {
-            public State decode(FriendlyByteBuf buf) { return new State(buf.readUUID(), buf.readUtf(MAX_ID_LENGTH)); }
+            public State decode(FriendlyByteBuf buf) { return new State(buf.readUUID(), buf.readUtf(MAX_ID_LENGTH), buf.readBoolean()); }
             public void encode(FriendlyByteBuf buf, State value) {
                 buf.writeUUID(value.playerId());
                 buf.writeUtf(value.formId(), MAX_ID_LENGTH);
+                buf.writeBoolean(value.showNametag());
             }
         };
         public Type<State> type() { return TYPE; }

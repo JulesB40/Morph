@@ -13,6 +13,7 @@ Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraf
 - Standing/crouching hitbox and eye height follow the form, with collision checks before expansion.
 - Health, damage, armor, movement, knockback and jump attributes follow the form, preserving injuries and original default caps.
 - Original Classic traits include flight/flapping, climbing, swimming, immunities and weaknesses, attack effects, hostile disguises, intimidation and eligible rideable forms. See [abilities and controls](docs/ABILITIES.md).
+- In the selector, click **Morphed nametag: Shown/Hidden** to toggle your tag for other players while transformed. You can also use `/morph nametag on`, `off`, or `toggle`. The setting is saved per player in the world, defaults to shown, and leaves normal-player nametags unchanged. Vanilla visibility/team rules still apply when shown.
 - Compatible vanilla mob layers display your held items and armor, including handedness and item-use poses. Models without the corresponding layers retain their native appearance.
 - Swimming and sprint-swimming animations follow mob model families, including villagers, illagers, quadrupeds and other native rigs. Ordinary zombies walk underwater; drowned retain swimming. See [coverage and limits](docs/SWIMMING_COVERAGE.md) and [Blockbench animation sources](art/blockbench/README.md).
 

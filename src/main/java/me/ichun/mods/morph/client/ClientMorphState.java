@@ -31,6 +31,7 @@ public final class ClientMorphState {
 
     public static void clear() {
         FORMS.clear();
+        me.ichun.mods.morph.client.nametag.MorphNameTags.clear();
         MorphRenderSnapshots.clear();
     }
 }

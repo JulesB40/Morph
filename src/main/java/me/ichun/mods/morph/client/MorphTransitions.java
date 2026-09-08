@@ -37,6 +37,7 @@ public final class MorphTransitions {
             cancel(avatar.getUUID());
             return null;
         }
+        me.ichun.mods.morph.client.nametag.MorphNameTags.apply(avatar.getUUID(), source);
         var from = transition.from.isEmpty() ? source : MorphRenderSnapshots.extract(avatar, source, transition.from);
         var to = transition.to.isEmpty() ? source : MorphRenderSnapshots.extract(avatar, source, transition.to);
         if (from == null || to == null) return null;

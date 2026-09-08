@@ -21,6 +21,22 @@ class MorphSavedDataTest {
         assertEquals("", restored.collection(second).activeForm());
     }
 
+    @Test void nametagPreferencePersistsAndOldSavesDefaultToVisible() {
+        UUID id = UUID.randomUUID();
+        var old = MorphSavedData.CODEC.parse(JsonOps.INSTANCE,
+                JsonParser.parseString("{\"schema_version\":1,\"players\":{}}")).getOrThrow();
+        assertTrue(old.showNametag(id));
+        old.setShowNametag(id, false);
+        var restored = MorphSavedData.CODEC.parse(JsonOps.INSTANCE,
+                MorphSavedData.CODEC.encodeStart(JsonOps.INSTANCE, old).getOrThrow()).getOrThrow();
+        assertFalse(restored.showNametag(id));
+        assertTrue(restored.showNametag(UUID.randomUUID()));
+        restored.collection(id).reset();
+        assertFalse(restored.showNametag(id));
+        restored.setShowNametag(id, true);
+        assertTrue(restored.showNametag(id));
+    }
+
     @Test void futureSchemaAndMalformedIdsProduceCodecErrors() {
         assertTrue(MorphSavedData.CODEC.parse(JsonOps.INSTANCE,
                 JsonParser.parseString("{\"schema_version\":2,\"players\":{}}")).error().isPresent());
