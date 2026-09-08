@@ -81,6 +81,7 @@ public final class MorphRenderSnapshots {
             EntityRenderState extracted = createState(adapter, partialTick);
             if (!(extracted instanceof LivingEntityRenderState target)) return null;
             copyPlayerMotion(source, target);
+            me.ichun.mods.morph.client.animation.MorphWitherHeads.apply(target);
             MorphEquipmentRendering.finish(avatar, source, target);
             me.ichun.mods.morph.client.animation.MorphSwimming.extract(avatar, source, target, formId);
             return target;

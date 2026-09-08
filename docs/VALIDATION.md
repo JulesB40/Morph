@@ -101,3 +101,7 @@ Added the selector's **Morphed nametag: Shown/Hidden** button and `/morph nameta
 Both builds passed: NeoForge 37 unit tests and 20 server GameTests; Fabric 30 unit tests and 12 server GameTests. The Fabric live client scenario exercised command-to-packet synchronization, renderer snapshots with observer-style name/score fields, both selector-button directions, and reset. A pig sprint-swim regression also passed. [Selector screenshot](screenshots/nametag-toggle.png). Shared codec tests cover old-save defaults and independent player preference persistence. A real two-client nametag session was not performed.
 
 Use alpha.5 on client and server: NeoForge's protocol is now 5 and Fabric's appearance channel is versioned as `appearance_v2` to avoid decoding the old packet layout as the new one.
+
+## Alpha 6: Wither side-head rotation
+
+The shared morph snapshot now supplies world-space side-head yaw from the copied body yaw plus relative look yaw, and copies look pitch. Unticked adapter head arrays previously stayed at zero, making the heads face south. This applies to both loaders and transition snapshots. A regression test runs the vanilla Wither model across 63 body/look/pitch combinations and asserts that both side heads match the center head. No new in-game visual verification is claimed for this fix.
