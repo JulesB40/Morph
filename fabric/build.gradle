@@ -1,0 +1,52 @@
+plugins {
+    id 'net.fabricmc.fabric-loom' version '1.17.20'
+    id 'maven-publish'
+}
+version = '11.0.0-alpha.1'
+group = 'me.ichun.mods.morph'
+base { archivesName = 'Morph-Fabric-26.2' }
+java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
+repositories { mavenCentral() }
+dependencies {
+    minecraft 'com.mojang:minecraft:26.2'
+    implementation 'net.fabricmc:fabric-loader:0.19.5'
+    implementation 'net.fabricmc.fabric-api:fabric-api:0.160.0+26.2'
+    testImplementation platform('org.junit:junit-bom:5.12.2')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+// Share only vanilla/model code; NeoForge entrypoints never enter the Fabric artifact.
+sourceSets.main.java {
+    srcDir '../src/main/java'
+    include 'me/ichun/mods/morph/fabric/**'
+    include 'me/ichun/mods/morph/model/**'
+    include 'me/ichun/mods/morph/shape/**'
+    include 'me/ichun/mods/morph/ability/**'
+    include 'me/ichun/mods/morph/server/MorphSavedData.java'
+    include 'me/ichun/mods/morph/client/MorphRenderSnapshots.java'
+    include 'me/ichun/mods/morph/ui/MorphScreen.java'
+}
+sourceSets.test.java { srcDir '../src/test/java'; include 'me/ichun/mods/morph/model/**'; include 'me/ichun/mods/morph/ability/**' }
+processResources {
+    inputs.property 'version', project.version
+    filesMatching('fabric.mod.json') { expand version: project.version }
+    from('../src/main/resources') { include 'assets/morph/**' }
+}
+test { useJUnitPlatform() }
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(Jar).configureEach {
+    from('../COPYING', '../COPYING.LESSER')
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+fabricApi {
+    configureTests {
+        createSourceSet = true
+        modId = 'morph-test'
+        enableGameTests = true
+        enableClientGameTests = false
+    }
+}
+
+// Stable development identity makes save/rejoin testing repeatable.
+loom.runs.client { programArgs '--username', 'MorphTester' }

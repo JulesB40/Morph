@@ -1,0 +1,8 @@
+* text=auto
+gradlew text eol=lf
+fabric/gradlew text eol=lf
+*.bat text eol=crlf
+*.jar binary
+*.png binary
+*.ogg binary
+*.zip binary

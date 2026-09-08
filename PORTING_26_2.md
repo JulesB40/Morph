@@ -1,10 +1,10 @@
 # Morph port to Minecraft Java 26.2
 
-Prepared 2026-09-08. Status: planning only; no playable 26.2 build yet.
+Prepared 2026-09-08. Implementation has started on `codex/port-26.2`; see README and docs/VALIDATION.md for current scope and verified results. The original milestones below remain the full-parity backlog.
 
 ## Recommendation and scope
 
-Port directly from the upstream `1.16` branch to **Minecraft Java Edition 26.2, NeoForge, Java 25**. Use a fresh target-version build setup and migrate subsystems incrementally. NeoForge is the proposed first loader because this source uses Forge events, capabilities, and registration extensively. Fabric support is a separate follow-up, not a prerequisite for the first release. The loader choice is a project recommendation, not an upstream commitment.
+Port directly from the upstream `1.16` branch to **Minecraft Java Edition 26.2, NeoForge and Fabric, Java 25**. The user requested both loaders during implementation. Use independent pinned loader builds and explicitly shared vanilla/model code, migrating subsystems incrementally. Both builds need their own runtime verification before release.
 
 First deliver a multiplayer-safe classic morph loop: kill a supported mob, acquire its form, select it, transform, return to player, and retain the collection after reconnect/restart. Full parity then restores variants, favorites, traits, abilities, biomass progression, other modes, and authoring tools. A first playable milestone is explicitly not full parity.
 

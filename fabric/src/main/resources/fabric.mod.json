@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "id": "morph",
+  "version": "${version}",
+  "name": "Morph (Fabric 26.2 port)",
+  "description": "Early, community-maintained Morph port. Kill living creatures to collect and select forms.",
+  "authors": ["iChun", "Morph port contributors"],
+  "license": "LGPL-3.0-only",
+  "environment": "*",
+  "entrypoints": { "main": ["me.ichun.mods.morph.fabric.MorphFabric"], "client": ["me.ichun.mods.morph.fabric.client.MorphFabricClient"] },
+  "mixins": ["morph.fabric.mixins.json", "morph.fabric.shape.mixins.json", "morph.fabric.ability.mixins.json"],
+  "depends": { "fabricloader": ">=0.19.5", "minecraft": "26.2", "java": ">=25", "fabric-api": ">=0.160.0+26.2" }
+}
+
+
+

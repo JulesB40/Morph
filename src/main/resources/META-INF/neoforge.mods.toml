@@ -1,0 +1,24 @@
+license="LGPL-3.0-only"
+issueTrackerURL="https://github.com/JulesB40/Morph/issues"
+[[mods]]
+modId="morph"
+version="${mod_version}"
+displayName="Morph (26.2 development port)"
+authors="iChun; port contributors"
+description='''Development port of Morph. Feature parity is in progress.'''
+[[mixins]]
+config="morph.mixins.json"
+[[mixins]]
+config="morph.abilities.mixins.json"
+[[dependencies.morph]]
+modId="neoforge"
+type="required"
+versionRange="[${neo_version},26.3)"
+ordering="NONE"
+side="BOTH"
+[[dependencies.morph]]
+modId="minecraft"
+type="required"
+versionRange="[26.2]"
+ordering="NONE"
+side="BOTH"

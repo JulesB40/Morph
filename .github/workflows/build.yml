@@ -1,0 +1,39 @@
+name: Build 26.2
+on: [push, pull_request, workflow_dispatch]
+permissions:
+  contents: read
+jobs:
+  neoforge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew --no-daemon build
+      - run: ./gradlew --no-daemon runGameTestServer
+      - uses: actions/upload-artifact@v4
+        with:
+          name: morph-neoforge-26.2-development
+          path: build/libs/*.jar
+  fabric:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fabric
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+      - uses: gradle/actions/setup-gradle@v4
+      - run: chmod +x gradlew
+      - run: ./gradlew --no-daemon build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: morph-fabric-26.2-development
+          path: fabric/build/libs/*.jar

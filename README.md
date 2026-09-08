@@ -1,14 +1,47 @@
-Morph
-====================
+# Morph — Minecraft 26.2 port
 
-Gameplay:
+Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraft Java 26.2**, with separate **NeoForge** and **Fabric** builds. Requires **Java 25**. This is an early development port, not a feature-complete replacement for Morph 1.16.5.
 
-- Kill a mob to acquire it as morph.
-- Hit "[" or "]" (defaults) to open the Morph Selection GUI and scroll up and down.
-- Hit "[" or "]" while holding SHIFT (defaults) to scroll left and right.
-- Hit ENTER/RETURN/LEFT CLICK to select a Morph.
-- Hit ESCAPE/RIGHT CLICK to close the GUI.
-- Hit DELETE/BACKSPACE to delete a Morph.
+## Current implementation
 
-Config file for more options.
-Requires iChunUtil and Minecraft Forge
+- Kill a supported vanilla living mob to acquire its entity type.
+- Press **[** (rebindable in Controls) to select a collected form or return to the player.
+- The server validates ownership and synchronizes appearance to observers.
+- Collections persist per player UUID in the world's Morph saved data. Death resets appearance while retaining the collection.
+- `/morph list`, `/morph select minecraft:pig`, and `/morph reset` are available to players. Operators can grant a test form with `/morph grant minecraft:pig` on NeoForge or `/morph grant @s minecraft:pig` on Fabric.
+- Standing/crouching hitbox and eye height follow the form, with collision checks before expansion.
+- Bat, bee, and parrot forms can fly and negate fall damage; supported aquatic forms breathe underwater. See [the trait table](docs/ABILITIES.md).
+
+There is a one-second selection cooldown and a maximum of 256 collected entity types. Returning to the player requires sufficient space. No arbitrary entity NBT is accepted from clients.
+
+## Building
+
+From the repository root:
+
+```powershell
+# NeoForge 26.2.0.82, ModDevGradle 2.0.146, Gradle 9.2.1
+.\gradlew.bat build
+.\gradlew.bat runClient
+
+# Fabric uses its own pinned toolchain and wrapper
+cd fabric
+.\gradlew.bat build
+.\gradlew.bat runClient
+```
+
+On Linux/macOS use `./gradlew` in the corresponding directory. The configured toolchain resolver can provision Java 25 for builds. NeoForge outputs are in `build/libs`; Fabric outputs are in `fabric/build/libs`. Install only the JAR matching your loader, not the `-sources` JAR. Install the same loader and Morph version on client and server; Fabric also requires Fabric API. Do not install both Morph builds together. iChunUtil is not required by this port.
+
+## Development status and limitations
+
+The first milestone focuses on the classic acquisition/selection loop. It currently uses default entity appearances: individual variants, favorites/deletion, player forms, modded mobs, legacy model interpolation, first-person mob hands, biomass progression, complete trait/ability parity, and the legacy editors are unfinished. Only the traits explicitly listed above are implemented. Rendering and multiplayer runtime results are tracked in [the validation report](docs/VALIDATION.md).
+
+The new versioned save format is separate from the legacy `morph_save` data. **There is no 1.16.5 save importer yet.** Test with a new world or a copy; this port does not promise legacy world migration.
+
+## Repository layout
+
+- `src/main`: NeoForge implementation plus explicitly shared vanilla/model code.
+- `fabric`: independent Fabric build, using the shared model, save codec, selector, and rendering adapter.
+- `legacy/1.16.5`: untouched upstream source retained for porting reference; excluded from both builds.
+- [Porting plan](PORTING_26_2.md), [dependency audit](docs/DEPENDENCY_AUDIT.md), and [rendering audit](docs/RENDERING_26_2_AUDIT.md).
+
+Original work by iChun and upstream contributors. LGPLv3 license texts are retained in `COPYING` and `COPYING.LESSER` and included in generated JARs. NeoForge MDK template attribution is retained in `TEMPLATE_LICENSE.txt`.
