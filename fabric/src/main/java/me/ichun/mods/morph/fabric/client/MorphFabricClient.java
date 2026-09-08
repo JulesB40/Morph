@@ -17,6 +17,10 @@ public final class MorphFabricClient implements ClientModInitializer {
     private static final java.util.Set<net.minecraft.world.entity.player.Player> SEEN = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
     public static final Map<UUID, String> FORMS = new HashMap<>();
     @Override public void onInitializeClient() {
+        net.fabricmc.fabric.api.resource.v1.ResourceLoader.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+            .registerReloadListener(net.minecraft.resources.Identifier.fromNamespaceAndPath("morph", "swim_animation"),
+                (net.minecraft.server.packs.resources.ResourceManagerReloadListener)
+                    me.ichun.mods.morph.client.animation.MorphSwimAnimation::reload);
         me.ichun.mods.morph.shape.ShapeHooks.setClientFormResolver(player -> FORMS.get(player.getUUID()));
         var open = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
             new net.minecraft.client.KeyMapping("key.morph.select", org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_BRACKET, net.minecraft.client.KeyMapping.Category.GAMEPLAY));

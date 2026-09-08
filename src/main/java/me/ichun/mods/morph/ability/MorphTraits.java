@@ -70,6 +70,7 @@ public final class MorphTraits {
         if (form == null || form.isEmpty() || !player.isAlive() || player.isSpectator()) { cleanup(player); return; }
         MorphInteractions.tick(player, form);
         MorphActions.tick(player, form);
+        MorphSwimmingRules.beforeTravel(player);
         if (FormTraits.forForm(form).waterBreathing() && player.isUnderWater()) {
             player.setAirSupply(Math.min(player.getMaxAirSupply(), player.getAirSupply() + 4));
         }
@@ -81,16 +82,20 @@ public final class MorphTraits {
                 step.addOrUpdateTransientModifier(new AttributeModifier(STEP_MODIFIER, amount, AttributeModifier.Operation.ADD_VALUE));
         }
         if (fireImmune(form)) player.clearFire();
-        for (MobEffectInstance effect : java.util.List.copyOf(player.getActiveEffects())) {
-            if (rejectsEffect(player, effect)) player.removeEffect(effect.getEffect());
+        if (isUndead(form) || "minecraft:wither".equals(form)) {
+            for (MobEffectInstance effect : java.util.List.copyOf(player.getActiveEffects())) {
+                if (rejectsEffect(player, effect)) player.removeEffect(effect.getEffect());
+            }
         }
         if (player.isCreative()) { DRY_TIME.remove(player); return; }
         if (WATER_SENSITIVE.contains(form) && player.isInWaterOrRain()) {
             player.hurtServer(player.level(), player.damageSources().drown(), 1);
+            if (!player.isAlive()) return;
         }
         if ("minecraft:snow_golem".equals(form)
                 && player.level().environmentAttributes().getValue(EnvironmentAttributes.SNOW_GOLEM_MELTS, player.position())) {
             player.hurtServer(player.level(), player.damageSources().onFire(), 1);
+            if (!player.isAlive()) return;
         }
         int dryLimit = WATER_ONLY.contains(form) ? 300 : "minecraft:dolphin".equals(form) ? 2400
                 : "minecraft:axolotl".equals(form) ? 6000 : 0;
@@ -100,6 +105,7 @@ public final class MorphTraits {
             if (player.isInWaterOrRain()) dry.ticks = 0;
             else if (usesDryAir(player, form) && ++dry.ticks >= dryLimit && (WATER_ONLY.contains(form) ? (dry.ticks - dryLimit) % 20 == 0 : true)) {
                 player.hurtServer(player.level(), WATER_ONLY.contains(form) ? player.damageSources().drown() : player.damageSources().dryOut(), WATER_ONLY.contains(form) ? 2 : 1);
+                if (!player.isAlive()) return;
             }
         } else DRY_TIME.remove(player);
         if (SUN_SENSITIVE.contains(form)) burnInSun(player);

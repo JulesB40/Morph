@@ -1,6 +1,7 @@
 package me.ichun.mods.morph.client;
 
 import com.mojang.logging.LogUtils;
+import me.ichun.mods.morph.client.equipment.MorphEquipmentRendering;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -35,6 +36,7 @@ public final class MorphRenderSnapshots {
     }
 
     public static void clear() {
+        me.ichun.mods.morph.client.transition.MorphTransitionRenderer.clearFailures();
         ADAPTERS.clear();
         FAILED_FORMS.clear();
         MorphTransitions.clear();
@@ -72,10 +74,13 @@ public final class MorphRenderSnapshots {
             adapter.xRotO = avatar.xRotO;
             adapter.setInvisible(avatar.isInvisible());
             adapter.setDeltaMovement(avatar.getDeltaMovement());
+            MorphEquipmentRendering.prepare(avatar, adapter);
             float partialTick = source.ageInTicks - avatar.tickCount;
             EntityRenderState extracted = createState(adapter, partialTick);
             if (!(extracted instanceof LivingEntityRenderState target)) return null;
             copyPlayerMotion(source, target);
+            MorphEquipmentRendering.finish(avatar, source, target);
+            me.ichun.mods.morph.client.animation.MorphSwimming.extract(avatar, source, target, formId);
             return target;
         } catch (RuntimeException failure) {
             // Unsupported renderers should leave the real player visible and log only once per session.

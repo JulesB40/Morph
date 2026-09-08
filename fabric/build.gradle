@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.20'
     id 'maven-publish'
 }
-version = '11.0.0-alpha.3'
+version = '11.0.0-alpha.4'
 group = 'me.ichun.mods.morph'
 base { archivesName = 'Morph-Fabric-26.2' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
@@ -27,6 +27,8 @@ sourceSets.main.java {
     include 'me/ichun/mods/morph/client/MorphTransitions.java'
     include 'me/ichun/mods/morph/client/transition/**'
     include 'me/ichun/mods/morph/client/health/**'
+    include 'me/ichun/mods/morph/client/equipment/**'
+    include 'me/ichun/mods/morph/client/animation/**'
     include 'me/ichun/mods/morph/ui/MorphScreen.java'
 }
 sourceSets.test.java {
@@ -34,11 +36,12 @@ sourceSets.test.java {
     include 'me/ichun/mods/morph/model/**'
     include 'me/ichun/mods/morph/ability/**'
     include 'me/ichun/mods/morph/client/transition/**'
+    include 'me/ichun/mods/morph/client/animation/**'
 }
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') { expand version: project.version }
-    from('../src/main/resources') { include 'assets/morph/**' }
+    from('../src/main/resources') { include 'assets/morph/**'; include 'morph.animation.mixins.json' }
 }
 test { useJUnitPlatform() }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
@@ -52,7 +55,7 @@ fabricApi {
         createSourceSet = true
         modId = 'morph-test'
         enableGameTests = true
-        enableClientGameTests = false
+        enableClientGameTests = true
     }
 }
 

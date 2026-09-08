@@ -9,7 +9,8 @@
     "EntitySwimMixin",
     "MobTargetMixin",
     "MorphRidingMixin",
-    "MorphPlayerVehicleMixin"
+    "MorphPlayerVehicleMixin",
+    "PlayerSwimmingRulesMixin"
   ],
   "injectors": {
     "defaultRequire": 1

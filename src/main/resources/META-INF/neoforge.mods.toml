@@ -10,6 +10,8 @@ description='''Development port of Morph. Feature parity is in progress.'''
 config="morph.mixins.json"
 [[mixins]]
 config="morph.abilities.mixins.json"
+[[mixins]]
+config="morph.animation.mixins.json"
 [[dependencies.morph]]
 modId="neoforge"
 type="required"

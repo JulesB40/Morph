@@ -8,6 +8,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
@@ -16,6 +18,13 @@ import net.minecraft.world.phys.Vec3;
 
 @Mixin(LivingEntity.class)
 abstract class LivingEntityTraitsMixin {
+    @Shadow protected boolean jumping;
+
+    @Redirect(method = "aiStep", at = @At(value = "FIELD", target = "Lnet/minecraft/world/entity/LivingEntity;jumping:Z", opcode = 180))
+    private boolean morph$voluntaryWaterJump(LivingEntity entity) {
+        return jumping && (!(entity instanceof Player player)
+                || me.ichun.mods.morph.ability.MorphSwimmingRules.allowsJumpInput(player));
+    }
     @Inject(method = "travel", at = @At("RETURN"))
     private void morph$movement(Vec3 input, CallbackInfo ci) {
         if ((Object) this instanceof Player player) MorphTraits.movement(player);

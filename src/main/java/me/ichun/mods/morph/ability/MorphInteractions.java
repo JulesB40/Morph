@@ -40,25 +40,39 @@ public final class MorphInteractions {
     }
     private record Fear(String target, double range, double far, double near) {
         boolean matches(Mob mob) {
-            String id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).toString();
+
             if (target.equals("villager")) return mob instanceof net.minecraft.world.entity.npc.villager.AbstractVillager;
-            return target.equals("skeletons") ? mob instanceof net.minecraft.world.entity.monster.skeleton.AbstractSkeleton
-                : id.equals("minecraft:" + target);
+            if (target.equals("skeletons")) return mob instanceof net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+            var id = BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType());
+            return id.getNamespace().equals("minecraft") && id.getPath().equals(target);
         }
     }
+    private static final java.util.Map<String, List<Fear>> FEARS = createFears();
+    private static java.util.Map<String, List<Fear>> createFears() {
+        var rules = new java.util.HashMap<String, List<Fear>>();
+        rules.put("cat", List.of(new Fear("creeper", 6, 1, 1.2)));
+        rules.put("ocelot", List.of(new Fear("creeper", 6, 1, 1.2)));
+        rules.put("guardian", List.of(new Fear("dolphin", 8, 1, 1)));
+        rules.put("elder_guardian", List.of(new Fear("dolphin", 8, 1, 1)));
+        rules.put("llama", List.of(new Fear("wolf", 24, 1.5, 1.5)));
+        rules.put("trader_llama", List.of(new Fear("wolf", 24, 1.5, 1.5)));
+        rules.put("polar_bear", List.of(new Fear("fox", 8, 1.6, 1.4)));
+        rules.put("wolf", List.of(new Fear("skeletons", 6, 1, 1.2), new Fear("fox", 8, 1.6, 1.4), new Fear("rabbit", 10, 2.2, 2.2)));
+        rules.put("drowned", List.of(new Fear("villager", 8, .5, .5)));
+        rules.put("husk", List.of(new Fear("villager", 8, .5, .5)));
+        rules.put("vex", List.of(new Fear("villager", 8, .5, .5)));
+        rules.put("zombie", List.of(new Fear("villager", 8, .5, .5)));
+        rules.put("zombie_villager", List.of(new Fear("villager", 8, .5, .5)));
+        rules.put("vindicator", List.of(new Fear("villager", 10, .5, .5)));
+        rules.put("zoglin", List.of(new Fear("villager", 10, .5, .5)));
+        rules.put("evoker", List.of(new Fear("villager", 12, .5, .5)));
+        rules.put("illusioner", List.of(new Fear("villager", 12, .5, .5)));
+        rules.put("ravager", List.of(new Fear("villager", 12, .5, .5)));
+        rules.put("pillager", List.of(new Fear("villager", 15, .5, .5)));
+        return java.util.Map.copyOf(rules);
+    }
     private static List<Fear> fears(String form) {
-        return switch (form) {
-            case "cat", "ocelot" -> List.of(new Fear("creeper", 6, 1, 1.2));
-            case "guardian", "elder_guardian" -> List.of(new Fear("dolphin", 8, 1, 1));
-            case "llama", "trader_llama" -> List.of(new Fear("wolf", 24, 1.5, 1.5));
-            case "polar_bear" -> List.of(new Fear("fox", 8, 1.6, 1.4));
-            case "wolf" -> List.of(new Fear("skeletons", 6, 1, 1.2), new Fear("fox", 8, 1.6, 1.4), new Fear("rabbit", 10, 2.2, 2.2));
-            case "drowned", "husk", "vex", "zombie", "zombie_villager" -> List.of(new Fear("villager", 8, .5, .5));
-            case "vindicator", "zoglin" -> List.of(new Fear("villager", 10, .5, .5));
-            case "evoker", "illusioner", "ravager" -> List.of(new Fear("villager", 12, .5, .5));
-            case "pillager" -> List.of(new Fear("villager", 15, .5, .5));
-            default -> List.of();
-        };
+        return FEARS.getOrDefault(form, List.of());
     }
     public static void tick(ServerPlayer player, String form) {
         if (MOUNTS.containsKey(player)) {
@@ -104,10 +118,15 @@ public final class MorphInteractions {
                 }
             }
             if (threat == null) return false;
-            var away = DefaultRandomPos.getPosAway(mob, 16, 7, threat.position());
-            if (away == null || threat.distanceToSqr(away) <= threat.distanceToSqr(mob)) return false;
-            path = mob.getNavigation().createPath(away.x, away.y, away.z, 0);
-            return path != null;
+            // Flat terrain can reject most random vertical samples. Bound retries so a single
+            // unlucky destination does not leave the creature idle for the whole search interval.
+            for (int attempt = 0; attempt < 4; attempt++) {
+                var away = DefaultRandomPos.getPosAway(mob, 16, 7, threat.position());
+                if (away == null || threat.distanceToSqr(away) <= threat.distanceToSqr(mob)) continue;
+                path = mob.getNavigation().createPath(away.x, away.y, away.z, 0);
+                if (path != null) return true;
+            }
+            return false;
         }
         @Override public boolean canContinueToUse() {
             return threat != null && threat.isAlive() && !threat.isSpectator() && !mob.getNavigation().isDone()

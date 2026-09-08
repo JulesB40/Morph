@@ -13,6 +13,8 @@ Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraf
 - Standing/crouching hitbox and eye height follow the form, with collision checks before expansion.
 - Health, damage, armor, movement, knockback and jump attributes follow the form, preserving injuries and original default caps.
 - Original Classic traits include flight/flapping, climbing, swimming, immunities and weaknesses, attack effects, hostile disguises, intimidation and eligible rideable forms. See [abilities and controls](docs/ABILITIES.md).
+- Compatible vanilla mob layers display your held items and armor, including handedness and item-use poses. Models without the corresponding layers retain their native appearance.
+- Swimming and sprint-swimming animations follow mob model families, including villagers, illagers, quadrupeds and other native rigs. Ordinary zombies walk underwater; drowned retain swimming. See [coverage and limits](docs/SWIMMING_COVERAGE.md) and [Blockbench animation sources](art/blockbench/README.md).
 
 There is a one-second selection cooldown and a maximum of 256 collected entity types. Returning to the player requires sufficient space. No arbitrary entity NBT is accepted from clients.
 

@@ -19,6 +19,7 @@ The collection currently stores species IDs rather than individual acquired vari
 | Cat, ocelot, iron golem, magma cube | Fall protection; flight/flap forms also avoid fall damage |
 | Aquatic fish, squid, guardians | Water breathing, faster swimming, slower land movement and eventual land suffocation |
 | Turtle, iron golem, undead | Water breathing without fish-style land suffocation |
+| Zombie, husk, zombie villager, zombified piglin | Walk and sink underwater; cannot enter player sprint-swimming. Drowned retain swimming. |
 | Dolphin | Faster swimming and moisture-dependent survival; still needs air |
 | Axolotl, glow squid | Modern vanilla adoption of the original bundled backport mappings |
 | Slime, magma cube | Float in water/lava |

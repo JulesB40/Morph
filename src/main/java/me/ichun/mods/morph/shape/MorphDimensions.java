@@ -31,12 +31,16 @@ public final class MorphDimensions {
     }
 
     private static synchronized EntityDimensions baseDimensions(Level level, String form) {
+        var shapes = CACHE.get(level);
+        if (shapes != null && shapes.containsKey(form)) return shapes.get(form);
         Identifier id = Identifier.tryParse(form);
         if (id == null || !id.getNamespace().equals("minecraft")) return null;
         var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
         if (type == null) return null;
-        var shapes = CACHE.computeIfAbsent(level, ignored -> new HashMap<>());
-        if (shapes.containsKey(form)) return shapes.get(form);
+        if (shapes == null) {
+            shapes = new HashMap<>();
+            CACHE.put(level, shapes);
+        }
         EntityDimensions dimensions = null;
         try {
             // Match the renderer's LOAD adapter, including default slime/pufferfish dimensions.

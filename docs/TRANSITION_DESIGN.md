@@ -24,3 +24,11 @@ Keep render snapshots immutable and local to the submitted frame. Do not retain 
 ## Limits
 
 Vertex correspondence does not reproduce the legacy matrix/box algorithm exactly, especially for dissimilar mesh topology. Vanilla item/block/custom feature submissions need an explicit capture or omission policy. A black collector wrapper by itself can tint or fade bodies but cannot produce geometry deformation. First-person hands are a distinct rendering path requiring separate support if parity is desired.
+
+## Packed capture and equipment safety (alpha.4)
+
+The deferred custom draw owns one private packed float array (eight components per vertex). It retains no model, render state, capture consumer, or live pose stack. Interpolation visits shared components contiguously, then normalizes normals and applies the small fade shell. Body-center scans run only for unmatched quads. Regression tests compare every component against the original implementation across unequal meshes, endpoint/middle progress, varied normals/UVs, and shell expansion.
+
+The capture collector proxy is reused per rendering thread. The two fade phases capture only the visible endpoint, and exact progress zero/one uses the normal renderer without mesh capture. Armor remains supported through vanilla model submissions. Consecutive texture-only passes for the same model/state/pose (dye, foil, trim) contribute their geometry once, preventing unnecessary duplicated black surfaces. Pose and normal matrices used for this comparison are copied, not retained from the caller. Held-item, block-item and unrelated custom-geometry submissions are intentionally omitted during the fully black middle; normal equipment rendering remains active at the textured endpoints and after the transition.
+
+Each capture is limited to 32,768 vertices and rejects nonfinite or unreasonable coordinates and incomplete quads. Failures quarantine only the failing entity type, preserving unrelated forms and the human endpoint. If its normal fallback also throws, subsequent fallback attempts are suppressed. Resource reload clears these failure caches so corrected resources can recover. These guards cover synchronous capture/submission failures; they cannot guarantee compatibility with every external renderer or GPU driver.

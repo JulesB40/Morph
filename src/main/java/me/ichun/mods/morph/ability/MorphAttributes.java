@@ -116,7 +116,14 @@ public final class MorphAttributes {
             var identifier = Identifier.tryParse(id);
             var type = identifier == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(identifier).orElse(null);
             if (type == null) return Map.of();
-            var entity = type.create(level, EntitySpawnReason.LOAD);
+            net.minecraft.world.entity.Entity entity;
+            try {
+                entity = type.create(level, EntitySpawnReason.LOAD);
+            } catch (RuntimeException failure) {
+                // Cache failure too: a broken adapter must not repeatedly break player ticks.
+                com.mojang.logging.LogUtils.getLogger().warn("Cannot read Morph attributes for {}", id, failure);
+                return Map.of();
+            }
             if (!(entity instanceof LivingEntity living) || living instanceof Avatar) return Map.of();
             Map<Holder<Attribute>, Double> values = new HashMap<>();
             for (var attribute : SUPPORTED) {

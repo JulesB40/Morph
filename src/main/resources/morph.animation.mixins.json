@@ -1,0 +1,18 @@
+{
+  "required": true,
+  "package": "me.ichun.mods.morph.client.animation.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": [
+    "LivingRenderSwimStateMixin",
+    "QuadrupedSwimMixin",
+    "HumanoidSwimRotationMixin",
+    "VillagerSwimMixin",
+    "IllagerSwimMixin",
+    "VillagerFamilySwimRotationMixin",
+    "ModelFamilySwimMixin",
+    "OtherSwimRotationMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

@@ -29,6 +29,10 @@ public final class MorphClient {
         me.ichun.mods.morph.shape.ShapeHooks.setClientFormResolver(player -> ClientMorphState.lookup(player.getUUID()));
         me.ichun.mods.morph.ui.MorphUi.initialize(modBus);
         modBus.addListener(MorphClient::registerModifiers);
+        modBus.addListener((net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) ->
+            event.addListener(Identifier.fromNamespaceAndPath(Morph.MOD_ID, "swim_animation"),
+                (net.minecraft.server.packs.resources.ResourceManagerReloadListener)
+                    me.ichun.mods.morph.client.animation.MorphSwimAnimation::reload));
         NeoForge.EVENT_BUS.addListener(MorphClient::renderPlayer);
         NeoForge.EVENT_BUS.addListener(MorphClient::loggedOut);
     }
