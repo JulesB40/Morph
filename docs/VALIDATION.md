@@ -13,7 +13,7 @@ Both builds use published dependencies without `mavenLocal()`. The legacy source
 
 ## Automated checks
 
-NeoForge: **11 JUnit tests**, **11 Morph GameTests** and one vanilla control passed. Fabric: **5 shared model JUnit tests**, **3 Morph GameTests** and one Fabric control passed. Shared model tests run on both targets; these counts are not all distinct test cases.
+NeoForge alpha.2: **16 JUnit tests**, **12 Morph GameTests** and one vanilla control passed. Fabric alpha.2: **8 shared JUnit tests**, **4 Morph GameTests** and one Fabric control passed. Shared model tests run on both targets; these counts are not all distinct test cases.
 
 - Ownership rules, duplicate/bounded collections, one-second cooldown, reset behavior, and versioned restore.
 - NeoForge packet round trips and rejection of oversized IDs/invalid collection lengths.
@@ -55,6 +55,14 @@ NeoForge client startup and resource loading passed. In a new local survival wor
 
 Not yet verified: two real clients on a dedicated server, late tracking/reconnect across all dimensions, Vulkan rendering, resource packs/shaders, all vanilla renderers, mod interoperability, or a standalone launcher loading the produced JAR outside development. No claim of full release readiness is made.
 
-Still missing: individual variants, favorites/deletion, player forms, modded entities, legacy transformation animation, mob first-person hands, complete traits and active abilities, biomass progression, alternate modes, legacy editors, public addon compatibility, and 1.16.5 save import. Special poses retain vanilla player geometry; only standing and crouching use form dimensions. Overlapping flight grants from other mods require the explicit integration contract in ABILITIES.md.
+Still missing: individual variants, favorites/deletion, player forms, modded entities, exact legacy part/box animation correspondence, mob first-person hands, complete traits and active abilities, biomass progression, alternate modes, legacy editors, public addon compatibility, and 1.16.5 save import. Special poses retain vanilla player geometry; only standing and crouching use form dimensions. Overlapping flight grants from other mods require the explicit integration contract in ABILITIES.md.
 
 Next release gate: complete the two-client matrix and remaining renderer/ability cases before labeling this a playable release rather than a development alpha.
+
+## Alpha.2 transformation and audio checks
+
+Both loaders now use explicit transformation payloads, a 100-tick visual timeline, and the six unchanged original OGG samples. The server schedules the positional sound at tick 20. Added integration checks cover rejection, accepted selection, redundant selection/synchronization, delayed sound consumption, and reset. NeoForge also exercises login and logout audio lifecycle. Three shared renderer tests cover eased timing, endpoint preservation, interpolation, and unmatched quad collapse.
+
+Fabric manual checks verified human-to-pig and pig-to-human black transitions and final appearances. NeoForge manual checks verified a persisted pig appearance and the black return-to-human transition, ending on the normal player model. The intermediate geometry was captured with the local test world's tick rate temporarily reduced to 5, then restored to 20: [Fabric transition screenshot](screenshots/fabric-transformation.png). No missing sound/texture or transition renderer errors appeared in either client log. Sound scheduling and asset loading were verified; this automated session did not record/listen to speaker output.
+
+The new mesh interpolation approximates the legacy box/part algorithm. First-person hands remain vanilla, collision dimensions switch at server selection, and item/block/custom geometry features are omitted during the fully black middle phase. A late observer receives the current destination appearance without replaying the transition. Real two-client visual/audio synchronization remains unverified.

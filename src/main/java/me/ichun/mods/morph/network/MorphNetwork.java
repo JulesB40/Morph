@@ -19,8 +19,9 @@ public final class MorphNetwork {
     private MorphNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("1");
+        var registrar = event.registrar("2");
         registrar.playToClient(State.TYPE, State.CODEC);
+        registrar.playToClient(Transition.TYPE, Transition.CODEC);
         registrar.playToClient(Collection.TYPE, Collection.CODEC);
         registrar.playToServer(Select.TYPE, Select.CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player) {
@@ -46,6 +47,33 @@ public final class MorphNetwork {
     public static void sendCollection(ServerPlayer recipient, List<String> forms, String activeForm) {
         if (recipient.connection != null && recipient.connection.hasChannel(Collection.TYPE))
             PacketDistributor.sendToPlayer(recipient, new Collection(forms, activeForm));
+    }
+
+    public static void broadcastTransition(ServerPlayer subject, String fromForm, String toForm) {
+        var payload = new Transition(subject.getUUID(), fromForm, toForm,
+                me.ichun.mods.morph.model.MorphSounds.DURATION_TICKS);
+        PacketDistributor.sendToPlayersTrackingEntity(subject, payload);
+        if (subject.connection != null && subject.connection.hasChannel(Transition.TYPE))
+            PacketDistributor.sendToPlayer(subject, payload);
+    }
+
+    public record Transition(UUID playerId, String fromForm, String toForm, int durationTicks) implements CustomPacketPayload {
+        public Transition {
+            if (durationTicks < 1 || durationTicks > 1200) throw new IllegalArgumentException("Invalid morph duration");
+        }
+        public static final Type<Transition> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "transition"));
+        public static final StreamCodec<FriendlyByteBuf, Transition> CODEC = new StreamCodec<>() {
+            public Transition decode(FriendlyByteBuf buf) {
+                return new Transition(buf.readUUID(), buf.readUtf(MAX_ID_LENGTH), buf.readUtf(MAX_ID_LENGTH), buf.readVarInt());
+            }
+            public void encode(FriendlyByteBuf buf, Transition value) {
+                buf.writeUUID(value.playerId());
+                buf.writeUtf(value.fromForm(), MAX_ID_LENGTH);
+                buf.writeUtf(value.toForm(), MAX_ID_LENGTH);
+                buf.writeVarInt(value.durationTicks());
+            }
+        };
+        public Type<Transition> type() { return TYPE; }
     }
 
     public record State(UUID playerId, String formId) implements CustomPacketPayload {

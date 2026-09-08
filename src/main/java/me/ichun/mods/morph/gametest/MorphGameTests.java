@@ -42,6 +42,7 @@ public final class MorphGameTests {
         if (!Boolean.getBoolean("morph.enableGameTests")) return;
         event.register(Registries.TEST_FUNCTION, helper -> {
             helper.register(id("selection_rules"), MorphGameTests::selectionRules);
+            helper.register(id("transformation_sound_lifecycle"), MorphGameTests::transformationSoundLifecycle);
             helper.register(id("kill_acquires_pig"), MorphGameTests::killAcquiresPig);
             helper.register(id("saved_data_round_trip"), MorphGameTests::savedDataRoundTrip);
             helper.register(id("pig_geometry_and_reset"), MorphGameTests::pigGeometryAndReset);
@@ -59,7 +60,7 @@ public final class MorphGameTests {
     public static void registerTests(RegisterGameTestsEvent event) {
         if (!Boolean.getBoolean("morph.enableGameTests")) return;
         var environment = event.registerEnvironment(id("smoke"));
-        for (String name : new String[] {"selection_rules", "kill_acquires_pig", "saved_data_round_trip",
+        for (String name : new String[] {"selection_rules", "transformation_sound_lifecycle", "kill_acquires_pig", "saved_data_round_trip",
                 "pig_geometry_and_reset", "ceiling_rejects_tall_form", "crouch_cannot_stand_through_ceiling",
                 "flight_cleanup_and_player_save", "external_flight_preserved", "aquatic_air_on_actual_tick",
                 "fall_event_immunity_and_cleanup", "flight_survives_game_mode_change"}) {
@@ -71,6 +72,35 @@ public final class MorphGameTests {
 
     private static Identifier id(String path) {
         return Identifier.fromNamespaceAndPath("morph", path);
+    }
+
+    private static void transformationSoundLifecycle(GameTestHelper helper) {
+        var player = connectedPlayer(helper);
+        player.setGameMode(GameType.SURVIVAL);
+        var forms = MorphService.collection(player);
+        helper.assertFalse(MorphService.select(player, "minecraft:pig"), "Unowned selection rejected");
+        helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Rejection schedules no sound");
+        forms.unlock("minecraft:pig");
+        helper.assertTrue(MorphService.select(player, "minecraft:pig"), "Owned selection accepted");
+        long due = me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).orElseThrow();
+        helper.assertValueEqual(due, player.level().getServer().overworld().getGameTime() + 20, "Original clip starts one second into morph");
+        helper.runAfterDelay(5, () -> {
+            MorphService.select(player, "minecraft:pig");
+            MorphService.requestCollection(player);
+            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent(player));
+            helper.assertValueEqual(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).orElseThrow(), due, "Redundant selection and login sync do not restart audio");
+        });
+        helper.runAfterDelay(21, () -> {
+            me.ichun.mods.morph.model.MorphSounds.tick(player);
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Due sound consumed exactly once");
+            MorphService.reset(player);
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isPresent(), "Returning to human schedules audio");
+            NeoForge.EVENT_BUS.post(new net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent(player));
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Logout cancels pending sound");
+            MorphService.reset(player);
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Redundant reset stays silent");
+            helper.succeed();
+        });
     }
 
     private static void selectionRules(GameTestHelper helper) {

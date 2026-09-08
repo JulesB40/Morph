@@ -19,22 +19,25 @@ import net.minecraft.world.entity.LivingEntity;
 
 /** Vanilla-only extraction adapter. No live entities are retained in submitted render data. */
 public final class MorphRenderSnapshots {
-    private static final Map<UUID, LivingEntity> ADAPTERS = new HashMap<>();
+    private record AdapterKey(UUID player, String form) {}
+    private static final Map<AdapterKey, LivingEntity> ADAPTERS = new HashMap<>();
     private static final Set<String> FAILED_FORMS = new HashSet<>();
 
     private MorphRenderSnapshots() {}
 
     public static void invalidate(UUID playerId) {
-        ADAPTERS.remove(playerId);
+        ADAPTERS.keySet().removeIf(key -> key.player.equals(playerId));
     }
 
     public static void retainPlayers(Set<UUID> present) {
-        ADAPTERS.keySet().retainAll(present);
+        ADAPTERS.keySet().removeIf(key -> !present.contains(key.player));
+        MorphTransitions.retainPlayers(present);
     }
 
     public static void clear() {
         ADAPTERS.clear();
         FAILED_FORMS.clear();
+        MorphTransitions.clear();
     }
 
     public static LivingEntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId) {
@@ -44,7 +47,8 @@ public final class MorphRenderSnapshots {
         var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
         if (type == null) return null;
         try {
-            var adapter = ADAPTERS.get(avatar.getUUID());
+            var key = new AdapterKey(avatar.getUUID(), formId);
+            var adapter = ADAPTERS.get(key);
             if (adapter == null || adapter.getType() != type || adapter.level() != avatar.level()) {
                 var entity = type.create(avatar.level(), EntitySpawnReason.LOAD);
                 if (!(entity instanceof LivingEntity living) || living instanceof Avatar) return null;
@@ -52,7 +56,7 @@ public final class MorphRenderSnapshots {
                 // 26.2 does not assign IDs in constructors. Renderers use the ID for item seeds.
                 // This adapter is never inserted into a level; reuse its owner's stable render ID.
                 adapter.setId(avatar.getId());
-                ADAPTERS.put(avatar.getUUID(), adapter);
+                ADAPTERS.put(key, adapter);
             }
             adapter.setPos(avatar.position());
             adapter.xOld = avatar.xOld;

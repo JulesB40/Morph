@@ -50,20 +50,29 @@ public final class MorphService {
         if (!me.ichun.mods.morph.shape.ShapeHooks.canFit(player, form))
             return fail(player, "There is not enough room for that form here.");
         MorphCollection forms = collection(player);
+        String previous = forms.activeForm();
         return switch (forms.select(form, player.level().getServer().overworld().getGameTime())) {
             case NOT_OWNED -> fail(player, "Acquire that form before selecting it.");
             case COOLDOWN -> fail(player, "Wait one second between morph selections.");
             case UNCHANGED -> { requestCollection(player); yield true; }
-            case CHANGED -> { data(player).setDirty(); sync(player); yield true; }
+            case CHANGED -> { data(player).setDirty(); sync(player); transform(player, previous); yield true; }
         };
     }
 
     public static boolean reset(ServerPlayer player) {
         if (player.isAlive() && !me.ichun.mods.morph.shape.ShapeHooks.canFit(player, ""))
             return fail(player, "Move somewhere with enough room to return to player form.");
-        if (collection(player).reset()) data(player).setDirty();
+        String previous = collection(player).activeForm();
+        boolean changed = collection(player).reset();
+        if (changed) data(player).setDirty();
         sync(player);
+        if (changed && player.isAlive()) transform(player, previous);
         return true;
+    }
+
+    private static void transform(ServerPlayer player, String previous) {
+        MorphNetwork.broadcastTransition(player, previous, collection(player).activeForm());
+        me.ichun.mods.morph.model.MorphSounds.schedule(player);
     }
 
     public static void requestCollection(ServerPlayer player) {
@@ -102,7 +111,9 @@ public final class MorphService {
     private static void onDeath(LivingDeathEvent event) {
         if (event.getEntity() instanceof ServerPlayer deadPlayer) {
             // Collections survive death; reset appearance, so respawn begins as the player.
-            reset(deadPlayer);
+            me.ichun.mods.morph.model.MorphSounds.cancel(deadPlayer);
+            if (collection(deadPlayer).reset()) data(deadPlayer).setDirty();
+            sync(deadPlayer);
         } else if (!(event.getEntity() instanceof Player) && event.getSource().getEntity() instanceof ServerPlayer killer) {
             String form = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
             if (!collection(killer).ownedForms().contains(form)) grant(killer, form);
@@ -114,8 +125,10 @@ public final class MorphService {
     }
 
     private static void tickAbilities(net.neoforged.neoforge.event.tick.PlayerTickEvent.Pre event) {
-        if (event.getEntity() instanceof ServerPlayer player)
+        if (event.getEntity() instanceof ServerPlayer player) {
             me.ichun.mods.morph.ability.MorphAbilities.tick(player, collection(player).activeForm());
+            me.ichun.mods.morph.model.MorphSounds.tick(player);
+        }
     }
 
     private static void onFall(net.neoforged.neoforge.event.entity.living.LivingFallEvent event) {
@@ -125,8 +138,10 @@ public final class MorphService {
     }
 
     private static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
-        if (event.getEntity() instanceof ServerPlayer player)
+        if (event.getEntity() instanceof ServerPlayer player) {
             me.ichun.mods.morph.ability.MorphAbilities.cleanup(player);
+            me.ichun.mods.morph.model.MorphSounds.cancel(player);
+        }
     }
     private static void onRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) sync(player);

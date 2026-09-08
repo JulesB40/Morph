@@ -11,6 +11,7 @@ public final class ClientMorphState {
     private ClientMorphState() {}
 
     public static void update(UUID playerId, String formId) {
+        MorphTransitions.reconcile(playerId, formId);
         if (formId == null || formId.isEmpty() || formId.equals("minecraft:player")) {
             FORMS.remove(playerId);
         } else {

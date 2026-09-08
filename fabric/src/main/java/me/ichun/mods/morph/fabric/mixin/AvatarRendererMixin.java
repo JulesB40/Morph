@@ -13,6 +13,10 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class AvatarRendererMixin {
     @Inject(method = "extractRenderState(Lnet/minecraft/world/entity/Avatar;Lnet/minecraft/client/renderer/entity/state/AvatarRenderState;F)V", at = @At("TAIL"))
     private void morph$extract(Avatar avatar, AvatarRenderState state, float partialTick, CallbackInfo ci) {
-        ((MorphSnapshotHolder) state).morph$setSnapshot(MorphRenderSnapshots.extract(avatar, state, MorphFabricClient.FORMS.get(avatar.getUUID())));
+        if (me.ichun.mods.morph.client.transition.MorphTransitionRenderer.isRendering()) return;
+        var holder = (MorphSnapshotHolder) state;
+        var transition = me.ichun.mods.morph.client.MorphTransitions.extract(avatar, state, MorphFabricClient.FORMS.get(avatar.getUUID()));
+        holder.morph$setTransition(transition);
+        holder.morph$setSnapshot(transition == null ? MorphRenderSnapshots.extract(avatar, state, MorphFabricClient.FORMS.get(avatar.getUUID())) : null);
     }
 }

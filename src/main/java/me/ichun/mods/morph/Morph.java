@@ -10,6 +10,10 @@ public final class Morph {
     public static final String MOD_ID = "morph";
 
     public Morph(IEventBus modBus) {
+        var sounds = net.neoforged.neoforge.registries.DeferredRegister.create(
+                net.minecraft.core.registries.Registries.SOUND_EVENT, MOD_ID);
+        sounds.register("morph", () -> me.ichun.mods.morph.model.MorphSounds.EVENT);
+        sounds.register(modBus);
         me.ichun.mods.morph.shape.ShapeHooks.setFormResolver(player ->
                 player instanceof net.minecraft.server.level.ServerPlayer serverPlayer
                         ? me.ichun.mods.morph.server.MorphService.collection(serverPlayer).activeForm() : null);

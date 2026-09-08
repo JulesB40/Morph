@@ -2,7 +2,7 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.20'
     id 'maven-publish'
 }
-version = '11.0.0-alpha.1'
+version = '11.0.0-alpha.2'
 group = 'me.ichun.mods.morph'
 base { archivesName = 'Morph-Fabric-26.2' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
@@ -24,9 +24,16 @@ sourceSets.main.java {
     include 'me/ichun/mods/morph/ability/**'
     include 'me/ichun/mods/morph/server/MorphSavedData.java'
     include 'me/ichun/mods/morph/client/MorphRenderSnapshots.java'
+    include 'me/ichun/mods/morph/client/MorphTransitions.java'
+    include 'me/ichun/mods/morph/client/transition/**'
     include 'me/ichun/mods/morph/ui/MorphScreen.java'
 }
-sourceSets.test.java { srcDir '../src/test/java'; include 'me/ichun/mods/morph/model/**'; include 'me/ichun/mods/morph/ability/**' }
+sourceSets.test.java {
+    srcDir '../src/test/java'
+    include 'me/ichun/mods/morph/model/**'
+    include 'me/ichun/mods/morph/ability/**'
+    include 'me/ichun/mods/morph/client/transition/**'
+}
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') { expand version: project.version }

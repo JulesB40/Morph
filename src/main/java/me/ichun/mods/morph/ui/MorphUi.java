@@ -32,6 +32,9 @@ public final class MorphUi {
     private static void registerPayloads(RegisterClientPayloadHandlersEvent event) {
         event.register(MorphNetwork.State.TYPE, (payload, context) ->
                 ClientMorphState.update(payload.playerId(), payload.formId()));
+        event.register(MorphNetwork.Transition.TYPE, (payload, context) ->
+                me.ichun.mods.morph.client.MorphTransitions.start(payload.playerId(), payload.fromForm(),
+                        payload.toForm(), payload.durationTicks()));
         event.register(MorphNetwork.Collection.TYPE, (payload, context) -> {
             if (Minecraft.getInstance().gui.screen() instanceof MorphScreen screen)
                 screen.update(payload.forms(), payload.activeForm());

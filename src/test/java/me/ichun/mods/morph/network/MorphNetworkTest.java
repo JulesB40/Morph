@@ -8,6 +8,30 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class MorphNetworkTest {
+    @Test void transitionRoundTripIncludesBothFormsAndServerDuration() {
+        for (String destination : List.of("minecraft:bat", "")) {
+            var buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try {
+                var transition = new MorphNetwork.Transition(UUID.randomUUID(), "minecraft:pig", destination, 100);
+                MorphNetwork.Transition.CODEC.encode(buffer, transition);
+                assertEquals(transition, MorphNetwork.Transition.CODEC.decode(buffer));
+                assertFalse(buffer.isReadable());
+            } finally { buffer.release(); }
+        }
+    }
+
+    @Test void rejectsInvalidTransitionDuration() {
+        for (int duration : new int[] {-1, 0, 1201, Integer.MAX_VALUE}) {
+            var buffer = new FriendlyByteBuf(Unpooled.buffer());
+            try {
+                buffer.writeUUID(UUID.randomUUID());
+                buffer.writeUtf("");
+                buffer.writeUtf("minecraft:pig");
+                buffer.writeVarInt(duration);
+                assertThrows(IllegalArgumentException.class, () -> MorphNetwork.Transition.CODEC.decode(buffer));
+            } finally { buffer.release(); }
+        }
+    }
     @Test void stateRoundTripIncludesSubjectAndReset() {
         var buffer = new FriendlyByteBuf(Unpooled.buffer());
         try {

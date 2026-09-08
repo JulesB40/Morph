@@ -7,6 +7,7 @@ Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraf
 - Kill a supported vanilla living mob to acquire its entity type.
 - Press **[** (rebindable in Controls) to select a collected form or return to the player.
 - The server validates ownership and synchronizes appearance to observers.
+- Transformations fade to the original black skin, deform between the two bodies, and reveal the new form over five seconds. Both loaders play one of the six original morph sounds.
 - Collections persist per player UUID in the world's Morph saved data. Death resets appearance while retaining the collection.
 - `/morph list`, `/morph select minecraft:pig`, and `/morph reset` are available to players. Operators can grant a test form with `/morph grant minecraft:pig` on NeoForge or `/morph grant @s minecraft:pig` on Fabric.
 - Standing/crouching hitbox and eye height follow the form, with collision checks before expansion.
@@ -33,7 +34,7 @@ On Linux/macOS use `./gradlew` in the corresponding directory. The configured to
 
 ## Development status and limitations
 
-The first milestone focuses on the classic acquisition/selection loop. It currently uses default entity appearances: individual variants, favorites/deletion, player forms, modded mobs, legacy model interpolation, first-person mob hands, biomass progression, complete trait/ability parity, and the legacy editors are unfinished. Only the traits explicitly listed above are implemented. Rendering and multiplayer runtime results are tracked in [the validation report](docs/VALIDATION.md).
+The first milestone focuses on the classic acquisition/selection loop. It currently uses default entity appearances: individual variants, favorites/deletion, player forms, modded mobs, exact legacy part/box interpolation, first-person mob hands, biomass progression, complete trait/ability parity, and the legacy editors are unfinished. Only the traits explicitly listed above are implemented. Rendering and multiplayer runtime results are tracked in [the validation report](docs/VALIDATION.md).
 
 The new versioned save format is separate from the legacy `morph_save` data. **There is no 1.16.5 save importer yet.** Test with a new world or a copy; this port does not promise legacy world migration.
 

@@ -11,6 +11,7 @@ import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 
 public final class MorphFabricClient implements ClientModInitializer {
     private static net.minecraft.client.multiplayer.ClientLevel lastLevel;
+    private static int cleanupTicks;
     private static final java.util.Set<net.minecraft.world.entity.player.Player> SEEN = java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
     public static final Map<UUID, String> FORMS = new HashMap<>();
     @Override public void onInitializeClient() {
@@ -20,6 +21,11 @@ public final class MorphFabricClient implements ClientModInitializer {
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
             if (client.level != lastLevel) { MorphRenderSnapshots.clear(); SEEN.clear(); lastLevel = client.level; }
             if (client.level != null) for (var player : client.level.players()) if (SEEN.add(player)) me.ichun.mods.morph.shape.ShapeHooks.refresh(player);
+            if (++cleanupTicks % 100 == 0 && client.level != null) {
+                var present = new java.util.HashSet<UUID>();
+                for (var player : client.level.players()) present.add(player.getUUID());
+                MorphRenderSnapshots.retainPlayers(present);
+            }
             while (open.consumeClick()) {
                 if (client.player != null && client.gui.screen() == null) {
                     client.gui.setScreen(new me.ichun.mods.morph.ui.MorphScreen(id -> client.player.connection.sendCommand(id.isEmpty() ? "morph reset" : "morph select " + id)));
@@ -31,6 +37,7 @@ public final class MorphFabricClient implements ClientModInitializer {
             if (context.client().gui.screen() instanceof me.ichun.mods.morph.ui.MorphScreen screen) screen.update(payload.forms(), payload.active());
         }));
         ClientPlayNetworking.registerGlobalReceiver(MorphAppearance.TYPE, (payload, context) -> context.client().execute(() -> {
+            me.ichun.mods.morph.client.MorphTransitions.reconcile(payload.player(), payload.form());
             if (payload.form().isEmpty()) FORMS.remove(payload.player()); else FORMS.put(payload.player(), payload.form());
             MorphRenderSnapshots.invalidate(payload.player());
             if (context.client().level != null) {
@@ -38,6 +45,8 @@ public final class MorphFabricClient implements ClientModInitializer {
                 if (player != null) me.ichun.mods.morph.shape.ShapeHooks.refresh(player);
             }
         }));
+        ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphTransition.TYPE, (payload, context) -> context.client().execute(() ->
+                me.ichun.mods.morph.client.MorphTransitions.start(payload.player(), payload.fromForm(), payload.toForm(), payload.durationTicks())));
         ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { FORMS.clear(); MorphRenderSnapshots.clear(); });
     }
 }

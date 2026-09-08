@@ -49,3 +49,7 @@ The adapter supports vanilla living-entity types whose normal renderer accepts a
 Do not promise universal geometry interpolation. Prototype one pair of known vanilla models with copied model-part transforms first. If deferred vanilla submissions cannot expose a safe reusable mesh, submit a Morph-owned transition feature with copied geometry, or use an immediate switch/fade for unsupported models. Such a fallback is a visible compatibility policy, not equivalent to legacy visual parity.
 
 Acceptance requires two clients (local and remote third person), walking/head animation, correct texture and lighting, switching repeatedly between pig/player, distinct simultaneously morphed players, late join, resource reload, disconnect/reconnect, and no leaked state. Inspect shadow and player nameplate separately. Exercise available OpenGL and Vulkan backends. Record screenshots/runtime logs and failures. Compilation alone cannot meet this rendering milestone.
+
+## Alpha.2 follow-up
+
+The original prototype limitations above describe alpha.1. Alpha.2 now captures both posed meshes, fades the original black skin, interpolates vertices, and reveals the destination. Both loaders share this renderer and explicit transition events. See TRANSITION_DESIGN.md for its differences from legacy part/box interpolation and VALIDATION.md for actual client checks. First-person hands remain unchanged.

@@ -46,6 +46,15 @@ public final class MorphFabric implements ModInitializer {
             return me.ichun.mods.morph.shape.MorphDimensions.supports(player.level(), id.toString()) ? id.toString() : null;
         } catch (RuntimeException ignored) { return null; }
     }
+    private static void transform(ServerPlayer player, String previous) {
+        var payload = new MorphTransition(player.getUUID(), previous, forms(player).activeForm(),
+                me.ichun.mods.morph.model.MorphSounds.DURATION_TICKS);
+        for (var observer : net.fabricmc.fabric.api.networking.v1.PlayerLookup.tracking(player)) {
+            if (ServerPlayNetworking.canSend(observer, MorphTransition.TYPE)) ServerPlayNetworking.send(observer, payload);
+        }
+        if (ServerPlayNetworking.canSend(player, MorphTransition.TYPE)) ServerPlayNetworking.send(player, payload);
+        me.ichun.mods.morph.model.MorphSounds.schedule(player);
+    }
     private static int grant(ServerPlayer player, String raw) {
         String id = validForm(player, raw);
         if (id == null) { player.sendSystemMessage(Component.literal("Unsupported form: " + raw)); return 0; }
@@ -55,17 +64,24 @@ public final class MorphFabric implements ModInitializer {
         return 1;
     }
     @Override public void onInitialize() {
+        net.minecraft.core.Registry.register(BuiltInRegistries.SOUND_EVENT,
+                me.ichun.mods.morph.model.MorphSounds.ID, me.ichun.mods.morph.model.MorphSounds.EVENT);
         me.ichun.mods.morph.shape.ShapeHooks.setFormResolver(player -> player instanceof ServerPlayer serverPlayer ? forms(serverPlayer).activeForm() : null);
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.START_SERVER_TICK.register(server -> {
-            for (var player : server.getPlayerList().getPlayers()) me.ichun.mods.morph.ability.MorphAbilities.tick(player, forms(player).activeForm());
+            for (var player : server.getPlayerList().getPlayers()) {
+                me.ichun.mods.morph.ability.MorphAbilities.tick(player, forms(player).activeForm());
+                me.ichun.mods.morph.model.MorphSounds.tick(player);
+            }
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !(entity instanceof ServerPlayer player
             && player.isAlive() && source.is(net.minecraft.tags.DamageTypeTags.IS_FALL)
             && me.ichun.mods.morph.ability.MorphAbilities.preventsFallDamage(forms(player).activeForm())));
         PayloadTypeRegistry.clientboundPlay().register(MorphAppearance.TYPE, MorphAppearance.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MorphTransition.TYPE, MorphTransition.CODEC);
         PayloadTypeRegistry.clientboundPlay().register(MorphOwned.TYPE, MorphOwned.CODEC);
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer player) {
+                me.ichun.mods.morph.model.MorphSounds.cancel(player);
                 forms(player).reset(); data(player.level().getServer()).setDirty(); sync(player);
             } else if (!(entity instanceof Avatar) && source.getEntity() instanceof ServerPlayer killer) {
                 grant(killer, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString());
@@ -82,6 +98,7 @@ public final class MorphFabric implements ModInitializer {
             sync(handler.player);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            me.ichun.mods.morph.model.MorphSounds.cancel(handler.player);
             me.ichun.mods.morph.ability.MorphAbilities.cleanup(handler.player);
             for (var observer : server.getPlayerList().getPlayers()) {
                 if (observer != handler.player && ServerPlayNetworking.canSend(observer, MorphAppearance.TYPE))
@@ -104,11 +121,13 @@ public final class MorphFabric implements ModInitializer {
                         var form = validForm(player, IdentifierArgument.getId(ctx, "form").toString());
                         if (form == null) { ctx.getSource().sendFailure(Component.literal("Unsupported living form")); return 0; }
                         if (!forms(player).activeForm().equals(form) && !me.ichun.mods.morph.shape.ShapeHooks.canFit(player, form)) { ctx.getSource().sendFailure(Component.literal("Not enough room for that form")); return 0; }
+                        String previous = forms(player).activeForm();
                         var result = forms(player).select(form, player.level().getServer().overworld().getGameTime());
                         return switch (result) {
                             case CHANGED -> {
                                 data(ctx.getSource().getServer()).setDirty();
                                 sync(player);
+                                transform(player, previous);
                                 yield 1;
                             }
                             case UNCHANGED -> { owned(player); yield 1; }
@@ -125,7 +144,11 @@ public final class MorphFabric implements ModInitializer {
                 .then(Commands.literal("reset").executes(ctx -> {
                     var player = ctx.getSource().getPlayerOrException();
                     if (!me.ichun.mods.morph.shape.ShapeHooks.canFit(player, "")) { ctx.getSource().sendFailure(Component.literal("Not enough room to return to player form")); return 0; }
-                    forms(player).reset(); data(ctx.getSource().getServer()).setDirty(); sync(player);
+                    String previous = forms(player).activeForm();
+                    boolean changed = forms(player).reset();
+                    if (changed) data(ctx.getSource().getServer()).setDirty();
+                    sync(player);
+                    if (changed && player.isAlive()) transform(player, previous);
                     player.sendSystemMessage(Component.literal("Returned to player form")); return 1;
                 }))
                 .then(Commands.literal("grant").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))

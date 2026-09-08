@@ -17,6 +17,31 @@ import net.minecraft.world.level.GameType;
 
 public final class MorphFabricGameTests {
     @GameTest(maxTicks = 100)
+    public void transformationSoundLifecycle(GameTestHelper helper) {
+        var player = player(helper);
+        helper.assertValueEqual(command(player, "morph select minecraft:pig"), 0, "Unowned form rejected");
+        helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Rejection schedules no sound");
+        MorphFabric.data(helper.getLevel().getServer()).collection(player.getUUID()).unlock("minecraft:pig");
+        helper.assertValueEqual(command(player, "morph select minecraft:pig"), 1, "Owned form accepted");
+        long due = me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).orElseThrow();
+        helper.assertValueEqual(due, player.level().getServer().overworld().getGameTime() + 20, "Original sound starts at tick twenty");
+        helper.runAfterDelay(5, () -> {
+            command(player, "morph select minecraft:pig");
+            command(player, "morph menu");
+            helper.assertValueEqual(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).orElseThrow(), due, "Redundant selection and menu sync preserve sound timing");
+        });
+        helper.runAfterDelay(21, () -> {
+            me.ichun.mods.morph.model.MorphSounds.tick(player);
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Due sound consumed");
+            command(player, "morph reset");
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isPresent(), "Returning to human schedules audio");
+            me.ichun.mods.morph.model.MorphSounds.cancel(player);
+            command(player, "morph reset");
+            helper.assertTrue(me.ichun.mods.morph.model.MorphSounds.scheduledTick(player).isEmpty(), "Redundant reset stays silent");
+            helper.succeed();
+        });
+    }
+    @GameTest(maxTicks = 100)
     public void commandsAndGeometry(GameTestHelper helper) {
         var player = player(helper);
         var forms = MorphFabric.data(helper.getLevel().getServer()).collection(player.getUUID());
