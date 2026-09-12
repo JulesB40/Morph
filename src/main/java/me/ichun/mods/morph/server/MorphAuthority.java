@@ -74,13 +74,27 @@ public final class MorphAuthority {
         return MorphCollection.isFormId(form) && me.ichun.mods.morph.shape.MorphDimensions.supports(player.level(), form);
     }
     private static boolean supported(ServerPlayer player, FormDescriptor descriptor) {
-        if (!validForm(player, descriptor.species()) || descriptor.adapterVersion() != 1) return false;
+        if (!validForm(player, descriptor.species()) || descriptor.adapterVersion() != 1
+                || !supportedAttributes(descriptor)) return false;
         return switch (descriptor.adapter()) {
             case "morph:species" -> descriptor.variant().isEmpty() && descriptor.profile() == null;
             case "morph:sheep" -> descriptor.species().equals("minecraft:sheep");
-            case "morph:slime" -> descriptor.species().equals("minecraft:slime") || descriptor.species().equals("minecraft:magma_cube");
+            case "morph:slime" -> descriptor.species().equals("minecraft:slime");
             default -> false;
         };
+    }
+    private static boolean supportedAttributes(FormDescriptor descriptor) {
+        for (var captured : descriptor.attributes().entrySet()) {
+            var attribute = me.ichun.mods.morph.ability.MorphAttributes.copiedAttributes().stream()
+                    .map(net.minecraft.core.Holder::value)
+                    .filter(candidate -> captured.getKey().equals(String.valueOf(
+                            net.minecraft.core.registries.BuiltInRegistries.ATTRIBUTE.getKey(candidate))))
+                    .findFirst().orElse(null);
+            double value = captured.getValue();
+            // Equality with the registered sanitizer rejects values that would otherwise be silently clamped.
+            if (attribute == null || !Double.isFinite(value) || attribute.sanitizeValue(value) != value) return false;
+        }
+        return true;
     }
     private static boolean canChange(ServerPlayer player) { return player.isAlive() && !player.isRemoved() && !player.isSpectator(); }
     public static boolean select(ServerPlayer player, String form) { return select(player.getUUID(), player, form); }
