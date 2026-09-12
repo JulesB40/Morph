@@ -25,7 +25,8 @@ def emit(event, ident=None, detail=None):
 def state():
     players = [dict(uuid=r, name='Morph'+r.title(), form=f, showNameTag=bool(s),position=[0,80,z])
                for r,f,s,c,z in db.execute('SELECT * FROM players') if c]
-    return dict(players=players, uuid=role, connected=any(p['uuid']==role for p in players))
+    return dict(players=players, uuid=role, eyePosition=[6,81.62,0],
+                connected=any(p['uuid']==role for p in players))
 if mode == 'no-ready' and role == 'observer':
     time.sleep(30)
 emit('ready')
@@ -40,6 +41,15 @@ while True:
         if path.name in seen: continue
         seen.add(path.name)
         req=json.loads(path.read_text()); op=req['op']; detail=None
+        if op=='probe':
+            if req['name']=='capture-failure':
+                expected=mode!='missing-capture-failure'
+                emit('failed' if expected else 'completed',req['id'],
+                    {'probe':'capture-failure','injected':expected,'recoverable':True})
+            else:
+                passed=mode!='failed-component'
+                emit('completed' if passed else 'failed',req['id'],{'passed':passed,'recoverable':True})
+            continue
         if op=='command' and role!='server':
             if req['command'].startswith('morph select') and mode!='reject-select':
                 db.execute("UPDATE players SET form='minecraft:bat' WHERE role=?",(role,))
@@ -47,7 +57,7 @@ while True:
                 db.execute('UPDATE players SET shown=0 WHERE role=?',(role,))
         if op in ('disconnect','reconnect'):
             db.execute('UPDATE players SET connected=? WHERE role=?',(int(op=='reconnect'),role))
-        if op=='input':
+        if op=='input' and req.get('keys'):
             if mode=='delayed-movement': pending_movement=time.monotonic()+.25
             elif mode!='lost-input': db.execute('UPDATE players SET z=z+1 WHERE role=?',(role,))
         if op=='capture':
@@ -113,6 +123,40 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(result['status'],'timeout',result)
         self.assertTrue(result['cleanup_confirmed'])
         self.assertEqual(len(result['processes']),3)
+
+    def test_optional_probes_and_capture_recovery(self):
+        spec=self.spec()
+        spec.update(component_probes=['wither-heads','sniffer-middle-legs'],capture_recovery=True,frame_scene=True)
+        result=run_session(spec,self.root/'run',self.root)
+        self.assertEqual(result['status'],'passed',result)
+        self.assertEqual(len(result['component_probes']),2)
+        self.assertEqual(result['capture_recovery']['injection']['event'],'failed')
+        self.assertIn('injected_capture_failure_then_state_and_png',result['checks'])
+        self.assertAlmostEqual(result['frame_scene']['yaw'],80.53767779)
+        self.assertGreater(result['frame_scene']['pitch'],0)
+        actor_requests = [json.loads(path.read_text()) for path in
+                          (self.root/'run'/'actor'/'control-1'/'requests').glob('*.json')]
+        self.assertTrue(any(row.get('op')=='view' and row.get('perspective')=='third_person_front'
+                            and row.get('hideGui') is True for row in actor_requests))
+        self.assertTrue(any(row.get('op')=='input' and row.get('keys')==[] and row.get('ticks')==120
+                            for row in actor_requests))
+
+    def test_missing_injected_failure_cannot_pass(self):
+        spec=self.spec('missing-capture-failure')
+        spec['capture_recovery']=True
+        result=run_session(spec,self.root/'run',self.root)
+        self.assertEqual(result['status'],'failed',result)
+        self.assertTrue(result['cleanup_confirmed'])
+        self.assertNotIn('injected_capture_failure_then_state_and_png',result['checks'])
+
+    def test_failed_component_is_retained_while_recovery_runs(self):
+        spec=self.spec('failed-component')
+        spec.update(component_probes=['sniffer-middle-legs'],capture_recovery=True)
+        result=run_session(spec,self.root/'run',self.root)
+        self.assertEqual(result['status'],'failed',result)
+        self.assertFalse(result['component_probes'][0]['passed'])
+        self.assertIn('injected_capture_failure_then_state_and_png',result['checks'])
+        self.assertTrue(result['cleanup_confirmed'])
 
     def test_invalid_spec_never_launches(self):
         spec = self.spec()

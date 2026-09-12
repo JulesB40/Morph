@@ -52,6 +52,14 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
     port = spec.get("port")
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("spec.port must be an explicitly reserved port")
+    probes = spec.get("component_probes", [])
+    if not isinstance(probes, list) or any(name not in {"wither-heads", "sniffer-middle-legs"}
+                                           for name in probes) or len(probes) != len(set(probes)):
+        raise ValueError("component_probes must list distinct supported probe names")
+    if type(spec.get("capture_recovery", False)) is not bool:
+        raise ValueError("capture_recovery must be boolean")
+    if type(spec.get("frame_scene", False)) is not bool:
+        raise ValueError("frame_scene must be boolean")
     names = spec.get("players", {"actor":"MorphActor", "observer":"MorphObserver"})
     if set(names) != {"actor", "observer"} or len(set(names.values())) != 2 or any(
             not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9_]{1,16}", name)
@@ -98,7 +106,7 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
         owned.append(process)
         active[role], channels[role] = process, channel
 
-    def await_event(role, request_id=None, end=None):
+    def await_event(role, request_id=None, end=None, *, allow_failed=False):
         end = end if end is not None else time.monotonic() + remaining(step_timeout)
         while True:
             budget = min(remaining(), end - time.monotonic())
@@ -106,7 +114,7 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
             try:
                 channel = channels[role]
                 return (channel.wait_ready(min(.1, budget)) if request_id is None
-                        else channel.wait(request_id, min(.1, budget)))
+                        else channel.wait(request_id, min(.1, budget), allow_failed=allow_failed))
             except BridgeTimeout:
                 healthy()
 
@@ -169,6 +177,11 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
                        for role in ("server", "actor", "observer")))
         result["appearance_before_restart"] = barrier(appearance)
         result["checks"].append("authoritative_and_two_client_appearance")
+        result["component_probes"] = []
+        for name in probes:
+            event = await_event("actor", channels["actor"].request("probe", name=name), allow_failed=True)
+            result["component_probes"].append({"name":name,"event":event,
+                "passed":event["event"] == "completed" and event.get("detail", {}).get("passed") is True})
         request("actor", "look", yaw=0, pitch=0)
         request("observer", "look", yaw=90, pitch=0)
         before = states()
@@ -187,6 +200,35 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
         moved = {role: math.dist(horizontal(before, role), horizontal(after, role)) for role in names}
         result["movement"] = {"before":before, "after":after, "horizontal_distance":moved}
         result["checks"].append("actor_input_observer_stationary")
+        if spec.get("frame_scene", False):
+            # Wait in client ticks beyond the current 100-tick transformation.
+            request("actor", "input", keys=[], ticks=120)
+            request("actor", "view", perspective="third_person_front", hideGui=True)
+            request("observer", "view", perspective="first_person", hideGui=True)
+            scene = states()
+            eye = scene["observer"]["eyePosition"]
+            target = list(player(scene["server"], uuids["actor"])["position"])
+            target[1] += .4
+            if len(eye) != 3 or not all(math.isfinite(value) for value in list(eye) + target):
+                raise BridgeError("scene camera positions must be finite three-dimensional coordinates")
+            dx, dy, dz = (target[index] - eye[index] for index in range(3))
+            yaw = math.degrees(math.atan2(-dx, dz))
+            pitch = -math.degrees(math.atan2(dy, math.hypot(dx, dz)))
+            request("observer", "look", yaw=yaw, pitch=pitch)
+            result["frame_scene"] = {"eye":eye,"target":target,"yaw":yaw,"pitch":pitch,
+                                      "meaning":"camera framing requested; PNG requires visual inspection"}
+        if spec.get("capture_recovery", False):
+            event = await_event("actor", channels["actor"].request("probe", name="capture-failure"),
+                                allow_failed=True)
+            result["capture_recovery"] = {"injection":event}
+            detail = event.get("detail", {})
+            if (event["event"] != "failed" or detail.get("probe") != "capture-failure"
+                    or detail.get("injected") is not True or detail.get("recoverable") is not True):
+                raise AssertionError("capture probe did not report the expected recoverable injected failure")
+            recovered_state = request("actor", "state")
+            result["capture_recovery"]["state_after_failure"] = recovered_state
+            if recovered_state.get("connected") is not True or recovered_state.get("uuid") != uuids["actor"]:
+                raise AssertionError("actor did not remain connected after capture failure")
         for role in names:
             detail = request(role, "capture")
             path = (channels[role].directory / detail["png"]).resolve()
@@ -197,6 +239,9 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
                 raise BridgeError("capture is not a nonempty PNG")
             result["captures"].append({"role":role,"path":str(path),
                                        "sha256":hashlib.sha256(content).hexdigest()})
+        if spec.get("capture_recovery", False):
+            result["capture_recovery"]["capture"] = next(row for row in result["captures"] if row["role"] == "actor")
+            result["checks"].append("injected_capture_failure_then_state_and_png")
         for role in names: request(role, "disconnect")
         barrier(lambda rows: not rows["server"].get("players") and
                 all(rows[role].get("connected") is False for role in names))
@@ -217,7 +262,7 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
             exit_process(role)
         request("server", "stop")
         exit_process("server")
-        result["status"] = "passed"
+        result["status"] = "passed" if all(probe["passed"] for probe in result["component_probes"]) else "failed"
     except BridgeTimeout as error:
         result.update(status="timeout", error=str(error))
     except AssertionError as error:

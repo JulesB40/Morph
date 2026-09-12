@@ -38,7 +38,7 @@ class ClientChannel:
     """
 
     OPERATIONS = frozenset({"input", "look", "command", "capture", "state", "release", "exit",
-                            "disconnect", "reconnect", "save", "stop"})
+                            "disconnect", "reconnect", "save", "stop", "probe", "view"})
     MAX_RECORD_BYTES = 1024 * 1024
 
     def __init__(self, directory: str | Path, *, poll_interval: float = 0.02,
@@ -117,7 +117,8 @@ class ClientChannel:
                     raise BridgeError(f"duplicate response for request: {request_id}")
                 self._results[request_id] = event
 
-    def wait(self, request_id: str, timeout: float = 30) -> dict:
+    def wait(self, request_id: str, timeout: float = 30, *, allow_failed: bool = False) -> dict:
+        """Return a completion; only explicit fault inspection may allow failed events."""
         if not isinstance(request_id, str) or request_id not in self._pending:
             raise ValueError("request id does not belong to this channel")
         deadline = _deadline(timeout)
@@ -125,7 +126,7 @@ class ClientChannel:
             self._read()
             if request_id in self._results:
                 event = self._results[request_id]
-                if event["event"] == "failed":
+                if event["event"] == "failed" and not allow_failed:
                     raise BridgeError(f"request {request_id} failed: {event}")
                 return event
             remaining = deadline - time.monotonic()

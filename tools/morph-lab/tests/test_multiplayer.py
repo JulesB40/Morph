@@ -153,6 +153,14 @@ class MultiplayerTests(unittest.TestCase):
         self.emit(actor, {"event":"completed", "id":request_id, "role":"observer"})
         with self.assertRaises(BridgeError): actor.wait(request_id, .1)
 
+    def test_failed_outcome_requires_explicit_opt_in(self):
+        channel = self.channel()
+        request_id = channel.request("probe", name="capture-failure")
+        self.emit(channel, {"event":"failed", "id":request_id, "detail":{"injected":True}})
+        with self.assertRaises(BridgeError): channel.wait(request_id, .1)
+        self.assertEqual(channel.wait(request_id, .1, allow_failed=True)["event"], "failed")
+        with self.assertRaises(BridgeError): channel.wait(request_id, .1)
+
 
 if __name__ == "__main__":
     unittest.main()
