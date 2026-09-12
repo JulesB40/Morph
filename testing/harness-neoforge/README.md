@@ -53,6 +53,23 @@ the external server and wait for server readiness before requesting reconnect.
 Unexpected connection loss after readiness remains fatal. The original overall
 timeout continues across disconnect/reconnect; the controller must budget for restart.
 
+Named component probes use `{"id":"0009","op":"probe","name":"wither-heads"}`.
+Supported names are `wither-heads`, `sniffer-middle-legs`, and `dragon-renderer`.
+They return numeric/type evidence with `detail.passed` and explicit component scope;
+an unmet assertion emits a recoverable `failed` event so later observations can run.
+Wither checks side-head world angles and actual native model rotations for three
+body/look/pitch combinations, including an untreated-state control that must differ.
+Sniffer samples all six native leg rotations at four swim ages. Dragon compares
+native renderer state type with the production extraction adapter's result.
+These do not prove visible pixels, actual movement or complete rendering behavior.
+
+`{"id":"0010","op":"probe","name":"capture-failure"}` injects one test-owned
+I/O failure at the next capture frame, before framebuffer readback. It emits
+`failed` with `injected:true`, `recoverable:true`, and the capture stage, then clears
+pending capture state. Submit a new `state` and ordinary `capture` to establish
+recovery from their own acknowledgements and PNG. This tests the bridge's request
+recovery path; it does not inject a production renderer or actual GPU failure.
+
 Read `events.ndjson` for `started`, `connecting`, `ready`, `input_started`,
 `completed`, `failed`, and `finished`. Rows contain `schema:1`, `loader`, `role`,
 `tick`, optional request `id`, and `detail`. Wait for `ready` before submitting actions.

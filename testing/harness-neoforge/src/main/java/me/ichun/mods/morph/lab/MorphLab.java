@@ -51,6 +51,7 @@ public final class MorphLab {
     private int releaseTick;
     private String captureId;
     private boolean captureSubmitted;
+    private boolean injectCaptureFailure;
 
     public MorphLab() throws IOException {
         if (!Boolean.getBoolean("morph.lab.enabled")) {
@@ -192,6 +193,20 @@ public final class MorphLab {
                 }
                 case "command" -> client.player.connection.sendCommand(request.get("command").getAsString());
                 case "state" -> { }
+                case "probe" -> {
+                    String name = request.get("name").getAsString();
+                    if (name.equals("capture-failure")) {
+                        captureId = id;
+                        captureSubmitted = false;
+                        injectCaptureFailure = true;
+                    } else {
+                        Map<String, Object> result = new LinkedHashMap<>(LabComponentProbes.run(client, name));
+                        boolean passed = Boolean.TRUE.equals(result.get("passed"));
+                        if (!passed) result.put("recoverable", true);
+                        emit(passed ? "completed" : "failed", id, result);
+                    }
+                    return;
+                }
                 case "capture" -> {
                     captureId = id;
                     captureSubmitted = false;
@@ -220,6 +235,10 @@ public final class MorphLab {
         Minecraft client = Minecraft.getInstance();
         String id = captureId;
         try {
+            if (injectCaptureFailure) {
+                injectCaptureFailure = false;
+                throw new InjectedCaptureFailure();
+            }
             Screenshot.takeScreenshot(client.gameRenderer.mainRenderTarget(), image -> {
                 try (image) {
                     Path target = directory.resolve("captures").resolve(id + ".png");
@@ -232,9 +251,18 @@ public final class MorphLab {
                     client.execute(() -> fail(client, id, error));
                 }
             });
+        } catch (InjectedCaptureFailure error) {
+            captureId = null;
+            captureSubmitted = false;
+            emit("failed", id, Map.of("probe", "capture-failure", "injected", true,
+                    "recoverable", true, "error", error.toString(), "stage", "before_framebuffer_readback"));
         } catch (Exception error) {
             fail(client, id, error);
         }
+    }
+
+    private static final class InjectedCaptureFailure extends IOException {
+        private InjectedCaptureFailure() { super("Deliberate test-only capture failure"); }
     }
 
     private KeyMapping key(Minecraft client, String name) {
