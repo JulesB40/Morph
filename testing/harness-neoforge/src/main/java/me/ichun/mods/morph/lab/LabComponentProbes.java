@@ -29,6 +29,7 @@ final class LabComponentProbes {
             case "wither-heads" -> wither();
             case "sniffer-middle-legs" -> sniffer(client);
             case "dragon-renderer" -> dragon(client);
+            case "renderer-fault-recovery" -> rendererFaultRecovery(client);
             default -> throw new IllegalArgumentException("Unknown component probe: " + name);
         });
         result.put("probe", name);
@@ -74,6 +75,88 @@ final class LabComponentProbes {
 
     private static boolean close(float actual, float expected) {
         return Float.isFinite(actual) && Math.abs(actual - expected) < .0001F;
+    }
+
+    private static Map<String, Object> rendererFaultRecovery(Minecraft client) {
+        var camera = client.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
+        if (camera == null) throw new IllegalStateException("No rendered camera available");
+        var source = (AvatarRenderState) client.getEntityRenderDispatcher().getRenderer(client.player)
+                .createRenderState(client.player, .5F);
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("fixture", "Explicit pig render adapter; live selected form unchanged");
+        try {
+            MorphRenderSnapshots.clear();
+            var baseline = MorphRenderSnapshots.extract(client.player, source, "minecraft:pig");
+            if (baseline == null) throw new IllegalStateException("Unfaulted pig extraction failed");
+            evidence.put("renderer", client.getEntityRenderDispatcher().getRenderer(baseline).getClass().getName());
+            evidence.put("renderState", baseline.getClass().getName());
+            var baselineNodes = new net.minecraft.client.renderer.SubmitNodeStorage();
+            boolean baselineSubmitted = me.ichun.mods.morph.client.transition.MorphTransitionRenderer.renderSnapshot(
+                    baseline, new com.mojang.blaze3d.vertex.PoseStack(), baselineNodes, camera);
+            boolean baselineHasNodes = !baselineNodes.getSubmitsPerOrder().isEmpty();
+            evidence.put("baselineSubmitted", baselineSubmitted);
+            evidence.put("baselineHasNodes", baselineHasNodes);
+
+            boolean extractionReturnedNull;
+            int extractionInjections;
+            try (var fault = LabRendererFaults.open(LabRendererFaults.Stage.EXTRACTION, 1)) {
+                extractionReturnedNull = MorphRenderSnapshots.extract(client.player, source, "minecraft:pig") == null;
+                extractionInjections = fault.injected();
+            }
+            evidence.put("extractionReturnedNull", extractionReturnedNull);
+            evidence.put("extractionInjections", extractionInjections);
+            MorphRenderSnapshots.clear();
+            var recovered = MorphRenderSnapshots.extract(client.player, source, "minecraft:pig");
+            if (recovered == null) throw new IllegalStateException("Pig extraction did not recover after clearing failure cache");
+
+            boolean submissionReturnedFalse;
+            int submissionInjections;
+            var failedNodes = new net.minecraft.client.renderer.SubmitNodeStorage();
+            try (var fault = LabRendererFaults.open(LabRendererFaults.Stage.SUBMISSION, 1)) {
+                submissionReturnedFalse = !me.ichun.mods.morph.client.transition.MorphTransitionRenderer.renderSnapshot(
+                        recovered, new com.mojang.blaze3d.vertex.PoseStack(), failedNodes, camera);
+                submissionInjections = fault.injected();
+            }
+            boolean guardCleared = !me.ichun.mods.morph.client.transition.MorphTransitionRenderer.isRendering();
+            evidence.put("submissionReturnedFalse", submissionReturnedFalse);
+            evidence.put("submissionInjections", submissionInjections);
+            evidence.put("failedSubmissionHasNoNodes", failedNodes.getSubmitsPerOrder().isEmpty());
+            evidence.put("guardCleared", guardCleared);
+            me.ichun.mods.morph.client.transition.MorphTransitionRenderer.clearFailures();
+            var recoveredNodes = new net.minecraft.client.renderer.SubmitNodeStorage();
+            boolean recoveredSubmission = me.ichun.mods.morph.client.transition.MorphTransitionRenderer.renderSnapshot(
+                    recovered, new com.mojang.blaze3d.vertex.PoseStack(), recoveredNodes, camera);
+            boolean recoveredHasNodes = !recoveredNodes.getSubmitsPerOrder().isEmpty();
+            evidence.put("recoveredSubmission", recoveredSubmission);
+            evidence.put("recoveredHasNodes", recoveredHasNodes);
+
+            var transitionNodes = new net.minecraft.client.renderer.SubmitNodeStorage();
+            boolean transitionFallback;
+            int transitionCallbacks;
+            int transitionInjections;
+            try (var fault = LabRendererFaults.open(LabRendererFaults.Stage.SUBMISSION, 1)) {
+                transitionFallback = me.ichun.mods.morph.client.transition.MorphTransitionRenderer.render(
+                        new me.ichun.mods.morph.client.transition.MorphTransitionRenderer.Frame(recovered, recovered, .5F),
+                        new com.mojang.blaze3d.vertex.PoseStack(), transitionNodes, camera);
+                transitionCallbacks = fault.callbacks();
+                transitionInjections = fault.injected();
+            }
+            boolean transitionHasNodes = !transitionNodes.getSubmitsPerOrder().isEmpty();
+            boolean scopesCleared = !LabRendererFaults.active()
+                    && !me.ichun.mods.morph.client.transition.MorphTransitionRenderer.isRendering();
+            evidence.put("transitionFallback", transitionFallback);
+            evidence.put("transitionCallbacks", transitionCallbacks);
+            evidence.put("transitionInjections", transitionInjections);
+            evidence.put("transitionHasNodes", transitionHasNodes);
+            evidence.put("scopesCleared", scopesCleared);
+            evidence.put("passed", baselineSubmitted && baselineHasNodes && extractionReturnedNull && extractionInjections == 1
+                    && submissionReturnedFalse && submissionInjections == 1 && failedNodes.getSubmitsPerOrder().isEmpty()
+                    && guardCleared && recoveredSubmission && recoveredHasNodes && transitionFallback && transitionHasNodes
+                    && transitionCallbacks == 2 && transitionInjections == 1 && scopesCleared);
+            return evidence;
+        } finally {
+            MorphRenderSnapshots.clear();
+        }
     }
 
     private static Map<String, Object> dragon(Minecraft client) {

@@ -1,0 +1,7 @@
+{
+  "required": true,
+  "package": "me.ichun.mods.morph.lab.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "client": ["PigRendererFaultMixin"],
+  "injectors": {"defaultRequire": 1}
+}

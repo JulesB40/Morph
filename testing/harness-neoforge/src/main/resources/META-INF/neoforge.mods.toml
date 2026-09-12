@@ -4,3 +4,5 @@ modId="morph_lab"
 version="1.0.0"
 displayName="Morph Lab (test only)"
 description='''Opt-in local client automation bridge. Never include in release artifacts.'''
+[[mixins]]
+config="morph_lab.mixins.json"
