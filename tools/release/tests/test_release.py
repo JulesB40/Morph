@@ -74,7 +74,7 @@ class ReleaseTests(unittest.TestCase):
                 state, calls, fake_gh = self.fake_github(out, initial)
                 with patch.object(release, "ROOT", root), patch.object(release, "gh", fake_gh):
                     release.publish(out, VERSION, SHA, "JulesB40/Morph")
-                self.assertFalse(state["draft"])
+                self.assertFalse(state["isDraft"])
                 self.assertEqual(len(state["assets"]), 4)
                 if initial == "published":
                     self.assertFalse(any(call[1] in ("create", "upload", "edit") for call in calls))
@@ -86,7 +86,7 @@ class ReleaseTests(unittest.TestCase):
             with self.subTest(conflict=conflict), tempfile.TemporaryDirectory() as temp:
                 root, out = self.release_fixture(temp)
                 state, calls, fake_gh = self.fake_github(out, "published")
-                if conflict == "source": state["target_commitish"] = "0" * 40
+                if conflict == "source": state["targetCommitish"] = "0" * 40
                 if conflict == "digest": state["assets"][0]["digest"] = "sha256:wrong"
                 if conflict == "missing": state["assets"].pop()
                 if conflict == "extra": state["assets"].append({"name": "unexpected.jar"})
@@ -102,9 +102,10 @@ class ReleaseTests(unittest.TestCase):
         return root, out
 
     def fake_github(self, out, initial):
-        assets = [{"name": p.name, "digest": f"sha256:{hashlib.sha256(p.read_bytes()).hexdigest()}"}
-                  for p in sorted(out.iterdir())]
-        state = {"target_commitish": SHA, "draft": initial != "published",
+        assets = [{"name": p.name, "digest": f"sha256:{hashlib.sha256(p.read_bytes()).hexdigest()}",
+                   "id": f"RA_node{index}", "apiUrl": f"https://api.github.com/repos/JulesB40/Morph/releases/assets/{index}"}
+                  for index, p in enumerate(sorted(out.iterdir()))]
+        state = {"targetCommitish": SHA, "isDraft": initial != "published",
                  "assets": assets[:1] if initial == "partial" else list(assets)}
         exists = initial != "new"
         calls = []
@@ -113,16 +114,17 @@ class ReleaseTests(unittest.TestCase):
             nonlocal exists
             calls.append(args)
             if args[:2] == ("release", "view"):
-                return SimpleNamespace(returncode=0 if exists else 1, stdout='"https://example.test/release"')
+                return SimpleNamespace(returncode=0 if exists else 1,
+                                       stdout=json.dumps(state) if "--jq" not in args else "https://example.test/release")
             if args[:2] == ("release", "create"):
                 exists = True
             elif args[:2] == ("release", "upload"):
                 state["assets"].append(next(asset for asset in assets if asset["name"] == Path(args[3]).name))
             elif args[:2] == ("release", "edit"):
                 self.assertEqual({asset["name"] for asset in state["assets"]}, {p.name for p in out.iterdir()})
-                state["draft"] = False
-            elif args == ("api", f"repos/JulesB40/Morph/releases/tags/26.2-{VERSION}"):
-                return SimpleNamespace(returncode=0, stdout=json.dumps(state))
+                state["isDraft"] = False
+            elif args[0] == "api" and args[1].startswith("https://api.github.com/repos/JulesB40/Morph/releases/assets/"):
+                return SimpleNamespace(returncode=0, stdout=json.dumps(next(asset for asset in state["assets"] if asset["apiUrl"] == args[1])))
             else:
                 self.fail(f"Unexpected GitHub command: {args}")
             return SimpleNamespace(returncode=0, stdout="")

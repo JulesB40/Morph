@@ -103,24 +103,27 @@ def publish(output: Path, version: str, sha: str, repo: str) -> None:
         gh("release", "create", tag, *(str(p) for p in files), "--repo", repo, "--target", sha,
            "--title", f"Morph 26.2 — {version}", "--prerelease", "--draft", "--notes-file", str(notes))
     # Resume partial drafts without replacing any already-uploaded bytes.
-    endpoint = f"repos/{repo}/releases/tags/{tag}"
-    current = json.loads(gh("api", endpoint).stdout)
-    if current["target_commitish"] != sha:
+    current = json.loads(gh("release", "view", tag, "--repo", repo,
+                            "--json", "targetCommitish,isDraft,assets").stdout)
+    if current["targetCommitish"] != sha:
         raise ValueError("Existing release targets another source commit")
     remote = {asset["name"]: asset for asset in current["assets"]}
     if set(remote) - {p.name for p in files}:
         raise ValueError("Existing release contains unexpected assets")
     for path in files:
         if path.name not in remote:
-            if not current["draft"]:
+            if not current["isDraft"]:
                 raise ValueError("Published release is missing an asset")
             gh("release", "upload", tag, str(path), "--repo", repo)
-    remote = {asset["name"]: asset for asset in json.loads(gh("api", endpoint).stdout)["assets"]}
+    remote = {asset["name"]: asset for asset in json.loads(gh("release", "view", tag, "--repo", repo,
+                                                             "--json", "assets").stdout)["assets"]}
     for path in files:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
-        if remote.get(path.name, {}).get("digest") != f"sha256:{digest}":
+        # Draft tags do not resolve through REST; CLI discovery supplies each asset's REST URL.
+        asset = json.loads(gh("api", remote[path.name]["apiUrl"]).stdout)
+        if asset.get("digest") != f"sha256:{digest}":
             raise ValueError("Release asset differs from this tested build")
-    if current["draft"]:
+    if current["isDraft"]:
         gh("release", "edit", tag, "--repo", repo, "--draft=false")
     print(gh("release", "view", tag, "--repo", repo, "--json", "url", "--jq", ".url").stdout.strip())
 

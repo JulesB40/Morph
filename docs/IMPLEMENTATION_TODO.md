@@ -8,6 +8,8 @@ This is an evidence-backed inventory, not a completion percentage. The project h
 
 These entries have a retained run or test result for the stated scope. “Done” is deliberately narrow: it does not close the wider work area.
 
+- **NeoForge CI and lab package repair:** at `69fb239`, [both loader build jobs passed](https://github.com/JulesB40/Morph/actions/runs/34720694104). NeoForge passed the same 20 native server GameTests with and without the lab mod, including native-pig crouch geometry and cramped-reset rejection. Fabric also compiled its client harness. This clears the duplicate-package server startup failure; loaded-client equipment assertions remain unverified.
+- **Download packaging:** both loader JARs are [available as development prereleases](https://github.com/JulesB40/Morph/releases), with matching embedded versions, source manifests, and verified SHA-256 hashes. Six release-tool tests cover packaging and publication retries, including a draft-lookup regression reproduced before the fix. The workflow publishes after both loader jobs pass; full installation and gameplay certification remain below.
 - **Harness fundamentals:** the Morph Lab Python suite reports 91 infrastructure tests, with two Windows symlink-privilege skips. It exercises queue leases, cleanup, source mutation detection, controller bridges, failed assertions, and memory admission. These are harness checks, not 91 Minecraft gameplay scenarios.
 - **Flight and nametag controls (Fabric):** the hidden-framebuffer pilot passed bat/bee flight and nametag controls (`a0a0783...`); the result is Fabric client evidence only.
 - **Husk Hunger correction (NeoForge and Fabric):** the five native cases passed after the empty-hand and local-difficulty fixes (`b784364...` NeoForge and `408a78a...` Fabric). This closes those cases, not every combat or loader path.
@@ -35,8 +37,6 @@ The following source exists on the current branch, but the required independent 
 
 ### Current test blockers
 
-- Verify the NeoForge equipment probe's relocation to the lab package against the duplicate-package startup failure (`5f105b...`). CI now runs the server GameTests both with and without the lab mod; client equipment assertions still require a loaded client world.
-- Verify the corrected native-pig crouch test against failing CI run `34719851105`. Native pigs retain their dimensions when crouching; the replacement compares native height, width, and eye height and preserves cramped-reset rejection. Download publication is gated on both loader jobs passing.
 - Verify the already-written Fabric test working-directory correction in `fabric/build.gradle`: the previous run created unexpected `fabric/logs/latest.log`. Rerun from a frozen snapshot and require source verification.
 
 ### 1. Collection and selector
@@ -95,7 +95,7 @@ The following source exists on the current branch, but the required independent 
 
 ## Loader and evidence limits
 
-The source layout is shared (`src/main`) with separate Fabric and NeoForge adapters. A source-level implementation or a unit test does not certify both loaders. The retained evidence includes Fabric client probes, NeoForge client/server probes, and one NeoForge real two-client session; it does not yet provide equivalent full client/render/multiplayer matrices for both loaders. The historical Fabric stray-log and NeoForge duplicate-package failures now have source corrections. Their scope and remaining verification are listed under Current test blockers; they do not establish feature passes.
+The source layout is shared (`src/main`) with separate Fabric and NeoForge adapters. A source-level implementation or a unit test does not certify both loaders. The retained evidence includes Fabric client probes, NeoForge client/server probes, and one NeoForge real two-client session; it does not yet provide equivalent full client/render/multiplayer matrices for both loaders. The NeoForge duplicate-package correction passed server startup; the Fabric stray-log correction still needs a frozen lab rerun. These checks do not establish client feature passes.
 
 Material validation remains limited: the 91-form/native-model inventory is source metadata and authored probe contracts; screenshots prove only the exercised scene; MP4s are tick-sampled; sound events do not prove audible output; committed memory is not process RSS; and no result guarantees every mob, variant, renderer, addon, resource pack, or multiplayer combination.
 
