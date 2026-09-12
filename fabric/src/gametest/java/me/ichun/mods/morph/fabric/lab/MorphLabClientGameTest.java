@@ -25,6 +25,7 @@ import net.minecraft.client.model.animal.sniffer.SnifferModel;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.SnifferRenderState;
+import net.minecraft.client.sounds.SoundEventListener;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
@@ -34,7 +35,7 @@ import org.lwjgl.glfw.GLFW;
 /** Developer-only probes. Assertions are evidence, never an instruction to change production behavior. */
 public final class MorphLabClientGameTest implements FabricClientGameTest {
     private static final List<String> DEFAULTS = List.of("dragon-renderer", "sniffer-middle-legs",
-            "bat-bee-flight", "nametag", "transformation-clip", "intentional-assertion");
+            "bat-bee-flight", "nametag", "transformation-clip", "transformation-sound", "intentional-assertion");
     private Path runDir;
     private long sequence;
     private final List<Map<String, Object>> results = new ArrayList<>();
@@ -85,6 +86,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
                 case "bat-bee-flight" -> new MorphFlyingClientGameTest().runTest(context);
                 case "nametag" -> new MorphNametagClientGameTest().runTest(context);
                 case "transformation-clip" -> clip(context);
+                case "transformation-sound" -> sound(context);
                 case "intentional-assertion" -> throw new DeliberateAssertion("Morph Lab intentionally wrong oracle: 2 + 2 must equal 5");
                 default -> throw new IllegalArgumentException(scenario);
             }
@@ -185,6 +187,53 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
                 }
                 if (!staticParts.isEmpty()) throw new AssertionError("Swimming must move all six native Sniffer legs; static/nonfinite parts: " + staticParts);
             });
+        }
+    }
+
+    private void sound(ClientGameTestContext context) throws Exception {
+        String scenario = "transformation-sound";
+        try (var world = context.worldBuilder().create()) {
+            world.getConnection().waitForChunksDownload();
+            var server = world.getServer();
+            server.runCommand("gamemode creative @a");
+            server.runCommand("morph grant @p minecraft:pig");
+            world.getConnection().waitForClientboundPackets();
+            context.runOnClient(client -> client.gui.setScreen(null));
+            List<Map<String, Object>> sounds = new ArrayList<>();
+            SoundEventListener listener = context.computeOnClient(client ->
+                    (SoundEventListener) (instance, soundEvent, range) -> {
+                        if (!instance.getIdentifier().toString().startsWith("morph:")) return;
+                        Map<String, Object> sample = new LinkedHashMap<>();
+                        sample.put("sound_id", instance.getIdentifier().toString());
+                        sample.put("category", instance.getSource().name());
+                        sample.put("volume", instance.getVolume());
+                        sample.put("pitch", instance.getPitch());
+                        sample.put("position", List.of(instance.getX(), instance.getY(), instance.getZ()));
+                        sample.put("client_tick", client.level == null ? -1L : client.level.getGameTime());
+                        sample.put("monotonic_ns", System.nanoTime());
+                        sample.put("relative", instance.isRelative());
+                        sounds.add(sample);
+                    });
+            context.runOnClient(client -> client.getSoundManager().addListener(listener));
+            try {
+                server.runCommand("execute as @a run morph select minecraft:pig");
+                context.waitFor(client -> client.player != null && "minecraft:pig".equals(MorphFabricClient.FORMS.get(client.player.getUUID())), 200);
+                // The contract schedules the sound twenty server ticks after selection.
+                context.waitTicks(60);
+                world.getConnection().waitForClientboundPackets();
+                List<Map<String, Object>> selected = context.computeOnClient(client -> List.copyOf(sounds));
+                for (Map<String, Object> sample : selected) event(scenario, "sound_event", sample);
+                write(runDir.resolve("scenarios").resolve(scenario).resolve("sounds.json"), Map.of(
+                        "scope", "client SoundEventListener notification; no audible-output assertion",
+                        "audio", "not captured", "expected_sound_id", "morph:morph", "expected_category", "PLAYERS",
+                        "events", selected));
+                if (selected.size() != 1 || !"morph:morph".equals(selected.getFirst().get("sound_id"))
+                        || !"PLAYERS".equals(selected.getFirst().get("category"))) {
+                    throw new AssertionError("Selecting pig must emit exactly one morph:morph event in PLAYERS; observed " + selected);
+                }
+            } finally {
+                context.runOnClient(client -> client.getSoundManager().removeListener(listener));
+            }
         }
     }
 
