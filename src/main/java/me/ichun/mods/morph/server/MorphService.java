@@ -31,6 +31,10 @@ public final class MorphService {
             public void transition(ServerPlayer player, me.ichun.mods.morph.model.CollectionEntry previous, me.ichun.mods.morph.model.CollectionEntry next) { MorphNetwork.broadcastDescriptorTransition(player, previous, next); }
         });
         me.ichun.mods.morph.shape.ShapeHooks.setDescriptorResolver(player -> player instanceof ServerPlayer serverPlayer ? collection(serverPlayer).activeDescriptor() : null);
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerAboutToStartEvent event) ->
+                MorphAuthority.startConfiguration(event.getServer(), net.neoforged.fml.loading.FMLPaths.CONFIGDIR.get()));
+        NeoForge.EVENT_BUS.addListener((net.neoforged.neoforge.event.server.ServerStoppedEvent event) ->
+                me.ichun.mods.morph.config.MorphConfiguration.stop(event.getServer()));
         NeoForge.EVENT_BUS.addListener(MorphService::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, MorphService::onDeath);
         NeoForge.EVENT_BUS.addListener(MorphService::onLogin);

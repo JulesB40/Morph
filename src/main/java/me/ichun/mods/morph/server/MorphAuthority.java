@@ -33,6 +33,10 @@ public final class MorphAuthority {
         long appearance, generation, lastSequence = -1, window = Long.MIN_VALUE, lastSnapshot = Long.MIN_VALUE;
         int requests;
     }
+    public static void startConfiguration(Object server, java.nio.file.Path directory) {
+        var result = me.ichun.mods.morph.config.MorphConfiguration.start(server, directory);
+        if (!result.accepted()) com.mojang.logging.LogUtils.getLogger().warn("Morph configuration rejected: {}", result.errors());
+    }
     public static void setTransport(Transport value) { transport = java.util.Objects.requireNonNull(value); }
     private static Session session(ServerPlayer player) { return sessions.computeIfAbsent(player, ignored -> new Session()); }
     private static long tick(ServerPlayer player) { return player.level().getServer().overworld().getGameTime(); }

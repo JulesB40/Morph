@@ -32,6 +32,9 @@ public final class MorphFabric implements ModInitializer {
                 ServerPlayNetworking.send(player, new MorphSnapshotPage(page));
     }
     @Override public void onInitialize() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STARTING.register(server ->
+            me.ichun.mods.morph.server.MorphAuthority.startConfiguration(server, net.fabricmc.loader.api.FabricLoader.getInstance().getConfigDir()));
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(me.ichun.mods.morph.config.MorphConfiguration::stop);
         me.ichun.mods.morph.server.MorphAuthority.setTransport(new me.ichun.mods.morph.server.MorphAuthority.Transport() {
             public void collection(ServerPlayer player) { owned(player); }
             public void appearance(ServerPlayer player) {
