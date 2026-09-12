@@ -128,10 +128,10 @@ class SessionTests(unittest.TestCase):
 
     def test_optional_probes_and_capture_recovery(self):
         spec=self.spec()
-        spec.update(component_probes=['wither-heads','sniffer-middle-legs'],capture_recovery=True,frame_scene=True)
+        spec.update(component_probes=['wither-heads','sniffer-middle-legs','dragon-renderer','renderer-fault-recovery'],capture_recovery=True,frame_scene=True)
         result=run_session(spec,self.root/'run',self.root)
         self.assertEqual(result['status'],'passed',result)
-        self.assertEqual(len(result['component_probes']),2)
+        self.assertEqual(len(result['component_probes']),4)
         self.assertEqual(result['capture_recovery']['injection']['event'],'failed')
         self.assertIn('injected_capture_failure_then_state_and_png',result['checks'])
         self.assertAlmostEqual(result['frame_scene']['yaw'],80.53767779)

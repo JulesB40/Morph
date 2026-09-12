@@ -22,7 +22,7 @@ public final class MorphService {
                 var forms = MorphAuthority.collection(player);
                 MorphNetwork.sendSnapshot(player, forms.snapshot());
             }
-            public void appearance(ServerPlayer player) { MorphNetwork.broadcastState(player, collection(player).activeForm()); }
+            public void appearance(ServerPlayer player) { MorphNetwork.broadcastState(player, MorphService.collection(player).activeForm()); }
             public void transition(ServerPlayer player, me.ichun.mods.morph.model.CollectionEntry previous, me.ichun.mods.morph.model.CollectionEntry next) { MorphNetwork.broadcastDescriptorTransition(player, previous, next); }
         });
         me.ichun.mods.morph.shape.ShapeHooks.setDescriptorResolver(player -> player instanceof ServerPlayer serverPlayer ? collection(serverPlayer).activeDescriptor() : null);
