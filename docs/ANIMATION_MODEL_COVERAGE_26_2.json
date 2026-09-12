@@ -758,7 +758,8 @@
         "variant-model-parts",
         "action-pose-preservation"
       ],
-      "visual_status": "not_verified_by_this_inventory"
+      "visual_status": "not_verified_by_this_inventory",
+      "idle_motion": "native_velocity_flap_clock_authored; per_adapter_tick_dedup_partial_interpolation_bounded_catchup; visual_probe_pending"
     },
     {
       "form": "minecraft:evoker",
