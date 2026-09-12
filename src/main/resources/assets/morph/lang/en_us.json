@@ -50,5 +50,7 @@
   "morph.radial.title": "Favorite morphs",
   "morph.radial.hint": "Choose a favorite · Esc to cancel",
   "morph.radial.empty": "Add favorites in the morph selector first.",
-  "morph.radial.collection": "Open collection"
+  "morph.radial.collection": "Open collection",
+  "morph.selector.preview": "Preview",
+  "morph.selector.preview.unavailable": "Preview unavailable"
 }

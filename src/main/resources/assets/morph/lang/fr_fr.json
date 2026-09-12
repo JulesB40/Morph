@@ -50,5 +50,7 @@
   "morph.radial.title": "Formes favorites",
   "morph.radial.hint": "Choisissez une favorite · Échap pour annuler",
   "morph.radial.empty": "Ajoutez d’abord des favorites dans le sélecteur.",
-  "morph.radial.collection": "Ouvrir la collection"
+  "morph.radial.collection": "Ouvrir la collection",
+  "morph.selector.preview": "Aperçu",
+  "morph.selector.preview.unavailable": "Aperçu indisponible"
 }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import me.ichun.mods.morph.model.CollectionSnapshot;
+import me.ichun.mods.morph.model.CollectionEntry;
 import me.ichun.mods.morph.model.FormDescriptor;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
@@ -37,6 +38,8 @@ public final class MorphScreen extends Screen implements CollectionView {
     private Button deleteButton;
     private Button resetButton;
     private Button filterButton;
+    private Button previewButton;
+    private CollectionSnapshot snapshot;
     private String active = "";
     private long revision = -1;
     private String deleteConfirmation;
@@ -64,6 +67,7 @@ public final class MorphScreen extends Screen implements CollectionView {
         if (snapshot.revision() < revision) return;
         if (snapshot.revision() != revision) deleteConfirmation = null;
         revision = snapshot.revision();
+        this.snapshot = snapshot;
         active = snapshot.activeEntryId() == null ? "" : snapshot.activeEntryId().value();
         model.replace(snapshot.entries().stream().map(entry -> {
             FormDescriptor descriptor = entry.descriptor();
@@ -106,8 +110,8 @@ public final class MorphScreen extends Screen implements CollectionView {
     }
 
     @Override protected void init() {
-        panelWidth = Math.min(420, width - 16);
-        left = (width - panelWidth) / 2;
+        panelWidth = width >= 640 ? 360 : Math.min(420, width - 16);
+        left = width >= 640 ? (width - panelWidth - 236) / 2 : (width - panelWidth) / 2;
         footer = height - 99;
         model.pageSize(Math.max(1, (footer - 80) / 24));
         search = addRenderableWidget(new EditBox(font, left, 47, panelWidth - 112, 20,
@@ -143,7 +147,10 @@ public final class MorphScreen extends Screen implements CollectionView {
         nametagButton = addRenderableWidget(Button.builder(nametagLabel(), b -> {
             if (minecraft.player != null) minecraft.player.connection.sendCommand("morph nametag " +
                     (me.ichun.mods.morph.client.nametag.MorphNameTags.visible(minecraft.player.getUUID()) ? "off" : "on"));
-        }).bounds(left, footer + 48, panelWidth - 88, 20).build());
+        }).bounds(left, footer + 48, panelWidth - 176, 20).build());
+        previewButton = addRenderableWidget(Button.builder(Component.translatable("morph.selector.preview"), b -> {
+            if (selectedEntry() != null) minecraft.gui.setScreen(new MorphPreviewScreen(this, selectedEntry()));
+        }).bounds(left + panelWidth - 172, footer + 48, 84, 20).build());
         addRenderableWidget(Button.builder(Component.translatable("morph.selector.refresh"), b -> {
             if (actions != null) actions.refresh();
         }).bounds(left + panelWidth - 84, footer + 48, 84, 20).build()).active = actions != null;
@@ -187,6 +194,7 @@ public final class MorphScreen extends Screen implements CollectionView {
         selectButton.active = canMutate() && model.selected() != null;
         deleteButton.active = canMutate() && actions != null && model.selected() != null;
         resetButton.active = loaded && !waiting.pending() && !active.isEmpty();
+        previewButton.active = selectedEntry() != null;
         selectButton.setMessage(Component.translatable(deleteConfirmation == null ? "morph.selector.select" : "morph.selector.delete.confirm"));
         deleteButton.setMessage(Component.translatable(deleteConfirmation == null ? "morph.selector.delete" : "gui.cancel"));
         if (deleteConfirmation != null) {
@@ -197,6 +205,11 @@ public final class MorphScreen extends Screen implements CollectionView {
     }
 
     private boolean canMutate() { return loaded && allowed && !waiting.pending(); }
+    private CollectionEntry selectedEntry() {
+        if (snapshot == null || model.selected() == null) return null;
+        String id = model.selected().id();
+        return snapshot.entries().stream().filter(entry -> entry.id().value().equals(id)).findFirst().orElse(null);
+    }
     private void request(long sequence) {
         waiting.start(sequence);
         feedback = null;
@@ -248,10 +261,24 @@ public final class MorphScreen extends Screen implements CollectionView {
         if (loaded && model.visibleCount() == 0) {
             Component empty = Component.translatable(model.count() == 0 ? "morph.selector.empty"
                     : model.favoritesOnly() && model.query().isBlank() ? "morph.selector.no_favorites" : "morph.selector.no_matches");
-            graphics.centeredText(font, font.plainSubstrByWidth(empty.getString(), panelWidth), width / 2, 81, 0xFFBBBBBB);
+            graphics.centeredText(font, font.plainSubstrByWidth(empty.getString(), panelWidth), left + panelWidth / 2, 81, 0xFFBBBBBB);
         }
         graphics.centeredText(font, Component.translatable("morph.selector.page", model.page() + 1, model.pages()),
-                width / 2, footer + 6, 0xFFBBBBBB);
+                left + panelWidth / 2, footer + 6, 0xFFBBBBBB);
+        if (width >= 640) {
+            int previewLeft = left + panelWidth + 16;
+            int previewRight = previewLeft + 220;
+            graphics.fill(previewLeft, 77, previewRight, footer + 68, 0x55000000);
+            CollectionEntry entry = selectedEntry();
+            if (entry != null) {
+                boolean rendered = me.ichun.mods.morph.client.MorphRenderSnapshots.preview(graphics, entry,
+                        previewLeft + 4, 81, previewRight - 4, footer + 64, mouseX, mouseY);
+                if (!rendered) graphics.centeredText(font, Component.translatable("morph.selector.preview.unavailable"),
+                        previewLeft + 110, (77 + footer + 68) / 2, 0xFFBBBBBB);
+                graphics.centeredText(font, font.plainSubstrByWidth(MorphLabels.name(entry.descriptor()).getString(), 220),
+                        previewLeft + 110, footer + 78, 0xFFFFFFFF);
+            }
+        }
     }
     @Override public boolean isPauseScreen() { return false; }
 }
