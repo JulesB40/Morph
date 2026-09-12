@@ -27,6 +27,9 @@ import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.SnifferRenderState;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EntityTypes;
+import net.fabricmc.fabric.api.client.gametest.v1.context.TestServerContext;
+import com.mojang.blaze3d.systems.RenderSystem;
+import org.lwjgl.glfw.GLFW;
 
 /** Developer-only probes. Assertions are evidence, never an instruction to change production behavior. */
 public final class MorphLabClientGameTest implements FabricClientGameTest {
@@ -50,6 +53,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
             for (String scenario : cases) {
                 if (!DEFAULTS.contains(scenario)) throw new IllegalArgumentException("Unknown Morph Lab scenario: " + scenario);
             }
+            configureOwnWindow(context);
             for (String scenario : cases) runCase(context, scenario);
             boolean infrastructureFailure = results.stream().anyMatch(r -> "infrastructure_failure".equals(r.get("status")));
             boolean assertionFailure = results.stream().anyMatch(r -> "fail".equals(r.get("status")));
@@ -57,7 +61,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
                     "status", infrastructureFailure ? "infrastructure_failure" : assertionFailure ? "fail" : "pass",
                     "role", System.getProperty("morph.lab.role", "baseline"),
                     "run_id", runDir.getParent().getFileName().toString(), "cases", results,
-                    "artifacts", List.of("events.ndjson", "scenarios")));
+                    "artifacts", List.of("events.ndjson", "environment.json", "scenarios")));
         } catch (java.io.IOException failure) {
             throw new IllegalStateException("Cannot write Morph Lab evidence", failure);
         }
@@ -74,6 +78,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
         result.put("started_at", java.time.Instant.now().toString());
         event(scenario, "start", Map.of());
         try {
+            configureOwnWindow(context);
             switch (scenario) {
                 case "dragon-renderer" -> dragon(context);
                 case "sniffer-middle-legs" -> sniffer(context);
@@ -107,6 +112,12 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
                 result.put("status", "infrastructure_failure");
             }
         }
+        try (var files = Files.walk(directory)) {
+            List<String> artifacts = new ArrayList<>(files.filter(Files::isRegularFile)
+                    .map(path -> runDir.relativize(path).toString().replace('\\', '/')).sorted().toList());
+            artifacts.add("scenarios/" + scenario + "/result.json");
+            result.put("artifacts", artifacts);
+        }
         result.put("finished_at", java.time.Instant.now().toString());
         event(scenario, "result", result);
         write(directory.resolve("result.json"), result);
@@ -116,6 +127,8 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
     private void dragon(ClientGameTestContext context) throws Exception {
         try (var world = context.worldBuilder().create()) {
             world.getConnection().waitForChunksDownload();
+            selectedScene(context, world.getServer(), "minecraft:ender_dragon");
+            checkpoint(context, "dragon-renderer", "selected-form");
             context.runOnClient(client -> {
                 var dragon = EntityTypes.ENDER_DRAGON.create(client.level, EntitySpawnReason.LOAD);
                 if (dragon == null) throw new IllegalStateException("Native dragon creation failed");
@@ -136,6 +149,8 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
     private void sniffer(ClientGameTestContext context) throws Exception {
         try (var world = context.worldBuilder().create()) {
             world.getConnection().waitForChunksDownload();
+            selectedScene(context, world.getServer(), "minecraft:sniffer");
+            checkpoint(context, "sniffer-middle-legs", "selected-form");
             context.runOnClient(client -> {
                 var entity = EntityTypes.SNIFFER.create(client.level, EntitySpawnReason.LOAD);
                 if (entity == null) throw new IllegalStateException("Native Sniffer creation failed");
@@ -212,6 +227,69 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
         }
     }
 
+    private void configureOwnWindow(ClientGameTestContext context) throws java.io.IOException {
+        Map<String, Object> environment = context.computeOnClient(client -> {
+            boolean hidden = Boolean.parseBoolean(System.getProperty("morph.lab.hidden", "true"));
+            long handle = client.getWindow().handle();
+            if (hidden) GLFW.glfwHideWindow(handle);
+            client.options.pauseOnLostFocus = false;
+            var device = RenderSystem.getDevice().getDeviceInfo();
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("run_id", runDir.getParent().getFileName().toString());
+            data.put("role", System.getProperty("morph.lab.role", "baseline"));
+            data.put("loader", "fabric");
+            data.put("pid", ProcessHandle.current().pid());
+            data.put("hidden_requested", hidden);
+            data.put("own_window_handle", Long.toUnsignedString(handle));
+            data.put("own_window_visible", GLFW.glfwGetWindowAttrib(handle, GLFW.GLFW_VISIBLE) == GLFW.GLFW_TRUE);
+            data.put("own_window_focused", GLFW.glfwGetWindowAttrib(handle, GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE);
+            data.put("gpu_vendor", device.vendorName());
+            data.put("gpu_renderer", device.name());
+            data.put("gpu_backend", device.backendName());
+            data.put("gpu_driver", device.driverInfo());
+            data.put("os", System.getProperty("os.name"));
+            data.put("focus_isolation", "unproven; visibility sampled only after GameTest entrypoint starts");
+            return data;
+        });
+        write(runDir.resolve("environment.json"), environment);
+        event("harness", "environment", environment);
+    }
+
+    private void selectedScene(ClientGameTestContext context, TestServerContext server, String form) {
+        server.runCommand("time set noon");
+        server.runCommand("weather clear");
+        server.runCommand("fill -8 99 -8 8 99 8 minecraft:stone");
+        server.runCommand("gamemode creative @a");
+        server.runCommand("tp @a 0 100 0 180 0");
+        server.runCommand("morph grant @p " + form);
+        server.runCommand("execute as @a run morph select " + form);
+        context.waitFor(client -> client.player != null && form.equals(MorphFabricClient.FORMS.get(client.player.getUUID())), 200);
+        context.runOnClient(client -> {
+            client.options.setCameraType(CameraType.THIRD_PERSON_FRONT);
+            client.gui.setScreen(null);
+        });
+        context.waitTicks(120);
+    }
+
+    private void checkpoint(ClientGameTestContext context, String scenario, String name) throws java.io.IOException {
+        long before = context.computeOnClient(client -> client.level.getGameTime());
+        Path captured = context.takeScreenshot("morph-lab-" + scenario + "-" + name);
+        Path target = runDir.resolve("scenarios").resolve(scenario).resolve(name + ".png");
+        Files.copy(captured, target, StandardCopyOption.REPLACE_EXISTING);
+        Map<String, Object> evidence = context.computeOnClient(client -> {
+            Map<String, Object> data = new LinkedHashMap<>();
+            data.put("path", runDir.relativize(target).toString().replace('\\', '/'));
+            data.put("client_tick_before", before);
+            data.put("client_tick_after", client.level.getGameTime());
+            data.put("selected_form", String.valueOf(MorphFabricClient.FORMS.get(client.player.getUUID())));
+            data.put("own_window_visible", GLFW.glfwGetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_VISIBLE) == GLFW.GLFW_TRUE);
+            data.put("own_window_focused", GLFW.glfwGetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE);
+            data.put("scope", "framebuffer supporting evidence; no automated pixel oracle");
+            return data;
+        });
+        event(scenario, "checkpoint", evidence);
+        write(target.resolveSibling(name + ".json"), evidence);
+    }
     private synchronized void event(String scenario, String type, Map<String, ?> payload) throws java.io.IOException {
         Map<String, Object> event = new LinkedHashMap<>();
         event.put("schema_version", 1);
