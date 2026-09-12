@@ -7,6 +7,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class MorphLabServerGameTests {
+    @GameTest(maxTicks = 100) public void nativePoseDimensions(GameTestHelper helper) { me.ichun.mods.morph.lab.NativePoseProbes.verify(helper); }
     private static final HuskDamageProbes.Adapter ADAPTER = new HuskDamageProbes.Adapter() {
         private me.ichun.mods.morph.model.MorphCollection forms(ServerPlayer player) {
             return player.level().getServer().overworld().getDataStorage().computeIfAbsent(MorphSavedData.TYPE).collection(player.getUUID());

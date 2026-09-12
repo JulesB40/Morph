@@ -33,12 +33,16 @@ public final class MorphLabServer {
     @SubscribeEvent public static void functions(RegisterEvent event) {
         if (!Boolean.getBoolean("morph.lab.serverTests")) return;
         event.register(Registries.TEST_FUNCTION, registry -> {
+            registry.register(Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions"), NativePoseProbes::verify);
             for (var scenario : HuskDamageProbes.Case.values()) registry.register(id(scenario), helper -> HuskDamageProbes.run(helper, scenario, ADAPTER));
         });
     }
     @SubscribeEvent public static void tests(RegisterGameTestsEvent event) {
         if (!Boolean.getBoolean("morph.lab.serverTests")) return;
         var environment = event.registerEnvironment(Identifier.fromNamespaceAndPath("morph_lab", "baseline"));
+        event.registerTest(Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions"), new FunctionGameTestInstance(
+                ResourceKey.create(Registries.TEST_FUNCTION, Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions")),
+                new TestData<>(environment, Identifier.withDefaultNamespace("empty"), 100, 0, true)));
         for (var scenario : HuskDamageProbes.Case.values()) {
             ResourceKey<Consumer<GameTestHelper>> function = ResourceKey.create(Registries.TEST_FUNCTION, id(scenario));
             event.registerTest(id(scenario), new FunctionGameTestInstance(function,
