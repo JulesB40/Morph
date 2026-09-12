@@ -1,7 +1,6 @@
 package me.ichun.mods.morph.fabric.mixin;
 import me.ichun.mods.morph.fabric.client.MorphSnapshotHolder;
 import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
@@ -16,14 +15,13 @@ public abstract class LivingEntityRendererMixin {
     private void morph$submit(LivingEntityRenderState state, PoseStack pose, SubmitNodeCollector collector, CameraRenderState camera, CallbackInfo ci) {
         if (me.ichun.mods.morph.client.transition.MorphTransitionRenderer.isRendering()) return;
         if (state instanceof MorphSnapshotHolder holder && holder.morph$getTransition() != null) {
-            me.ichun.mods.morph.client.transition.MorphTransitionRenderer.render(holder.morph$getTransition(), pose, collector, camera);
-            ci.cancel();
+            if (me.ichun.mods.morph.client.transition.MorphTransitionRenderer.render(holder.morph$getTransition(), pose, collector, camera))
+                ci.cancel();
             return;
         }
         if (state instanceof MorphSnapshotHolder holder && holder.morph$getSnapshot() != null) {
-            LivingEntityRenderState snapshot = holder.morph$getSnapshot();
-            Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(snapshot).submit(snapshot, pose, collector, camera);
-            ci.cancel();
+            if (me.ichun.mods.morph.client.transition.MorphTransitionRenderer.renderSnapshot(holder.morph$getSnapshot(), pose, collector, camera))
+                ci.cancel();
         }
     }
 }

@@ -46,8 +46,9 @@ public final class MorphSwimmingClientGameTest implements FabricClientGameTest {
                         var original = (AvatarRenderState) client.getEntityRenderDispatcher().getRenderer(player).createRenderState(player, .5F);
                         if (me.ichun.mods.morph.client.MorphTransitions.extract(player, original, "minecraft:" + form) != null)
                             throw new AssertionError("Transformation still active for " + form);
-                        var snapshot = MorphRenderSnapshots.extract(player, original, "minecraft:" + form);
-                        if (snapshot == null) throw new AssertionError("Missing swimming renderer for " + form);
+                        var extracted = MorphRenderSnapshots.extract(player, original, "minecraft:" + form);
+                        if (!(extracted instanceof net.minecraft.client.renderer.entity.state.LivingEntityRenderState snapshot))
+                            throw new AssertionError("Missing living swimming renderer for " + form);
                         if (form.equals("pillager") || form.equals("villager")) {
                             try {
                                 // Check the actual renderer rotation, independently of the marker fields.

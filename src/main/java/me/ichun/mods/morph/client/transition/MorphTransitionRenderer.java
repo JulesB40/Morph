@@ -11,7 +11,7 @@ import java.util.Set;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.renderer.SubmitNodeCollector;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
@@ -30,33 +30,32 @@ public final class MorphTransitionRenderer {
 
     private MorphTransitionRenderer() {}
 
-    public record Frame(LivingEntityRenderState from, LivingEntityRenderState to, float progress) {}
+    public record Frame(EntityRenderState from, EntityRenderState to, float progress) {}
 
     /** Loader hooks use this guard when the source/destination is an ordinary avatar. */
     public static boolean isRendering() { return renderDepth != 0; }
 
-    public static void render(Frame frame, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
+    public static boolean render(Frame frame, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
+        if (invisibleNonLiving(frame.from()) || invisibleNonLiving(frame.to())) return false;
         renderDepth++;
         try {
             float progress = Math.clamp(frame.progress(), 0.0F, 1.0F);
             if (!Float.isFinite(progress) || progress >= 1.0F) {
                 submit(frame.to(), poses, collector, camera);
-                return;
+                return true;
             }
             if (progress <= 0.0F) {
                 submit(frame.from(), poses, collector, camera);
-                return;
+                return true;
             }
             if (UNSUPPORTED.contains(failureKey(frame.from())) || UNSUPPORTED.contains(failureKey(frame.to()))) {
-                safeFallback(frame.to(), poses, collector, camera);
-                return;
+                return safeFallback(frame.to(), poses, collector, camera);
             }
             // Respect vanilla invisibility rather than exposing a player through the transition.
-            if ((frame.from().isInvisible && frame.from().isInvisibleToPlayer)
-                || (frame.to().isInvisible && frame.to().isInvisibleToPlayer)) {
+            if (hiddenLiving(frame.from()) || hiddenLiving(frame.to())) {
                 // Vanilla still handles glowing outlines and visible equipment on invisible players.
                 submit(frame.to(), poses, collector, camera);
-                return;
+                return true;
             }
             float deformation = ease(Math.clamp((progress - 0.125F) / 0.75F, 0.0F, 1.0F));
             float alpha = progress < 0.125F ? ease(progress / 0.125F)
@@ -66,12 +65,12 @@ public final class MorphTransitionRenderer {
             if (previous == null) previous = next;
             if (previous.size == 0 || next.size == 0) {
                 submit(progress < 0.5F ? frame.from() : frame.to(), poses, collector, camera);
-                return;
+                return true;
             }
             // The skin covers a normal body only at the two ends of the animation.
             if (progress < 0.125F) submit(frame.from(), poses, collector, camera);
             else if (progress > 0.875F) submit(frame.to(), poses, collector, camera);
-            if (alpha <= 0.0F) return;
+            if (alpha <= 0.0F) return true;
             PackedMesh vertices = interpolate(previous, next, deformation, alpha < 1.0F);
             int color = (Math.round(alpha * 255.0F) << 24) | 0xFFFFFF;
             int light = frame.to().lightCoords;
@@ -84,27 +83,45 @@ public final class MorphTransitionRenderer {
                         OverlayTexture.NO_OVERLAY, light, data[i + 5], data[i + 6], data[i + 7]);
                 }
             });
+            return true;
         } catch (RuntimeException failure) {
             if (!loggedFailure) {
                 loggedFailure = true;
                 LogUtils.getLogger().warn("Morph transition mesh unavailable; using destination appearance", failure);
             }
-            safeFallback(frame.to(), poses, collector, camera);
+            return safeFallback(frame.to(), poses, collector, camera);
         } finally {
             renderDepth--;
         }
     }
 
+    /** True means a replacement was submitted; false leaves the original avatar visible. */
+    public static boolean renderSnapshot(EntityRenderState state, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
+        if (invisibleNonLiving(state)) return false;
+        renderDepth++;
+        try { return safeFallback(state, poses, collector, camera); }
+        finally { renderDepth--; }
+    }
+
+    private static boolean hiddenLiving(EntityRenderState state) {
+        return state instanceof net.minecraft.client.renderer.entity.state.LivingEntityRenderState living
+                && living.isInvisible && living.isInvisibleToPlayer;
+    }
+
+    private static boolean invisibleNonLiving(EntityRenderState state) {
+        return state.isInvisible && !(state instanceof net.minecraft.client.renderer.entity.state.LivingEntityRenderState);
+    }
+
     static float ease(float value) { return (1.0F - (float) Math.cos(Math.PI * value)) * 0.5F; }
 
-    private static void submit(LivingEntityRenderState state, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
+    private static void submit(EntityRenderState state, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
         // Work on an independent stack so even an unsupported renderer cannot unbalance its caller.
         PoseStack isolated = new PoseStack();
         isolated.last().set(poses.last());
         Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(state).submit(state, isolated, collector, camera);
     }
 
-    private static Object failureKey(LivingEntityRenderState state) {
+    private static Object failureKey(EntityRenderState state) {
         return state.entityType != null ? state.entityType : state.getClass();
     }
 
@@ -115,16 +132,18 @@ public final class MorphTransitionRenderer {
         loggedFailure = false;
     }
 
-    private static void safeFallback(LivingEntityRenderState state, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
-        if (BROKEN_FALLBACKS.contains(failureKey(state))) return;
-        try { submit(state, poses, collector, camera); }
-        catch (RuntimeException ignored) {
+    private static boolean safeFallback(EntityRenderState state, PoseStack poses, SubmitNodeCollector collector, CameraRenderState camera) {
+        if (BROKEN_FALLBACKS.contains(failureKey(state))) return false;
+        try { submit(state, poses, collector, camera); return true; }
+        catch (RuntimeException failure) {
             // A broken third-party renderer must not turn the fallback into a crash loop.
             if (BROKEN_FALLBACKS.size() < 128) BROKEN_FALLBACKS.add(failureKey(state));
+            LogUtils.getLogger().warn("Morph cannot submit renderer for {}; keeping player appearance", failureKey(state), failure);
+            return false;
         }
     }
 
-    private static Mesh capture(LivingEntityRenderState state, PoseStack poses, CameraRenderState camera) {
+    private static Mesh capture(EntityRenderState state, PoseStack poses, CameraRenderState camera) {
         Mesh mesh = new Mesh();
         CaptureCollector capture = CAPTURE.get();
         Mesh previous = capture.mesh;

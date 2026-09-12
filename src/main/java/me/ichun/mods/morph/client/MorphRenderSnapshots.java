@@ -42,7 +42,7 @@ public final class MorphRenderSnapshots {
         MorphTransitions.clear();
     }
 
-    public static LivingEntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId) {
+    public static EntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId) {
         if (formId == null || formId.isEmpty()) return null;
         me.ichun.mods.morph.client.nametag.MorphNameTags.apply(avatar.getUUID(), source);
         if (source.isSpectator || FAILED_FORMS.contains(formId)) return null;
@@ -79,7 +79,16 @@ public final class MorphRenderSnapshots {
             MorphEquipmentRendering.prepare(avatar, adapter);
             float partialTick = source.ageInTicks - avatar.tickCount;
             EntityRenderState extracted = createState(adapter, partialTick);
-            if (!(extracted instanceof LivingEntityRenderState target)) return null;
+            copyCommonState(source, extracted);
+            if (extracted instanceof net.minecraft.client.renderer.entity.state.EnderDragonRenderState dragon) {
+                dragon.deathTime = source.deathTime;
+                dragon.hasRedOverlay = source.hasRedOverlay;
+                // Detached dragons never tick their flight history. Supply the player's heading
+                // without running dragon AI or borrowing the native boss's world state.
+                for (int i = 0; i < net.minecraft.world.entity.boss.enderdragon.DragonFlightHistory.LENGTH; i++)
+                    dragon.flightHistory.record(source.y, source.bodyRot);
+            }
+            if (!(extracted instanceof LivingEntityRenderState target)) return extracted;
             copyPlayerMotion(source, target);
             me.ichun.mods.morph.client.animation.MorphWitherHeads.apply(target);
             if (target instanceof net.minecraft.client.renderer.entity.state.WitherRenderState wither)
@@ -102,7 +111,7 @@ public final class MorphRenderSnapshots {
         return renderer.createRenderState(entity, partialTick);
     }
 
-    private static void copyPlayerMotion(AvatarRenderState source, LivingEntityRenderState target) {
+    private static void copyCommonState(AvatarRenderState source, EntityRenderState target) {
         target.x = source.x;
         target.y = source.y;
         target.z = source.z;
@@ -111,8 +120,15 @@ public final class MorphRenderSnapshots {
         target.lightCoords = source.lightCoords;
         target.outlineColor = source.outlineColor;
         target.isInvisible = source.isInvisible;
-        target.isInvisibleToPlayer = source.isInvisibleToPlayer;
         target.isDiscrete = source.isDiscrete;
+        target.nameTag = source.nameTag;
+        target.scoreText = source.scoreText;
+        target.nameTagAttachment = source.nameTagAttachment;
+        target.leashStates = null;
+    }
+
+    private static void copyPlayerMotion(AvatarRenderState source, LivingEntityRenderState target) {
+        target.isInvisibleToPlayer = source.isInvisibleToPlayer;
         target.bodyRot = source.bodyRot;
         target.yRot = source.yRot;
         target.xRot = source.xRot;
@@ -123,9 +139,5 @@ public final class MorphRenderSnapshots {
         target.isFullyFrozen = source.isFullyFrozen;
         target.isInWater = source.isInWater;
         target.isUpsideDown = source.isUpsideDown;
-        target.nameTag = source.nameTag;
-        target.scoreText = source.scoreText;
-        target.nameTagAttachment = source.nameTagAttachment;
-        target.leashStates = null;
     }
 }

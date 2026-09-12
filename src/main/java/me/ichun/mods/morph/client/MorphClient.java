@@ -4,7 +4,7 @@ import me.ichun.mods.morph.Morph;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.ClientAvatarEntity;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.EntityRenderState;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.context.ContextKey;
 import net.minecraft.world.entity.Avatar;
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.common.NeoForge;
 public final class MorphClient {
     private static final ContextKey<me.ichun.mods.morph.client.transition.MorphTransitionRenderer.Frame> TRANSITION =
             new ContextKey<>(Identifier.fromNamespaceAndPath(Morph.MOD_ID, "transition_render_state"));
-    private static final ContextKey<LivingEntityRenderState> MORPH_STATE =
+    private static final ContextKey<EntityRenderState> MORPH_STATE =
             new ContextKey<>(Identifier.fromNamespaceAndPath(Morph.MOD_ID, "form_render_state"));
 
     public MorphClient(IEventBus modBus) {
@@ -58,21 +58,12 @@ public final class MorphClient {
         var minecraft = Minecraft.getInstance();
         var camera = minecraft.gameRenderer.gameRenderState().levelRenderState.cameraRenderState;
         if (camera == null) return;
-        if (transition != null) {
-            me.ichun.mods.morph.client.transition.MorphTransitionRenderer.render(
-                    transition, event.getPoseStack(), event.getSubmitNodeCollector(), camera);
-            event.setCanceled(true);
-            return;
-        }
-        var renderer = minecraft.getEntityRenderDispatcher().getRenderer(replacement);
-        var pose = event.getPoseStack();
-        pose.pushPose();
-        try {
-            renderer.submit(replacement, pose, event.getSubmitNodeCollector(), camera);
-            event.setCanceled(true);
-        } finally {
-            pose.popPose();
-        }
+        boolean replaced = transition != null
+                ? me.ichun.mods.morph.client.transition.MorphTransitionRenderer.render(
+                        transition, event.getPoseStack(), event.getSubmitNodeCollector(), camera)
+                : me.ichun.mods.morph.client.transition.MorphTransitionRenderer.renderSnapshot(
+                        replacement, event.getPoseStack(), event.getSubmitNodeCollector(), camera);
+        if (replaced) event.setCanceled(true);
     }
 
     private static void loggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
