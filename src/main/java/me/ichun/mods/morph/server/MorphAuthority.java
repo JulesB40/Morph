@@ -4,6 +4,8 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.UUID;
 import me.ichun.mods.morph.model.*;
+import me.ichun.mods.morph.config.MorphPolicies;
+import me.ichun.mods.morph.api.MorphEvents;
 import me.ichun.mods.morph.network.CollectionProtocol;
 import me.ichun.mods.morph.network.CollectionProtocol.Code;
 import me.ichun.mods.morph.network.AppearanceProtocol;
@@ -20,6 +22,11 @@ public final class MorphAuthority {
         void transition(ServerPlayer player, CollectionEntry previous, CollectionEntry next);
     }
     private static Transport transport;
+    private static final MorphEvents events = new MorphEvents();
+    public static MorphEvents events() { return events; }
+    private static boolean allowed(MorphEvents.Action action, UUID actor, ServerPlayer target, String species) {
+        return events.before(new MorphEvents.BeforeAction(action, actor, target.getUUID(), species, MorphPolicies.current().revision())).allowed();
+    }
     private static final Map<ServerPlayer, Session> sessions = new WeakHashMap<>();
     private static final class Session {
         final UUID epoch = UUID.randomUUID();
@@ -46,7 +53,7 @@ public final class MorphAuthority {
     public static AppearanceProtocol.Transition transition(ServerPlayer player, CollectionEntry from, CollectionEntry to) {
         var session = session(player);
         return new AppearanceProtocol.Transition(player.getUUID(), session.epoch, session.generation++, tick(player),
-                me.ichun.mods.morph.model.MorphSounds.DURATION_TICKS, from, to);
+                MorphPolicies.current().durationTicks(), from, to);
     }
     public static void disconnected(ServerPlayer player) { sessions.remove(player); }
     public static int nametag(ServerPlayer player, Boolean visible) {
@@ -68,21 +75,25 @@ public final class MorphAuthority {
         };
     }
     private static boolean canChange(ServerPlayer player) { return player.isAlive() && !player.isRemoved() && !player.isSpectator(); }
-    public static boolean select(ServerPlayer player, String form) {
+    public static boolean select(ServerPlayer player, String form) { return select(player.getUUID(), player, form); }
+    public static boolean select(UUID actor, ServerPlayer player, String form) {
         if (!validForm(player, form)) return report(player, Code.UNSUPPORTED);
         var forms = collection(player);
         var species = FormDescriptor.species(form).entryId();
         var id = forms.entry(species) != null ? species : forms.entries().stream().filter(e -> e.descriptor().species().equals(form))
                 .map(CollectionEntry::id).min(EntryId::compareTo).orElse(null);
-        return report(player, selectEntry(player, id));
+        return report(player, selectEntry(actor, player, id));
     }
-    public static Code selectEntry(ServerPlayer player, EntryId id) {
+    public static Code selectEntry(ServerPlayer player, EntryId id) { return selectEntry(player.getUUID(), player, id); }
+    public static Code selectEntry(UUID actor, ServerPlayer player, EntryId id) {
         if (!canChange(player)) return Code.DENIED;
         var forms = collection(player); var entry = forms.entry(id);
         if (entry == null) return Code.NOT_OWNED;
         if (!supported(player, entry.descriptor())) return Code.UNSUPPORTED;
+        if (!MorphPolicies.current().canMorph(player.getUUID(), entry.descriptor().species())) return Code.DENIED;
         if (id.equals(forms.activeEntryId())) return Code.UNCHANGED;
         if (!ShapeHooks.canFit(player, entry.descriptor())) return Code.NO_SPACE;
+        if (!allowed(MorphEvents.Action.SELECT, actor, player, entry.descriptor().species())) return Code.CANCELED;
         var previous = active(player);
         var result = forms.select(id, tick(player));
         if (result == MorphCollection.SelectionResult.CHANGED) {
@@ -90,20 +101,26 @@ public final class MorphAuthority {
         }
         return Code.valueOf(result.name());
     }
-    public static boolean reset(ServerPlayer player) { return report(player, resetEntry(player)); }
-    public static Code resetEntry(ServerPlayer player) {
+    public static boolean reset(ServerPlayer player) { return reset(player.getUUID(), player); }
+    public static boolean reset(UUID actor, ServerPlayer player) { return report(player, resetEntry(actor, player)); }
+    public static Code resetEntry(ServerPlayer player) { return resetEntry(player.getUUID(), player); }
+    public static Code resetEntry(UUID actor, ServerPlayer player) {
         if (collection(player).activeEntryId() == null) return Code.UNCHANGED;
         if (player.isAlive() && !ShapeHooks.canFit(player, (FormDescriptor) null)) return Code.NO_SPACE;
+        if (!allowed(MorphEvents.Action.RESET, actor, player, "")) return Code.CANCELED;
         var previous = active(player);
         if (!collection(player).reset()) return Code.UNCHANGED;
         changedForm(player, previous); return Code.CHANGED;
     }
-    public static Code deleteEntry(ServerPlayer player, EntryId id) {
+    public static Code deleteEntry(ServerPlayer player, EntryId id) { return deleteEntry(player.getUUID(), player, id); }
+    public static Code deleteEntry(UUID actor, ServerPlayer player, EntryId id) {
         if (!canChange(player)) return Code.DENIED;
         var forms = collection(player); var previous = active(player);
         if (forms.entry(id) == null) return Code.NOT_OWNED;
         boolean deletingActive = id.equals(forms.activeEntryId());
         if (deletingActive && !ShapeHooks.canFit(player, (FormDescriptor) null)) return Code.NO_SPACE;
+        if (!allowed(MorphEvents.Action.DELETE, actor, player, forms.entry(id).descriptor().species())) return Code.CANCELED;
+        if (deletingActive && !allowed(MorphEvents.Action.RESET, actor, player, "")) return Code.CANCELED;
         var result = forms.delete(id, deletingActive);
         if (result == MorphCollection.MutationResult.CHANGED) {
             if (deletingActive) changedForm(player, previous);
@@ -121,7 +138,8 @@ public final class MorphAuthority {
     public static CollectionProtocol.Ack action(ServerPlayer player, CollectionProtocol.Action action) {
         var session = session(player); var forms = collection(player); long now = tick(player);
         Code code;
-        if (action.sequence() <= session.lastSequence) code = Code.STALE;
+        if (!MorphPolicies.current().canUseSelector(player.getUUID())) code = Code.DENIED;
+        else if (action.sequence() <= session.lastSequence) code = Code.STALE;
         else {
             session.lastSequence = action.sequence();
             if (session.window == Long.MIN_VALUE || now < session.window || now - session.window >= 20) { session.window = now; session.requests = 0; }
@@ -149,10 +167,12 @@ public final class MorphAuthority {
         sync(player);
         if (player.isAlive()) {
             publish(() -> transport.transition(player, previous, active(player)));
-            me.ichun.mods.morph.model.MorphSounds.schedule(player);
+            if (MorphPolicies.current().morphSounds()) me.ichun.mods.morph.model.MorphSounds.schedule(player);
         }
     }
-    public static void requestCollection(ServerPlayer player) { publish(() -> transport.collection(player)); }
+    public static void requestCollection(ServerPlayer player) {
+        if (MorphPolicies.current().canUseSelector(player.getUUID())) publish(() -> transport.collection(player));
+    }
     public static void sync(ServerPlayer player) {
         var forms = collection(player);
         if (forms.activeDescriptor() != null && !supported(player, forms.activeDescriptor())) {
@@ -162,19 +182,25 @@ public final class MorphAuthority {
         me.ichun.mods.morph.ability.MorphAbilities.tick(player, forms.activeForm());
         publish(() -> transport.appearance(player)); requestCollection(player);
     }
-    public static boolean grant(ServerPlayer player, String form) {
+    public static boolean grant(ServerPlayer player, String form) { return grant(player.getUUID(), player, form); }
+    public static boolean grant(UUID actor, ServerPlayer player, String form) {
         if (!validForm(player, form)) return report(player, Code.UNSUPPORTED);
-        return report(player, grantDescriptor(player, FormDescriptor.species(form)));
+        return report(player, grantDescriptor(actor, player, FormDescriptor.species(form)));
     }
     /** Trusted server capture/admin boundary. No serverbound payload accepts a descriptor. */
-    public static Code grantDescriptor(ServerPlayer player, FormDescriptor descriptor) {
+    public static Code grantDescriptor(ServerPlayer player, FormDescriptor descriptor) { return grantDescriptor(player.getUUID(), player, descriptor); }
+    public static Code grantDescriptor(UUID actor, ServerPlayer player, FormDescriptor descriptor) {
         if (!supported(player, descriptor)) return Code.UNSUPPORTED;
+        if (!MorphPolicies.current().forms().allows(descriptor.species())) return Code.DENIED;
+        if (!allowed(MorphEvents.Action.ACQUIRE, actor, player, descriptor.species())) return Code.CANCELED;
         var result = collection(player).acquire(descriptor, MorphCollection.AttributeMergePolicy.KEEP_EXISTING);
         if (result == MorphCollection.MutationResult.CHANGED) { data(player).setDirty(); requestCollection(player); }
         return Code.valueOf(result.name());
     }
     public static Code capture(ServerPlayer player, net.minecraft.world.entity.LivingEntity source) {
         if (!canAcquire(player)) return Code.DENIED;
+        String species = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(source.getType()).toString();
+        if (!MorphPolicies.current().canAcquireByKill(player.getUUID(), species)) return Code.DENIED;
         var result = FormCapture.capture(source);
         return result.succeeded() ? grantDescriptor(player, result.descriptor()) : Code.UNSUPPORTED;
     }

@@ -15,6 +15,9 @@ public final class MorphCommands {
         catch (IllegalArgumentException invalid) { throw new com.mojang.brigadier.exceptions.SimpleCommandExceptionType(Component.literal("Invalid morph entry ID")).create(); }
     }
     private MorphCommands() {}
+    private static java.util.UUID actor(CommandSourceStack source) {
+        return source.getEntity() == null ? new java.util.UUID(0, 0) : source.getEntity().getUUID();
+    }
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("morph")
             .then(Commands.literal("nametag").executes(c -> MorphAuthority.nametag(c.getSource().getPlayerOrException(), null))
@@ -34,22 +37,22 @@ public final class MorphCommands {
                 .executes(c -> MorphAuthority.select(c.getSource().getPlayerOrException(), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0)))
             .then(Commands.literal("reset").executes(c -> MorphAuthority.reset(c.getSource().getPlayerOrException()) ? 1 : 0)
                 .then(Commands.argument("player", EntityArgument.player()).requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
-                    .executes(c -> MorphAuthority.reset(EntityArgument.getPlayer(c, "player")) ? 1 : 0)))
+                    .executes(c -> MorphAuthority.reset(actor(c.getSource()), EntityArgument.getPlayer(c, "player")) ? 1 : 0)))
             .then(Commands.literal("grant").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.argument("form", IdentifierArgument.id()).executes(c -> MorphAuthority.grant(c.getSource().getPlayerOrException(), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0))
                 .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("form", IdentifierArgument.id())
-                    .executes(c -> MorphAuthority.grant(EntityArgument.getPlayer(c, "player"), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0))))
+                    .executes(c -> MorphAuthority.grant(actor(c.getSource()), EntityArgument.getPlayer(c, "player"), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0))))
             .then(Commands.literal("selectentry")
                 .then(Commands.argument("entry", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
                     .executes(c -> MorphAuthority.report(c.getSource().getPlayerOrException(), MorphAuthority.selectEntry(c.getSource().getPlayerOrException(), entry(c))) ? 1 : 0)))
             .then(Commands.literal("unacquire").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("entry", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
-                    .executes(c -> MorphAuthority.report(EntityArgument.getPlayer(c, "player"), MorphAuthority.deleteEntry(EntityArgument.getPlayer(c, "player"), entry(c))) ? 1 : 0))))
+                    .executes(c -> MorphAuthority.report(EntityArgument.getPlayer(c, "player"), MorphAuthority.deleteEntry(actor(c.getSource()), EntityArgument.getPlayer(c, "player"), entry(c))) ? 1 : 0))))
             .then(Commands.literal("forceentry").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("entry", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
-                    .executes(c -> MorphAuthority.report(EntityArgument.getPlayer(c, "player"), MorphAuthority.selectEntry(EntityArgument.getPlayer(c, "player"), entry(c))) ? 1 : 0))))
+                    .executes(c -> MorphAuthority.report(EntityArgument.getPlayer(c, "player"), MorphAuthority.selectEntry(actor(c.getSource()), EntityArgument.getPlayer(c, "player"), entry(c))) ? 1 : 0))))
             .then(Commands.literal("force").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("form", IdentifierArgument.id())
-                    .executes(c -> MorphAuthority.select(EntityArgument.getPlayer(c, "player"), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0)))));
+                    .executes(c -> MorphAuthority.select(actor(c.getSource()), EntityArgument.getPlayer(c, "player"), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0)))));
     }
 }

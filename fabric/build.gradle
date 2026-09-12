@@ -24,6 +24,8 @@ sourceSets.main.java {
     include 'me/ichun/mods/morph/ability/**'
     include 'me/ichun/mods/morph/server/MorphSavedData.java'
     include 'me/ichun/mods/morph/server/MorphAuthority.java'
+    include 'me/ichun/mods/morph/config/**'
+    include 'me/ichun/mods/morph/api/MorphEvents.java'
     include 'me/ichun/mods/morph/server/FormCapture.java'
     include 'me/ichun/mods/morph/server/MorphCommands.java'
     include 'me/ichun/mods/morph/network/CollectionProtocol.java'
