@@ -19,7 +19,17 @@ public final class MorphNetwork {
     private MorphNetwork() {}
 
     public static void register(RegisterPayloadHandlersEvent event) {
-        var registrar = event.registrar("5");
+        var registrar = event.registrar("6");
+        registrar.playToClient(SnapshotPage.TYPE, SnapshotPage.CODEC);
+        registrar.playToClient(ActionAck.TYPE, ActionAck.CODEC);
+        registrar.playToClient(DescriptorAppearance.TYPE, DescriptorAppearance.CODEC);
+        registrar.playToClient(DescriptorTransition.TYPE, DescriptorTransition.CODEC);
+        registrar.playToServer(CollectionAction.TYPE, CollectionAction.CODEC, (payload, context) -> {
+            if (context.player() instanceof ServerPlayer player) {
+                var ack = me.ichun.mods.morph.server.MorphAuthority.action(player, payload.value());
+                PacketDistributor.sendToPlayer(player, new ActionAck(ack));
+            }
+        });
         registrar.playToServer(Flap.TYPE, Flap.CODEC, (payload, context) -> {
             if (context.player() instanceof ServerPlayer player) me.ichun.mods.morph.ability.MorphActions.flap(player);
         });
@@ -39,8 +49,9 @@ public final class MorphNetwork {
     }
 
     public static void sendState(ServerPlayer recipient, UUID subject, String formId, boolean showNametag) {
-        if (recipient.connection != null && recipient.connection.hasChannel(State.TYPE))
-            PacketDistributor.sendToPlayer(recipient, new State(subject, formId, showNametag));
+        var player = recipient.level().getServer().getPlayerList().getPlayer(subject);
+        if (player != null && recipient.connection != null && recipient.connection.hasChannel(DescriptorAppearance.TYPE))
+            PacketDistributor.sendToPlayer(recipient, new DescriptorAppearance(me.ichun.mods.morph.server.MorphAuthority.appearance(player)));
     }
 
     public static void sendHealth(ServerPlayer recipient, me.ichun.mods.morph.ability.HealthSnapshot health) {
@@ -66,8 +77,21 @@ public final class MorphNetwork {
     }
 
     public static void broadcastState(ServerPlayer subject, String formId) {
-        PacketDistributor.sendToPlayersTrackingEntity(subject, new State(subject.getUUID(), formId, MorphService.showNametag(subject)));
-        sendState(subject, subject.getUUID(), formId, MorphService.showNametag(subject));
+        var payload = new DescriptorAppearance(me.ichun.mods.morph.server.MorphAuthority.appearance(subject));
+        PacketDistributor.sendToPlayersTrackingEntity(subject, payload);
+        if (subject.connection != null && subject.connection.hasChannel(DescriptorAppearance.TYPE)) PacketDistributor.sendToPlayer(subject, payload);
+    }
+    public static void broadcastDeparture(ServerPlayer subject) {
+        PacketDistributor.sendToPlayersTrackingEntity(subject, new DescriptorAppearance(me.ichun.mods.morph.server.MorphAuthority.departure(subject)));
+    }
+    public static void sendSnapshot(ServerPlayer recipient, me.ichun.mods.morph.model.CollectionSnapshot snapshot) {
+        if (recipient.connection != null && recipient.connection.hasChannel(SnapshotPage.TYPE))
+            for (var page : CollectionProtocol.pages(snapshot)) PacketDistributor.sendToPlayer(recipient, new SnapshotPage(page));
+    }
+    public static void broadcastDescriptorTransition(ServerPlayer subject, me.ichun.mods.morph.model.CollectionEntry from, me.ichun.mods.morph.model.CollectionEntry to) {
+        var payload = new DescriptorTransition(me.ichun.mods.morph.server.MorphAuthority.transition(subject, from, to));
+        PacketDistributor.sendToPlayersTrackingEntity(subject, payload);
+        if (subject.connection != null && subject.connection.hasChannel(DescriptorTransition.TYPE)) PacketDistributor.sendToPlayer(subject, payload);
     }
 
     public static void sendCollection(ServerPlayer recipient, List<String> forms, String activeForm) {
@@ -158,5 +182,50 @@ public final class MorphNetwork {
         public static final Type<RequestCollection> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "request_collection"));
         public static final StreamCodec<FriendlyByteBuf, RequestCollection> CODEC = StreamCodec.unit(new RequestCollection());
         public Type<RequestCollection> type() { return TYPE; }
+    }
+
+    public record CollectionAction(CollectionProtocol.Action value) implements CustomPacketPayload {
+        public static final Type<CollectionAction> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "collection_action"));
+        public static final StreamCodec<FriendlyByteBuf, CollectionAction> CODEC = new StreamCodec<>() {
+            public CollectionAction decode(FriendlyByteBuf buf) { return new CollectionAction(CollectionProtocol.readAction(buf)); }
+            public void encode(FriendlyByteBuf buf, CollectionAction value) { CollectionProtocol.writeAction(buf, value.value()); }
+        };
+        public Type<CollectionAction> type() { return TYPE; }
+    }
+
+    public record SnapshotPage(CollectionProtocol.Page value) implements CustomPacketPayload {
+        public static final Type<SnapshotPage> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "snapshot_page"));
+        public static final StreamCodec<FriendlyByteBuf, SnapshotPage> CODEC = new StreamCodec<>() {
+            public SnapshotPage decode(FriendlyByteBuf buf) { return new SnapshotPage(CollectionProtocol.readPage(buf)); }
+            public void encode(FriendlyByteBuf buf, SnapshotPage value) { CollectionProtocol.writePage(buf, value.value()); }
+        };
+        public Type<SnapshotPage> type() { return TYPE; }
+    }
+
+    public record ActionAck(CollectionProtocol.Ack value) implements CustomPacketPayload {
+        public static final Type<ActionAck> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "action_ack"));
+        public static final StreamCodec<FriendlyByteBuf, ActionAck> CODEC = new StreamCodec<>() {
+            public ActionAck decode(FriendlyByteBuf buf) { return new ActionAck(CollectionProtocol.readAck(buf)); }
+            public void encode(FriendlyByteBuf buf, ActionAck value) { CollectionProtocol.writeAck(buf, value.value()); }
+        };
+        public Type<ActionAck> type() { return TYPE; }
+    }
+
+    public record DescriptorAppearance(AppearanceProtocol.Appearance value) implements CustomPacketPayload {
+        public static final Type<DescriptorAppearance> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "appearance"));
+        public static final StreamCodec<FriendlyByteBuf, DescriptorAppearance> CODEC = new StreamCodec<>() {
+            public DescriptorAppearance decode(FriendlyByteBuf buf) { return new DescriptorAppearance(AppearanceProtocol.readAppearance(buf)); }
+            public void encode(FriendlyByteBuf buf, DescriptorAppearance value) { AppearanceProtocol.writeAppearance(buf, value.value()); }
+        };
+        public Type<DescriptorAppearance> type() { return TYPE; }
+    }
+
+    public record DescriptorTransition(AppearanceProtocol.Transition value) implements CustomPacketPayload {
+        public static final Type<DescriptorTransition> TYPE = new Type<>(Identifier.fromNamespaceAndPath("morph", "descriptor_transition"));
+        public static final StreamCodec<FriendlyByteBuf, DescriptorTransition> CODEC = new StreamCodec<>() {
+            public DescriptorTransition decode(FriendlyByteBuf buf) { return new DescriptorTransition(AppearanceProtocol.readTransition(buf)); }
+            public void encode(FriendlyByteBuf buf, DescriptorTransition value) { AppearanceProtocol.writeTransition(buf, value.value()); }
+        };
+        public Type<DescriptorTransition> type() { return TYPE; }
     }
 }

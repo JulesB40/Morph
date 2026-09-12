@@ -10,6 +10,10 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.permissions.Permissions;
 
 public final class MorphCommands {
+    private static me.ichun.mods.morph.model.EntryId entry(com.mojang.brigadier.context.CommandContext<CommandSourceStack> context) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        try { return new me.ichun.mods.morph.model.EntryId(com.mojang.brigadier.arguments.StringArgumentType.getString(context, "entry")); }
+        catch (IllegalArgumentException invalid) { throw new com.mojang.brigadier.exceptions.SimpleCommandExceptionType(Component.literal("Invalid morph entry ID")).create(); }
+    }
     private MorphCommands() {}
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("morph")
@@ -35,6 +39,15 @@ public final class MorphCommands {
                 .then(Commands.argument("form", IdentifierArgument.id()).executes(c -> MorphAuthority.grant(c.getSource().getPlayerOrException(), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0))
                 .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("form", IdentifierArgument.id())
                     .executes(c -> MorphAuthority.grant(EntityArgument.getPlayer(c, "player"), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0))))
+            .then(Commands.literal("selectentry")
+                .then(Commands.argument("entry", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                    .executes(c -> MorphAuthority.report(c.getSource().getPlayerOrException(), MorphAuthority.selectEntry(c.getSource().getPlayerOrException(), entry(c))) ? 1 : 0)))
+            .then(Commands.literal("unacquire").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
+                .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("entry", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                    .executes(c -> MorphAuthority.report(EntityArgument.getPlayer(c, "player"), MorphAuthority.deleteEntry(EntityArgument.getPlayer(c, "player"), entry(c))) ? 1 : 0))))
+            .then(Commands.literal("forceentry").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
+                .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("entry", com.mojang.brigadier.arguments.StringArgumentType.greedyString())
+                    .executes(c -> MorphAuthority.report(EntityArgument.getPlayer(c, "player"), MorphAuthority.selectEntry(EntityArgument.getPlayer(c, "player"), entry(c))) ? 1 : 0))))
             .then(Commands.literal("force").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
                 .then(Commands.argument("player", EntityArgument.player()).then(Commands.argument("form", IdentifierArgument.id())
                     .executes(c -> MorphAuthority.select(EntityArgument.getPlayer(c, "player"), IdentifierArgument.getId(c, "form").toString()) ? 1 : 0)))));

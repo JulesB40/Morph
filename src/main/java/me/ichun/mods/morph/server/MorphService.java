@@ -25,11 +25,12 @@ public final class MorphService {
         MorphAuthority.setTransport(new MorphAuthority.Transport() {
             public void collection(ServerPlayer player) {
                 var forms = MorphAuthority.collection(player);
-                MorphNetwork.sendCollection(player, forms.ownedForms(), forms.activeForm());
+                MorphNetwork.sendSnapshot(player, forms.snapshot());
             }
             public void appearance(ServerPlayer player) { MorphNetwork.broadcastState(player, collection(player).activeForm()); }
-            public void transition(ServerPlayer player, String previous, String next) { MorphNetwork.broadcastTransition(player, previous, next); }
+            public void transition(ServerPlayer player, me.ichun.mods.morph.model.CollectionEntry previous, me.ichun.mods.morph.model.CollectionEntry next) { MorphNetwork.broadcastDescriptorTransition(player, previous, next); }
         });
+        me.ichun.mods.morph.shape.ShapeHooks.setDescriptorResolver(player -> player instanceof ServerPlayer serverPlayer ? collection(serverPlayer).activeDescriptor() : null);
         NeoForge.EVENT_BUS.addListener(MorphService::onRegisterCommands);
         NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, MorphService::onDeath);
         NeoForge.EVENT_BUS.addListener(MorphService::onLogin);
@@ -55,8 +56,7 @@ public final class MorphService {
             MorphAuthority.died(deadPlayer);
         } else if (!(event.getEntity() instanceof Player) && event.getSource().getEntity() instanceof ServerPlayer killer
                 && !(killer instanceof net.neoforged.neoforge.common.util.FakePlayer) && MorphAuthority.canAcquire(killer)) {
-            String form = BuiltInRegistries.ENTITY_TYPE.getKey(event.getEntity().getType()).toString();
-            if (!collection(killer).ownedForms().contains(form)) MorphAuthority.grant(killer, form);
+            MorphAuthority.capture(killer, event.getEntity());
         }
     }
 
@@ -97,6 +97,8 @@ public final class MorphService {
 
     private static void onLogout(PlayerEvent.PlayerLoggedOutEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
+            MorphNetwork.broadcastDeparture(player);
+            MorphAuthority.disconnected(player);
             me.ichun.mods.morph.ability.MorphAbilities.cleanup(player);
             me.ichun.mods.morph.model.MorphSounds.cancel(player);
         }

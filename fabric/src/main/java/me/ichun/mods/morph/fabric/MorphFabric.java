@@ -27,21 +27,23 @@ public final class MorphFabric implements ModInitializer {
     private static MorphCollection forms(ServerPlayer player) { return data(player.level().getServer()).collection(player.getUUID()); }
     private static void sync(ServerPlayer player) { me.ichun.mods.morph.server.MorphAuthority.sync(player); }
     private static void owned(ServerPlayer player) {
-        if (ServerPlayNetworking.canSend(player, MorphOwned.TYPE)) ServerPlayNetworking.send(player, new MorphOwned(forms(player).ownedForms(), forms(player).activeForm()));
+        if (ServerPlayNetworking.canSend(player, MorphSnapshotPage.TYPE))
+            for (var page : me.ichun.mods.morph.network.CollectionProtocol.pages(forms(player).snapshot()))
+                ServerPlayNetworking.send(player, new MorphSnapshotPage(page));
     }
     @Override public void onInitialize() {
         me.ichun.mods.morph.server.MorphAuthority.setTransport(new me.ichun.mods.morph.server.MorphAuthority.Transport() {
             public void collection(ServerPlayer player) { owned(player); }
             public void appearance(ServerPlayer player) {
-                var payload = new MorphAppearance(player.getUUID(), forms(player).activeForm(), data(player.level().getServer()).showNametag(player.getUUID()));
+                var payload = new MorphDescriptorAppearance(me.ichun.mods.morph.server.MorphAuthority.appearance(player));
                 for (var observer : player.level().getServer().getPlayerList().getPlayers())
-                    if (ServerPlayNetworking.canSend(observer, MorphAppearance.TYPE)) ServerPlayNetworking.send(observer, payload);
+                    if (ServerPlayNetworking.canSend(observer, MorphDescriptorAppearance.TYPE)) ServerPlayNetworking.send(observer, payload);
             }
-            public void transition(ServerPlayer player, String previous, String next) {
-                var payload = new MorphTransition(player.getUUID(), previous, next, me.ichun.mods.morph.model.MorphSounds.DURATION_TICKS);
+            public void transition(ServerPlayer player, me.ichun.mods.morph.model.CollectionEntry previous, me.ichun.mods.morph.model.CollectionEntry next) {
+                var payload = new MorphDescriptorTransition(me.ichun.mods.morph.server.MorphAuthority.transition(player, previous, next));
                 for (var observer : net.fabricmc.fabric.api.networking.v1.PlayerLookup.tracking(player))
-                    if (ServerPlayNetworking.canSend(observer, MorphTransition.TYPE)) ServerPlayNetworking.send(observer, payload);
-                if (ServerPlayNetworking.canSend(player, MorphTransition.TYPE)) ServerPlayNetworking.send(player, payload);
+                    if (ServerPlayNetworking.canSend(observer, MorphDescriptorTransition.TYPE)) ServerPlayNetworking.send(observer, payload);
+                if (ServerPlayNetworking.canSend(player, MorphDescriptorTransition.TYPE)) ServerPlayNetworking.send(player, payload);
             }
         });
         me.ichun.mods.morph.ability.MorphAttributes.setHealthSync((player, health) -> {
@@ -52,6 +54,7 @@ public final class MorphFabric implements ModInitializer {
         });
         net.minecraft.core.Registry.register(BuiltInRegistries.SOUND_EVENT,
                 me.ichun.mods.morph.model.MorphSounds.ID, me.ichun.mods.morph.model.MorphSounds.EVENT);
+        me.ichun.mods.morph.shape.ShapeHooks.setDescriptorResolver(player -> player instanceof ServerPlayer serverPlayer ? forms(serverPlayer).activeDescriptor() : null);
         me.ichun.mods.morph.shape.ShapeHooks.setFormResolver(player -> player instanceof ServerPlayer serverPlayer ? forms(serverPlayer).activeForm() : null);
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents.START_SERVER_TICK.register(server -> {
             for (var player : server.getPlayerList().getPlayers()) {
@@ -62,6 +65,16 @@ public final class MorphFabric implements ModInitializer {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> !(entity instanceof ServerPlayer player
             && player.isAlive()
             && me.ichun.mods.morph.ability.MorphTraits.preventsDamage(player, forms(player).activeForm(), source)));
+        PayloadTypeRegistry.serverboundPlay().register(MorphCollectionAction.TYPE, MorphCollectionAction.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MorphSnapshotPage.TYPE, MorphSnapshotPage.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MorphActionAck.TYPE, MorphActionAck.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MorphDescriptorAppearance.TYPE, MorphDescriptorAppearance.CODEC);
+        PayloadTypeRegistry.clientboundPlay().register(MorphDescriptorTransition.TYPE, MorphDescriptorTransition.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(MorphCollectionAction.TYPE, (payload, context) ->
+            context.server().execute(() -> {
+                var ack = me.ichun.mods.morph.server.MorphAuthority.action(context.player(), payload.value());
+                ServerPlayNetworking.send(context.player(), new MorphActionAck(ack));
+            }));
         PayloadTypeRegistry.serverboundPlay().register(MorphAction.TYPE, MorphAction.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(MorphAction.TYPE, (payload, context) ->
                 me.ichun.mods.morph.ability.MorphActions.flap(context.player()));
@@ -74,26 +87,30 @@ public final class MorphFabric implements ModInitializer {
                 me.ichun.mods.morph.server.MorphAuthority.died(player);
             } else if (!(entity instanceof Avatar) && source.getEntity() instanceof ServerPlayer killer
                     && me.ichun.mods.morph.server.MorphAuthority.canAcquire(killer)) {
-                me.ichun.mods.morph.server.MorphAuthority.grant(killer, BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType()).toString());
+                me.ichun.mods.morph.server.MorphAuthority.capture(killer, entity);
             }
         });
         net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sync(newPlayer));
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents.ENTITY_LOAD.register((entity, world) -> { if (entity instanceof ServerPlayer player) sync(player); });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-            for (var player : server.getPlayerList().getPlayers()) {
-                if (ServerPlayNetworking.canSend(handler.player, MorphAppearance.TYPE)) {
-                    ServerPlayNetworking.send(handler.player, new MorphAppearance(player.getUUID(), forms(player).activeForm(), data(player.level().getServer()).showNametag(player.getUUID())));
-                }
+            if (!ServerPlayNetworking.canSend(handler.player, MorphSnapshotPage.TYPE)
+                    || !ServerPlayNetworking.canSend(handler.player, MorphDescriptorAppearance.TYPE)
+                    || !ServerPlayNetworking.canSend(handler.player, MorphDescriptorTransition.TYPE)
+                    || !ServerPlayNetworking.canSend(handler.player, MorphActionAck.TYPE)) {
+                handler.disconnect(Component.literal("Morph requires a client with descriptor protocol v3. Update Morph on client and server."));
+                return;
             }
+            for (var player : server.getPlayerList().getPlayers())
+                ServerPlayNetworking.send(handler.player, new MorphDescriptorAppearance(me.ichun.mods.morph.server.MorphAuthority.appearance(player)));
             sync(handler.player);
         });
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
             me.ichun.mods.morph.model.MorphSounds.cancel(handler.player);
             me.ichun.mods.morph.ability.MorphAbilities.cleanup(handler.player);
-            for (var observer : server.getPlayerList().getPlayers()) {
-                if (observer != handler.player && ServerPlayNetworking.canSend(observer, MorphAppearance.TYPE))
-                    ServerPlayNetworking.send(observer, new MorphAppearance(handler.player.getUUID(), ""));
-            }
+            var payload = new MorphDescriptorAppearance(me.ichun.mods.morph.server.MorphAuthority.departure(handler.player));
+            for (var observer : server.getPlayerList().getPlayers())
+                if (observer != handler.player && ServerPlayNetworking.canSend(observer, MorphDescriptorAppearance.TYPE)) ServerPlayNetworking.send(observer, payload);
+            me.ichun.mods.morph.server.MorphAuthority.disconnected(handler.player);
         });
         CommandRegistrationCallback.EVENT.register((dispatcher, registry, environment) -> me.ichun.mods.morph.server.MorphCommands.register(dispatcher));
     }
