@@ -26,7 +26,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.state.AvatarRenderState;
 import net.minecraft.client.renderer.entity.state.SnifferRenderState;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 
 /** Developer-only probes. Assertions are evidence, never an instruction to change production behavior. */
 public final class MorphLabClientGameTest implements FabricClientGameTest {
@@ -117,7 +117,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
         try (var world = context.worldBuilder().create()) {
             world.getConnection().waitForChunksDownload();
             context.runOnClient(client -> {
-                var dragon = EntityType.ENDER_DRAGON.create(client.level, EntitySpawnReason.LOAD);
+                var dragon = EntityTypes.ENDER_DRAGON.create(client.level, EntitySpawnReason.LOAD);
                 if (dragon == null) throw new IllegalStateException("Native dragon creation failed");
                 dragon.setId(client.player.getId());
                 var renderer = client.getEntityRenderDispatcher().getRenderer(dragon);
@@ -137,7 +137,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
         try (var world = context.worldBuilder().create()) {
             world.getConnection().waitForChunksDownload();
             context.runOnClient(client -> {
-                var entity = EntityType.SNIFFER.create(client.level, EntitySpawnReason.LOAD);
+                var entity = EntityTypes.SNIFFER.create(client.level, EntitySpawnReason.LOAD);
                 if (entity == null) throw new IllegalStateException("Native Sniffer creation failed");
                 var renderer = client.getEntityRenderDispatcher().getRenderer(entity);
                 if (!(renderer instanceof LivingEntityRenderer<?, ?, ?> living) || !(living.getModel() instanceof SnifferModel model))
@@ -147,7 +147,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
                 var lookup = model.root().createPartLookup();
                 for (int frame = 0; frame < samples.length; frame++) {
                     var state = new SnifferRenderState();
-                    state.entityType = EntityType.SNIFFER;
+                    state.entityType = EntityTypes.SNIFFER;
                     state.ageInTicks = frame * 7F;
                     state.isInWater = true;
                     ((MorphSwimState) state).morph$setSwimBlend(1F);

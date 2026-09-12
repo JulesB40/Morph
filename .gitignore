@@ -28,3 +28,6 @@ run
 *.class
 *.war
 *.ear
+
+# Python verification tools
+__pycache__/

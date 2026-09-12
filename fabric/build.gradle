@@ -64,7 +64,33 @@ fabricApi {
 // Stable development identity makes save/rejoin testing repeatable.
 sourceSets.gametest.java {
     srcDir '../src/main/java'
+    srcDir '../testing/harness-common/src/main/java'
     include 'me/ichun/mods/morph/fabric/**'
+    include 'me/ichun/mods/morph/lab/**'
     include 'me/ichun/mods/morph/gametest/NativeAttributeChecks.java'
 }
 loom.runs.client { programArgs '--username', 'MorphTester' }
+
+// Opt-in harness routing; these classes remain in the test source set.
+def morphLab = providers.gradleProperty('morphLab').map { it.toBoolean() }.getOrElse(false)
+tasks.named('processGametestResources') {
+    inputs.property('morphLab', morphLab)
+    doLast {
+        if (morphLab) {
+            def metadata = new File(destinationDir, 'fabric.mod.json')
+            def data = new groovy.json.JsonSlurper().parse(metadata)
+            data.entrypoints.'fabric-client-gametest' = ['me.ichun.mods.morph.fabric.lab.MorphLabClientGameTest']
+            data.entrypoints.'fabric-gametest' = ['me.ichun.mods.morph.fabric.lab.MorphLabServerGameTests']
+            metadata.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(data))
+        }
+    }
+}
+loom.runs.configureEach {
+    if (morphLab) {
+        ['runDir', 'scenarios', 'role', 'server', 'events'].each { key ->
+            def value = providers.gradleProperty('morph.lab.' + key).orNull
+            if (value != null) property('morph.lab.' + key, value)
+        }
+        vmArg '-Xmx1536m'
+    }
+}

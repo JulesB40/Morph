@@ -53,3 +53,45 @@ tasks.withType(Jar).configureEach {
     preserveFileTimestamps = false
     reproducibleFileOrder = true
 }
+
+// Opt-in developer client bridge; lab classes are never part of the main JAR.
+if (providers.gradleProperty('morphLab').map { it.toBoolean() }.getOrElse(false)) {
+    sourceSets {
+        lab {
+            java.srcDir 'testing/harness-neoforge/src/main/java'
+            java.srcDir 'testing/harness-common/src/main/java'
+            resources.srcDir 'testing/harness-neoforge/src/main/resources'
+            compileClasspath += sourceSets.main.output
+            runtimeClasspath += sourceSets.main.output
+        }
+    }
+    neoForge.addModdingDependenciesTo(sourceSets.lab)
+    neoForge.mods {
+        morph_lab { sourceSet sourceSets.lab }
+    }
+    neoForge.runs {
+        labGameTestServer {
+            type = 'gameTestServer'
+            sourceSet = sourceSets.lab
+            systemProperty 'morph.lab.serverTests', 'true'
+            systemProperty 'neoforge.enabledGameTestNamespaces', 'morph_lab'
+            def events = providers.gradleProperty('morph.lab.events').orNull
+            if (events != null) systemProperty 'morph.lab.events', events
+            jvmArgument '-Xmx1536m'
+        }
+        labClient {
+            client()
+            sourceSet = sourceSets.lab
+            systemProperty 'morph.lab.enabled', 'true'
+            ['runDir', 'server', 'role', 'timeoutSeconds'].each { key ->
+                def value = providers.gradleProperty('morph.lab.' + key).orNull
+                if (value != null) systemProperty('morph.lab.' + key, value)
+            }
+            jvmArgument '-Xmx1536m'
+            def gameDir = providers.gradleProperty('morph.lab.gameDir').orNull
+            if (gameDir != null) gameDirectory = file(gameDir)
+            programArgument '--username'
+            programArgument providers.gradleProperty('morph.lab.username').getOrElse('MorphLabActor')
+        }
+    }
+}

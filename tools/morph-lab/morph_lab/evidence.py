@@ -75,6 +75,8 @@ def write_report(root: Path | str) -> Path:
         artifacts = []
         media_count = 0
         for path in sorted(run.rglob("*")):
+            if "source" in path.relative_to(run).parts or "__pycache__" in path.parts:
+                continue
             if not path.is_file() or not _inside(path, run) or path.name == "index.html":
                 continue
             href = quote(path.relative_to(root).as_posix(), safe="/")
