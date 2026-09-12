@@ -11,6 +11,7 @@ import sys
 
 from morph_lab.processes import supervise
 from morph_lab.session import run_session
+from morph_lab.probe_session import run_probe_session
 
 
 def prepare_fixture(run: Path, port: int) -> None:
@@ -75,7 +76,7 @@ def launch_provenance(source: Path, launch_file: Path, launch: dict) -> dict:
     return {str(path): hashlib.sha256(path.read_bytes()).hexdigest() for path in sorted(files)}
 
 
-def execute(source: Path, run: Path) -> dict:
+def execute(source: Path, run: Path, *, single_client: bool = False) -> dict:
     source, run = source.resolve(strict=True), run.resolve()
     if not source.is_dir() or run.is_relative_to(source) or source.is_relative_to(run):
         raise ValueError("Source and disposable run must be separate directories")
@@ -107,16 +108,18 @@ def execute(source: Path, run: Path) -> dict:
                 provenance = launch_provenance(source, launch_file, launch)
                 (run / "launch-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
                 roles = {}
-                for role in ("server", "actor", "observer"):
+                for role in (("server", "actor") if single_client else ("server", "actor", "observer")):
                     entry = launch["roles"]["server" if role == "server" else "client"]
                     name = "MorphActor" if role == "actor" else "MorphObserver"
                     roles[role] = {"argv": [arg.replace("{username}", name) for arg in entry["argv"]],
                                    "cwd": entry["cwd"], "env": entry.get("env", {})}
             result.update(phase="session", cleanup_confirmed=False)
-            result = run_session({"roles": roles, "port": port, "timeout": 480,
+            runner = run_probe_session if single_client else run_session
+            result = runner({"roles": roles, "port": port, "timeout": 480,
                                   "step_timeout": 90, "min_free_memory_mb": 384,
                                   "component_probes": ["wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery"],
-                                  "capture_recovery": True, "frame_scene": True}, run, source)
+                                  "capture_recovery": True, "frame_scene": True,
+                                  "fixture_form": "minecraft:bat"}, run, source)
             result["port_reservation"] = "Loopback availability probe; a successful owned-server ready event is also required."
     except Exception as error:
         result.update(status="infrastructure_failure", error=f"{type(error).__name__}: {error}")
@@ -148,9 +151,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--run", required=True, type=Path)
+    parser.add_argument("--single-client", action="store_true")
     args = parser.parse_args()
     try:
-        result = execute(args.source.resolve(strict=True), args.run.resolve())
+        result = execute(args.source.resolve(strict=True), args.run.resolve(), single_client=args.single_client)
     except Exception as error:
         result = {"status": "infrastructure_failure", "error": f"{type(error).__name__}: {error}"}
     result["status"] = {"passed": "pass", "failed": "fail",

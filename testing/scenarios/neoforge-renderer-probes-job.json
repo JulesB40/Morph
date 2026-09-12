@@ -1,0 +1,32 @@
+{
+  "scenario": "neoforge-native-renderer-probes",
+  "loader": "neoforge",
+  "role": "candidate",
+  "resources": {
+    "memory_mb": 3072,
+    "cpu": 2,
+    "gpu": 1,
+    "exclusive": true
+  },
+  "timeout_seconds": 1200,
+  "cwd": "{source}",
+  "argv": [
+    "C:/Users/Jules/AppData/Local/Programs/Python/Python313/python.exe",
+    "tools/morph-lab/multiplayer_job.py",
+    "--source",
+    "{source}",
+    "--run",
+    "{run}/session",
+    "--single-client"
+  ],
+  "scenario_results": [
+    "session/result.json"
+  ],
+  "artifacts": [
+    "build/classes/**/*.class",
+    "build/resources/lab/META-INF/neoforge.mods.toml",
+    "build/morph-lab/launch.json",
+    "build/moddev/*Args.txt",
+    "build/moddev/*Classpath.txt"
+  ]
+}

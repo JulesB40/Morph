@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 from morph_lab.probe_session import run_probe_session
-from test_session import FAKE
+from tests.test_session import FAKE
 
 
 class ProbeSessionTests(unittest.TestCase):
