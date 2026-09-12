@@ -1,0 +1,33 @@
+{
+  "scenario": "fabric-candidate-controls",
+  "loader": "fabric",
+  "role": "candidate",
+  "resources": {
+    "memory_mb": 3072,
+    "cpu": 2,
+    "gpu": 1
+  },
+  "timeout_seconds": 900,
+  "cwd": "{source}/fabric",
+  "argv": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "gradlew.bat",
+    "--no-daemon",
+    "--max-workers=2",
+    "-Dorg.gradle.jvmargs=-Xmx1G",
+    "-PmorphLab=true",
+    "-Pmorph.lab.runDir={run}/probes",
+    "-Pmorph.lab.role=candidate",
+    "-Pmorph.lab.scenarios=sniffer-middle-legs,bat-bee-flight,nametag,transformation-sound",
+    "runClientGameTest"
+  ],
+  "scenario_results": [
+    "probes/result.json"
+  ],
+  "artifacts": [
+    "fabric/build/classes/**/*.class",
+    "fabric/build/resources/gametest/fabric.mod.json"
+  ]
+}

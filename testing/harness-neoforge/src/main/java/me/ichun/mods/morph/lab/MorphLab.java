@@ -182,6 +182,15 @@ public final class MorphLab {
                     return;
                 }
                 case "release" -> release();
+                case "view" -> {
+                    var perspective = switch (request.get("perspective").getAsString()) {
+                        case "first_person" -> net.minecraft.client.CameraType.FIRST_PERSON;
+                        case "third_person_front" -> net.minecraft.client.CameraType.THIRD_PERSON_FRONT;
+                        default -> throw new IllegalArgumentException("Unknown perspective");
+                    };
+                    client.options.setCameraType(perspective);
+                    client.options.hideGui = request.get("hideGui").getAsBoolean();
+                }
                 case "look" -> {
                     float yaw = request.get("yaw").getAsFloat();
                     float pitch = request.get("pitch").getAsFloat();
@@ -291,6 +300,8 @@ public final class MorphLab {
         state.put("uuid", player.getUUID().toString());
         state.put("name", player.getName().getString());
         state.put("position", java.util.List.of(player.getX(), player.getY(), player.getZ()));
+        var eye = player.getEyePosition();
+        state.put("eyePosition", java.util.List.of(eye.x, eye.y, eye.z));
         state.put("velocity", java.util.List.of(player.getDeltaMovement().x, player.getDeltaMovement().y, player.getDeltaMovement().z));
         state.put("onGround", player.onGround());
         state.put("inWater", player.isInWater());
@@ -312,7 +323,8 @@ public final class MorphLab {
                 "gpuVendor", device.vendorName(), "gpuRenderer", device.name(),
                 "gpuBackend", device.backendName(), "gpuDriver", device.driverInfo(),
                 "hiddenRequested", Boolean.getBoolean("morph.lab.hidden"),
-                "windowHidden", GLFW.glfwGetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_VISIBLE) == GLFW.GLFW_FALSE);
+                "windowHidden", GLFW.glfwGetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_VISIBLE) == GLFW.GLFW_FALSE,
+                "windowFocused", GLFW.glfwGetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_FOCUSED) == GLFW.GLFW_TRUE);
     }
 
     private void fail(Minecraft client, String id, Exception error) {

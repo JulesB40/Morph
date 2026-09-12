@@ -74,7 +74,7 @@ if (providers.gradleProperty('morphLab').map { it.toBoolean() }.getOrElse(false)
             server()
             sourceSet = sourceSets.lab
             gameDirectory = layout.buildDirectory.dir('morph-lab/server').get().asFile
-            systemProperty 'morph.lab.controlDir', '{control}'
+            systemProperty 'morph.lab.controlDir', layout.buildDirectory.dir('morph-lab/server-control').get().asFile.absolutePath
             systemProperty 'morph.lab.role', 'server'
             programArgument '--nogui'
             jvmArgument '-Xmx1024m'
@@ -92,6 +92,7 @@ if (providers.gradleProperty('morphLab').map { it.toBoolean() }.getOrElse(false)
         labClient {
             client()
             sourceSet = sourceSets.lab
+            gameDirectory = layout.buildDirectory.dir('morph-lab/client').get().asFile
             systemProperty 'morph.lab.enabled', 'true'
             ['runDir', 'server', 'role', 'timeoutSeconds'].each { key ->
                 def value = providers.gradleProperty('morph.lab.' + key).orNull
