@@ -3,6 +3,7 @@ package me.ichun.mods.morph.lab;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -15,6 +16,7 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RenderFrameEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import org.lwjgl.glfw.GLFW;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -42,6 +44,9 @@ public final class MorphLab {
     private boolean connected;
     private boolean ready;
     private boolean stopped;
+    private boolean initialized;
+    private boolean explicitlyDisconnected;
+    private String reconnectId;
     private String inputId;
     private int releaseTick;
     private String captureId;
@@ -65,7 +70,6 @@ public final class MorphLab {
         Files.createDirectories(directory.resolve("captures"));
         // A stale output directory must never be mistaken for a fresh successful run.
         Files.createFile(directory.resolve("events.ndjson"));
-        emit("started", null, Map.of("server", server));
         NeoForge.EVENT_BUS.addListener(this::beforeTick);
         NeoForge.EVENT_BUS.addListener(this::afterFrame);
     }
@@ -81,6 +85,13 @@ public final class MorphLab {
         Minecraft client = Minecraft.getInstance();
         tick++;
         try {
+            if (!initialized) {
+                initialized = true;
+                if (Boolean.getBoolean("morph.lab.hidden")) {
+                    GLFW.glfwHideWindow(client.getWindow().handle());
+                }
+                emit("started", null, runtime(client));
+            }
             if (System.nanoTime() > deadline) throw new IllegalStateException("Client bridge timed out");
             if (!connected && client.isGameLoadFinished() && client.gui.overlay() == null) {
                 connected = true;
@@ -91,12 +102,17 @@ public final class MorphLab {
             }
             if (client.player == null || client.level == null) {
                 if (ready) throw new IllegalStateException("Client disconnected during lab session");
+                if (explicitlyDisconnected) pollRequest(client);
                 return;
             }
             if (!ready) {
                 if (client.gui.screen() != null || ++loadedTicks < 40) return;
                 ready = true;
                 emit("ready", null, state(client));
+                if (reconnectId != null) {
+                    emit("completed", reconnectId, state(client));
+                    reconnectId = null;
+                }
             }
             if (inputId != null) {
                 if (tick < releaseTick) {
@@ -108,16 +124,20 @@ public final class MorphLab {
                 inputId = null;
             }
             if (captureId != null) return;
-            try (var files = Files.list(directory.resolve("requests"))) {
+            pollRequest(client);
+        } catch (Exception error) {
+            fail(client, reconnectId, error);
+        }
+    }
+
+    private void pollRequest(Minecraft client) throws IOException {
+        try (var files = Files.list(directory.resolve("requests"))) {
                 Path next = files.filter(p -> p.getFileName().toString().endsWith(".json"))
                         .filter(p -> !consumed.contains(p)).sorted().findFirst().orElse(null);
                 if (next != null) {
                     consumed.add(next);
                     runRequest(client, next);
                 }
-            }
-        } catch (Exception error) {
-            fail(client, null, error);
         }
     }
 
@@ -130,7 +150,25 @@ public final class MorphLab {
             if (!id.matches("[a-zA-Z0-9_-]{1,80}") || !identifiers.add(id)) {
                 throw new IllegalArgumentException("Invalid or repeated request id");
             }
-            switch (request.get("op").getAsString()) {
+            String operation = request.get("op").getAsString();
+            if (explicitlyDisconnected && !Set.of("reconnect", "state", "exit").contains(operation)) {
+                throw new IllegalStateException("Only reconnect/state/exit are available while disconnected");
+            }
+            switch (operation) {
+                case "disconnect" -> {
+                    release();
+                    ready = false;
+                    loadedTicks = 0;
+                    explicitlyDisconnected = true;
+                    client.disconnect(new TitleScreen(), false);
+                }
+                case "reconnect" -> {
+                    if (!explicitlyDisconnected) throw new IllegalStateException("Disconnect before reconnecting");
+                    explicitlyDisconnected = false;
+                    connected = false;
+                    reconnectId = id;
+                    return;
+                }
                 case "input" -> {
                     if (client.gui.screen() != null) throw new IllegalStateException("Cannot apply movement with a screen open");
                     int duration = request.get("ticks").getAsInt();
@@ -219,7 +257,9 @@ public final class MorphLab {
 
     private Map<String, Object> state(Minecraft client) {
         var player = client.player;
-        Map<String, Object> state = new LinkedHashMap<>();
+        Map<String, Object> state = new LinkedHashMap<>(runtime(client));
+        state.put("connected", player != null && client.level != null);
+        if (player == null || client.level == null) return state;
         state.put("uuid", player.getUUID().toString());
         state.put("name", player.getName().getString());
         state.put("position", java.util.List.of(player.getX(), player.getY(), player.getZ()));
@@ -236,6 +276,15 @@ public final class MorphLab {
                 "showNameTag", me.ichun.mods.morph.client.nametag.MorphNameTags.visible(other.getUUID()),
                 "position", java.util.List.of(other.getX(), other.getY(), other.getZ()))).toList());
         return state;
+    }
+
+    private Map<String, Object> runtime(Minecraft client) {
+        var device = RenderSystem.getDevice().getDeviceInfo();
+        return Map.of("server", server,
+                "gpuVendor", device.vendorName(), "gpuRenderer", device.name(),
+                "gpuBackend", device.backendName(), "gpuDriver", device.driverInfo(),
+                "hiddenRequested", Boolean.getBoolean("morph.lab.hidden"),
+                "windowHidden", GLFW.glfwGetWindowAttrib(client.getWindow().handle(), GLFW.GLFW_VISIBLE) == GLFW.GLFW_FALSE);
     }
 
     private void fail(Minecraft client, String id, Exception error) {

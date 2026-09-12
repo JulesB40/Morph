@@ -10,11 +10,18 @@ Required JVM properties:
 * `morph.lab.runDir=<absolute, fresh per-client evidence directory>`
 * `morph.lab.server=127.0.0.1:<port>` (only literal loopback hosts accepted)
 
-Optional: `morph.lab.role=actor` or `observer`, and
+Optional: `morph.lab.role=actor` or `observer`, `morph.lab.hidden=true`, and
 `morph.lab.timeoutSeconds=180` (10–3600). Supply a separate game directory and player
 identity for every process. The bridge never starts or modifies a server/world. It
 connects once after client resource loading, bypassing initial menu screens. It
 disables pause-on-focus-loss in memory, without saving global options.
+
+Hidden mode hides this process's GLFW window on its first client tick. It does not
+call focus APIs or control another application. The startup window may be visible
+before that tick; this is not a guarantee of an invisible launch. `started`, `ready`
+and state details record actual `windowHidden`, `hiddenRequested`, `gpuVendor`,
+`gpuRenderer`, `gpuBackend` and `gpuDriver`. These use the active Minecraft GPU device
+and GLFW visibility attribute, rather than assuming the requested GPU/visibility.
 
 The controller writes a UTF-8 JSON request to a temporary file, closes it, then
 atomically renames it to `requests/<sortable-sequence>.json`. One request is handled
@@ -36,6 +43,16 @@ the specified keys for 1–1200 client ticks and releases them before completing
 tick wait. `release` clears held keys. `look` sets player view angles. The bridge does
 not set position, velocity, movement abilities or Morph state to manufacture results.
 
+`{"id":"0007","op":"disconnect"}` closes the current server connection and
+acknowledges with `connected:false`, keeping this client process alive. While
+explicitly disconnected, only `state`, `reconnect` and `exit` are accepted.
+`{"id":"0008","op":"reconnect"}` connects once to the same configured endpoint;
+its correlated `completed` arrives only after the new playable world is ready (also
+emitting a new `ready` event). Await the disconnect acknowledgement before stopping
+the external server and wait for server readiness before requesting reconnect.
+Unexpected connection loss after readiness remains fatal. The original overall
+timeout continues across disconnect/reconnect; the controller must budget for restart.
+
 Read `events.ndjson` for `started`, `connecting`, `ready`, `input_started`,
 `completed`, `failed`, and `finished`. Rows contain `schema:1`, `loader`, `role`,
 `tick`, optional request `id`, and `detail`. Wait for `ready` before submitting actions.
@@ -50,7 +67,7 @@ is normalized to `minecraft:player`. They are not authoritative server measureme
 its completion means sent, not accepted. The controller must assert resulting server
 and observer state independently. Exit emits `finished` with status `completed`, which
 means bridge actions completed, **not gameplay passed**. Any invalid command file,
-disconnect after readiness, or timeout fails the bridge and stops its own client.
+unexpected disconnect after readiness, or timeout fails the bridge and stops its own client.
 A JVM exit code of zero alone is never evidence of a passing scenario. Require the
 expected correlated events, artifacts, and independent scenario assertions. Startup
 failure may occur before any event file exists. The outer runner must enforce a
@@ -59,6 +76,8 @@ wall-clock timeout as well, including before tick events start.
 API provenance: NeoForge 26.2.0.82 source JAR documents `ClientTickEvent.Pre` and
 `RenderFrameEvent.Post`; Minecraft 26.2 cached client bytecode exposes
 `ConnectScreen.startConnecting`, `Minecraft.gui`, `GameRenderer.mainRenderTarget`,
-`Screenshot.takeScreenshot` and `NativeImage.writeToFile`. The first pilot must verify
+`Screenshot.takeScreenshot` and `NativeImage.writeToFile`. Hidden/device inspection
+uses `Window.handle`, GLFW 3.4.1 `glfwHideWindow`/`glfwGetWindowAttrib`, and
+`RenderSystem.getDevice().getDeviceInfo()`. The first pilot must verify
 background focus/input and actual GPU capture behavior; source inspection alone does
 not establish either. No desktop automation is used.
