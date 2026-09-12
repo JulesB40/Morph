@@ -33,8 +33,7 @@ public final class NativeSoundChecks {
                 if (!isSilent()) emitted.add(new Emission(sound.location().toString(), volume, pitch));
             }
         };
-        var forms = helper.getLevel().getServer().overworld().getDataStorage()
-                .computeIfAbsent(MorphSavedData.TYPE).collection(player.getUUID());
+        var forms = MorphSavedData.load(helper.getLevel().getServer()).collection(player.getUUID());
         try {
             forms.unlock("minecraft:pig");
             forms.select("minecraft:pig", 0);

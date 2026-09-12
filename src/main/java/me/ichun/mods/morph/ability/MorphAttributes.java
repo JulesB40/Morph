@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
+import me.ichun.mods.morph.model.FormDescriptor;
+import me.ichun.mods.morph.server.FormCapture;
+import me.ichun.mods.morph.shape.ShapeHooks;
+import me.ichun.mods.morph.config.MorphPolicies;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -30,9 +34,9 @@ public final class MorphAttributes {
             Attributes.WATER_MOVEMENT_EFFICIENCY, Attributes.OXYGEN_BONUS,
             Attributes.BURNING_TIME, Attributes.MAX_ABSORPTION, Attributes.BOUNCINESS,
             Attributes.AIR_DRAG_MODIFIER, Attributes.FRICTION_MODIFIER);
-    private static final Map<Level, Map<String, Map<Holder<Attribute>, Double>>> DEFAULTS = new WeakHashMap<>();
+    private static final Map<Level, Map<FormDescriptor, Map<Holder<Attribute>, Double>>> DEFAULTS = new WeakHashMap<>();
     private static final Map<ServerPlayer, Transition> TRANSITIONS = new WeakHashMap<>();
-    private record Transition(String form, long start, Map<Holder<Attribute>, Double> amounts) {}
+    private record Transition(String form, long start, int duration, Map<Holder<Attribute>, Double> amounts) {}
     private static java.util.function.BiConsumer<ServerPlayer, HealthSnapshot> healthSync = (player, health) -> {};
     private MorphAttributes() {}
 
@@ -50,19 +54,21 @@ public final class MorphAttributes {
             var modifier = instance == null ? null : instance.getModifier(MODIFIER);
             amounts.put(attribute, modifier == null ? 0.0 : modifier.amount());
         }
-        TRANSITIONS.put(player, new Transition(form, time(player), Map.copyOf(amounts)));
+        TRANSITIONS.put(player, new Transition(form, time(player), MorphPolicies.current().durationTicks(), Map.copyOf(amounts)));
     }
 
     public static void tick(ServerPlayer player, String form) {
         if (!player.isAlive()) { cleanup(player); return; }
         form = form == null ? "" : form;
-        var target = defaults(player.level(), form);
+        FormDescriptor descriptor = ShapeHooks.descriptor(player);
+        if (!form.isEmpty() && (descriptor == null || !descriptor.species().equals(form))) descriptor = FormDescriptor.species(form);
+        var target = defaults(player.level(), form.isEmpty() ? null : descriptor);
         var transition = TRANSITIONS.get(player);
         if (transition != null && !transition.form.equals(form)) {
             TRANSITIONS.remove(player);
             transition = null;
         }
-        float progress = transition == null ? 1.0F : progress(time(player) - transition.start);
+        float progress = transition == null ? 1.0F : progress(time(player) - transition.start, transition.duration);
         float oldMaximum = player.getMaxHealth();
         float health = player.getHealth();
         for (var attribute : SUPPORTED) {
@@ -112,15 +118,22 @@ public final class MorphAttributes {
     }
 
     static float progress(long ticks) {
-        double phase = Math.clamp((ticks / 100.0 - 0.125) / 0.75, 0.0, 1.0);
+        return progress(ticks, 100);
+    }
+
+    static float progress(long ticks, int duration) {
+        double phase = Math.clamp((ticks / (double) duration - 0.125) / 0.75, 0.0, 1.0);
         return (float)((1.0 - Math.cos(Math.PI * phase)) * 0.5);
     }
 
     private static long time(ServerPlayer player) { return player.level().getServer().overworld().getGameTime(); }
 
-    private static Map<Holder<Attribute>, Double> defaults(Level level, String form) {
-        if (form.isEmpty()) return Map.of();
-        return DEFAULTS.computeIfAbsent(level, ignored -> new HashMap<>()).computeIfAbsent(form, id -> {
+    private static Map<Holder<Attribute>, Double> defaults(Level level, FormDescriptor descriptor) {
+        if (descriptor == null) return Map.of();
+        var cache = DEFAULTS.computeIfAbsent(level, ignored -> new java.util.LinkedHashMap<>(128, 0.75F, true));
+        if (cache.size() >= 1024 && !cache.containsKey(descriptor)) cache.remove(cache.keySet().iterator().next());
+        return cache.computeIfAbsent(descriptor, captured -> {
+            String id = captured.species();
             var identifier = Identifier.tryParse(id);
             var type = identifier == null ? null : BuiltInRegistries.ENTITY_TYPE.getOptional(identifier).orElse(null);
             if (type == null) return Map.of();
@@ -133,6 +146,7 @@ public final class MorphAttributes {
                 return Map.of();
             }
             if (!(entity instanceof LivingEntity living) || living instanceof Avatar) return Map.of();
+            if (!FormCapture.applyVariant(living, captured)) return Map.of();
             // LOAD construction omits spawn-time size initialization. Use the same
             // default size as the render adapter, without spawning mobs or random gear.
             if (living instanceof net.minecraft.world.entity.monster.cubemob.AbstractCubeMob cube)
@@ -146,6 +160,8 @@ public final class MorphAttributes {
                 var instance = living.getAttribute(attribute);
                 if (instance == null) continue;
                 double value = instance.getBaseValue();
+                Double capturedBase = captured.attributes().get(BuiltInRegistries.ATTRIBUTE.getKey(attribute.value()).toString());
+                if (capturedBase != null && attribute.value().sanitizeValue(capturedBase) == capturedBase) value = capturedBase;
                 // Morph's shulker adapter stays closed; vanilla applies +20 covered
                 // armor when closing its shell in AI, which this adapter never ticks.
                 if (living instanceof net.minecraft.world.entity.monster.Shulker && attribute == Attributes.ARMOR)

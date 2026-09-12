@@ -21,7 +21,7 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 public final class MorphLabServer {
     private static final HuskDamageProbes.Adapter ADAPTER = new HuskDamageProbes.Adapter() {
         private me.ichun.mods.morph.model.MorphCollection forms(ServerPlayer player) {
-            return player.level().getServer().overworld().getDataStorage().computeIfAbsent(MorphSavedData.TYPE).collection(player.getUUID());
+            return MorphSavedData.load(player.level().getServer()).collection(player.getUUID());
         }
         public void selectForm(ServerPlayer player, String form) { forms(player).unlock(form); forms(player).select(form, 0); }
         public String activeForm(ServerPlayer player) { return forms(player).activeForm(); }
@@ -34,6 +34,12 @@ public final class MorphLabServer {
         if (!Boolean.getBoolean("morph.lab.serverTests")) return;
         event.register(Registries.TEST_FUNCTION, registry -> {
             registry.register(Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions"), NativePoseProbes::verify);
+            registry.register(Identifier.fromNamespaceAndPath("morph_lab", "native_sounds"), helper -> {
+                NativeSoundChecks.verify(helper, helper.makeMockServerPlayerInLevel()); helper.succeed();
+            });
+            for (var scenario : NativeAuthorityChecks.Case.values()) registry.register(
+                    Identifier.fromNamespaceAndPath("morph_lab", "authority_" + scenario.name().toLowerCase(java.util.Locale.ROOT)),
+                    helper -> NativeAuthorityChecks.run(helper, scenario));
             for (var scenario : HuskDamageProbes.Case.values()) registry.register(id(scenario), helper -> HuskDamageProbes.run(helper, scenario, ADAPTER));
         });
     }
@@ -43,6 +49,14 @@ public final class MorphLabServer {
         event.registerTest(Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions"), new FunctionGameTestInstance(
                 ResourceKey.create(Registries.TEST_FUNCTION, Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions")),
                 new TestData<>(environment, Identifier.withDefaultNamespace("empty"), 100, 0, true)));
+        var extra = new java.util.ArrayList<String>();
+        extra.add("native_sounds");
+        for (var scenario : NativeAuthorityChecks.Case.values()) extra.add("authority_" + scenario.name().toLowerCase(java.util.Locale.ROOT));
+        for (String name : extra) {
+            var testId = Identifier.fromNamespaceAndPath("morph_lab", name);
+            event.registerTest(testId, new FunctionGameTestInstance(ResourceKey.create(Registries.TEST_FUNCTION, testId),
+                    new TestData<>(environment, Identifier.withDefaultNamespace("empty"), 100, 0, true)));
+        }
         for (var scenario : HuskDamageProbes.Case.values()) {
             ResourceKey<Consumer<GameTestHelper>> function = ResourceKey.create(Registries.TEST_FUNCTION, id(scenario));
             event.registerTest(id(scenario), new FunctionGameTestInstance(function,
