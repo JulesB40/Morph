@@ -19,6 +19,7 @@ public final class MorphCommands {
         return source.getEntity() == null ? new java.util.UUID(0, 0) : source.getEntity().getUUID();
     }
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        me.ichun.mods.morph.config.MorphConfigCommands.register(dispatcher);
         dispatcher.register(Commands.literal("morph")
             .then(Commands.literal("nametag").executes(c -> MorphAuthority.nametag(c.getSource().getPlayerOrException(), null))
                 .then(Commands.literal("toggle").executes(c -> MorphAuthority.nametag(c.getSource().getPlayerOrException(), null)))

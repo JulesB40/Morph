@@ -49,6 +49,7 @@ sourceSets.test.java {
     include 'me/ichun/mods/morph/model/**'
     include 'me/ichun/mods/morph/ui/**'
     include 'me/ichun/mods/morph/client/ClientCollectionStateTest.java'
+    include 'me/ichun/mods/morph/client/DescriptorStateTest.java'
     include 'me/ichun/mods/morph/config/**'
     include 'me/ichun/mods/morph/definition/**'
     include 'me/ichun/mods/morph/api/**'

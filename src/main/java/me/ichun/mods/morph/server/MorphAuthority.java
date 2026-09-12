@@ -171,7 +171,8 @@ public final class MorphAuthority {
         sync(player);
         if (player.isAlive()) {
             publish(() -> transport.transition(player, previous, active(player)));
-            if (MorphPolicies.current().morphSounds()) me.ichun.mods.morph.model.MorphSounds.schedule(player);
+            if (MorphPolicies.current().morphSounds()) me.ichun.mods.morph.model.MorphSounds.schedule(player, MorphPolicies.current().durationTicks());
+            else me.ichun.mods.morph.model.MorphSounds.cancel(player);
         }
     }
     public static void requestCollection(ServerPlayer player) {

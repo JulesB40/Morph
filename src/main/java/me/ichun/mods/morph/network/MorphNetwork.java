@@ -37,15 +37,7 @@ public final class MorphNetwork {
         registrar.playToClient(Transition.TYPE, Transition.CODEC);
         registrar.playToClient(Health.TYPE, Health.CODEC);
         registrar.playToClient(Collection.TYPE, Collection.CODEC);
-        registrar.playToServer(Select.TYPE, Select.CODEC, (payload, context) -> {
-            if (context.player() instanceof ServerPlayer player) {
-                if (payload.formId().isEmpty()) MorphService.reset(player);
-                else MorphService.select(player, payload.formId());
-            }
-        });
-        registrar.playToServer(RequestCollection.TYPE, RequestCollection.CODEC, (payload, context) -> {
-            if (context.player() instanceof ServerPlayer player) MorphService.requestCollection(player);
-        });
+
     }
 
     public static void sendState(ServerPlayer recipient, UUID subject, String formId, boolean showNametag) {

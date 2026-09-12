@@ -1,6 +1,5 @@
 package me.ichun.mods.morph.fabric;
 
-import net.minecraft.commands.arguments.IdentifierArgument;
 import me.ichun.mods.morph.model.MorphCollection;
 import me.ichun.mods.morph.server.MorphSavedData;
 import net.fabricmc.api.ModInitializer;
@@ -9,15 +8,10 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.world.entity.Avatar;
 
 

@@ -4,11 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import me.ichun.mods.morph.model.MorphCollection;
 import me.ichun.mods.morph.network.MorphNetwork;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.Commands;
-import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.IdentifierArgument;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.neoforged.bus.api.EventPriority;
@@ -17,7 +12,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
-/** Server-thread-only authoritative operations. Forms are entity IDs, not saved entity variants. */
+/** NeoForge lifecycle adapter; shared authority owns collection mutations. */
 public final class MorphService {
     private MorphService() {}
 
