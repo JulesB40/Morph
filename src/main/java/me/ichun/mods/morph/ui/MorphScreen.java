@@ -15,7 +15,7 @@ import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 /** Collection presentation; only complete server snapshots change ownership or favorites. */
-public final class MorphScreen extends Screen {
+public final class MorphScreen extends Screen implements CollectionView {
     public interface Actions {
         long select(String entryId);
         long favorite(String entryId, boolean value);
@@ -248,4 +248,3 @@ public final class MorphScreen extends Screen {
     }
     @Override public boolean isPauseScreen() { return false; }
 }
-

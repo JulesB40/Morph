@@ -20,18 +20,40 @@ public final class MorphUi {
     private static final KeyMapping OPEN = new KeyMapping("key.morph.select", GLFW.GLFW_KEY_LEFT_BRACKET,
             KeyMapping.Category.GAMEPLAY);
 
+    private static final KeyMapping FAVORITES = new KeyMapping("key.morph.favorites", GLFW.GLFW_KEY_RIGHT_BRACKET,
+            KeyMapping.Category.GAMEPLAY);
+    private static final MorphScreen.Actions COLLECTION_ACTIONS = CollectionClientUi.actions(action ->
+            ClientPacketDistributor.sendToServer(new MorphNetwork.CollectionAction(action)));
+
     private MorphUi() {}
 
     public static void initialize(IEventBus modBus) {
+        me.ichun.mods.morph.shape.ShapeHooks.setClientDescriptorResolver(player -> {
+            var active = me.ichun.mods.morph.client.DescriptorState.active(player.getUUID());
+            return active == null ? null : active.descriptor();
+        });
         modBus.addListener(MorphUi::registerKeys);
         modBus.addListener(MorphUi::registerPayloads);
         NeoForge.EVENT_BUS.addListener(MorphUi::tick);
         NeoForge.EVENT_BUS.addListener(MorphUi::entityJoined);
     }
 
-    private static void registerKeys(RegisterKeyMappingsEvent event) { event.register(OPEN); }
+    private static void registerKeys(RegisterKeyMappingsEvent event) { event.register(OPEN); event.register(FAVORITES); }
 
     private static void registerPayloads(RegisterClientPayloadHandlersEvent event) {
+        event.register(MorphNetwork.SnapshotPage.TYPE, (payload, context) -> CollectionClientUi.receive(payload.value()));
+        event.register(MorphNetwork.ActionAck.TYPE, (payload, context) -> CollectionClientUi.receive(payload.value()));
+        event.register(MorphNetwork.DescriptorAppearance.TYPE, (payload, context) -> {
+            var value = payload.value();
+            if (!me.ichun.mods.morph.client.DescriptorState.accept(value)) return;
+            ClientMorphState.update(value.subject(), value.active() == null ? "" : value.active().descriptor().species());
+            me.ichun.mods.morph.client.nametag.MorphNameTags.update(value.subject(), value.showNametag());
+        });
+        event.register(MorphNetwork.DescriptorTransition.TYPE, (payload, context) -> {
+            var value = payload.value();
+            if (me.ichun.mods.morph.client.DescriptorState.accept(value))
+                me.ichun.mods.morph.client.MorphTransitions.start(value.subject(), value.from(), value.to(), value.startTick(), value.duration());
+        });
         event.register(MorphNetwork.Health.TYPE, (payload, context) ->
                 me.ichun.mods.morph.client.health.MorphHealthSync.apply(payload.value()));
         event.register(MorphNetwork.State.TYPE, (payload, context) ->
@@ -64,11 +86,12 @@ public final class MorphUi {
             for (var player : minecraft.level.players()) present.add(player.getUUID());
             me.ichun.mods.morph.client.MorphRenderSnapshots.retainPlayers(present);
         }
+        while (FAVORITES.consumeClick()) {
+            if (minecraft.player != null && minecraft.gui.screen() == null) CollectionClientUi.open(COLLECTION_ACTIONS, true);
+        }
         while (OPEN.consumeClick()) {
             if (minecraft.player != null && minecraft.gui.screen() == null) {
-                minecraft.gui.setScreen(new MorphScreen(id ->
-                        ClientPacketDistributor.sendToServer(new MorphNetwork.Select(id))));
-                ClientPacketDistributor.sendToServer(new MorphNetwork.RequestCollection());
+                CollectionClientUi.open(COLLECTION_ACTIONS, false);
             }
         }
     }

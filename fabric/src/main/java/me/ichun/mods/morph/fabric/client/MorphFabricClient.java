@@ -21,7 +21,18 @@ public final class MorphFabricClient implements ClientModInitializer {
             .registerReloadListener(net.minecraft.resources.Identifier.fromNamespaceAndPath("morph", "swim_animation"),
                 (net.minecraft.server.packs.resources.ResourceManagerReloadListener)
                     me.ichun.mods.morph.client.animation.MorphSwimAnimation::reload);
+        net.fabricmc.fabric.api.resource.v1.ResourceLoader.get(net.minecraft.server.packs.PackType.CLIENT_RESOURCES)
+            .registerReloadListener(net.minecraft.resources.Identifier.fromNamespaceAndPath("morph", "render_snapshots"),
+                (net.minecraft.server.packs.resources.ResourceManagerReloadListener) MorphRenderSnapshots::reload);
+        me.ichun.mods.morph.shape.ShapeHooks.setClientDescriptorResolver(player -> {
+            var active = me.ichun.mods.morph.client.DescriptorState.active(player.getUUID());
+            return active == null ? null : active.descriptor();
+        });
         me.ichun.mods.morph.shape.ShapeHooks.setClientFormResolver(player -> FORMS.get(player.getUUID()));
+        var collectionActions = me.ichun.mods.morph.ui.CollectionClientUi.actions(action ->
+                ClientPlayNetworking.send(new me.ichun.mods.morph.fabric.MorphCollectionAction(action)));
+        var favorites = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
+            new net.minecraft.client.KeyMapping("key.morph.favorites", org.lwjgl.glfw.GLFW.GLFW_KEY_RIGHT_BRACKET, net.minecraft.client.KeyMapping.Category.GAMEPLAY));
         var open = net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper.registerKeyMapping(
             new net.minecraft.client.KeyMapping("key.morph.select", org.lwjgl.glfw.GLFW.GLFW_KEY_LEFT_BRACKET, net.minecraft.client.KeyMapping.Category.GAMEPLAY));
         net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -40,13 +51,38 @@ public final class MorphFabricClient implements ClientModInitializer {
                 for (var player : client.level.players()) present.add(player.getUUID());
                 MorphRenderSnapshots.retainPlayers(present);
             }
+            while (favorites.consumeClick()) {
+                if (client.player != null && client.gui.screen() == null) me.ichun.mods.morph.ui.CollectionClientUi.open(collectionActions, true);
+            }
             while (open.consumeClick()) {
                 if (client.player != null && client.gui.screen() == null) {
-                    client.gui.setScreen(new me.ichun.mods.morph.ui.MorphScreen(id -> client.player.connection.sendCommand(id.isEmpty() ? "morph reset" : "morph select " + id)));
-                    client.player.connection.sendCommand("morph menu");
+                    me.ichun.mods.morph.ui.CollectionClientUi.open(collectionActions, false);
+
                 }
             }
         });
+        ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphSnapshotPage.TYPE, (payload, context) ->
+                context.client().execute(() -> me.ichun.mods.morph.ui.CollectionClientUi.receive(payload.value())));
+        ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphActionAck.TYPE, (payload, context) ->
+                context.client().execute(() -> me.ichun.mods.morph.ui.CollectionClientUi.receive(payload.value())));
+        ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphDescriptorAppearance.TYPE, (payload, context) -> context.client().execute(() -> {
+            var value = payload.value();
+            if (!me.ichun.mods.morph.client.DescriptorState.accept(value)) return;
+            String form = value.active() == null ? "" : value.active().descriptor().species();
+            me.ichun.mods.morph.client.MorphTransitions.reconcile(value.subject(), form);
+            if (form.isEmpty()) FORMS.remove(value.subject()); else FORMS.put(value.subject(), form);
+            me.ichun.mods.morph.client.nametag.MorphNameTags.update(value.subject(), value.showNametag());
+            MorphRenderSnapshots.invalidate(value.subject());
+            if (context.client().level != null) {
+                var player = context.client().level.getPlayerByUUID(value.subject());
+                if (player != null) me.ichun.mods.morph.shape.ShapeHooks.refresh(player);
+            }
+        }));
+        ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphDescriptorTransition.TYPE, (payload, context) -> context.client().execute(() -> {
+            var value = payload.value();
+            if (me.ichun.mods.morph.client.DescriptorState.accept(value))
+                me.ichun.mods.morph.client.MorphTransitions.start(value.subject(), value.from(), value.to(), value.startTick(), value.duration());
+        }));
         ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphOwned.TYPE, (payload, context) -> context.client().execute(() -> {
             if (context.client().gui.screen() instanceof me.ichun.mods.morph.ui.MorphScreen screen) screen.update(payload.forms(), payload.active());
         }));
@@ -64,6 +100,6 @@ public final class MorphFabricClient implements ClientModInitializer {
         }));
         ClientPlayNetworking.registerGlobalReceiver(me.ichun.mods.morph.fabric.MorphTransition.TYPE, (payload, context) -> context.client().execute(() ->
                 me.ichun.mods.morph.client.MorphTransitions.start(payload.player(), payload.fromForm(), payload.toForm(), payload.durationTicks())));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { FORMS.clear(); me.ichun.mods.morph.client.nametag.MorphNameTags.clear(); MorphRenderSnapshots.clear(); });
+        ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> { me.ichun.mods.morph.client.ClientCollectionState.clear(); me.ichun.mods.morph.client.DescriptorState.clear(); FORMS.clear(); me.ichun.mods.morph.client.nametag.MorphNameTags.clear(); MorphRenderSnapshots.clear(); });
     }
 }
