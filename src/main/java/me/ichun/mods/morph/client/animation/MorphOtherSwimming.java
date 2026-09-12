@@ -18,7 +18,8 @@ public final class MorphOtherSwimming {
     private static final Map<Model<?>, Function<String, ModelPart>> LOOKUPS = new WeakHashMap<>();
     private static final String[] LIMBS = {"right_hind_leg", "left_hind_leg", "right_front_leg", "left_front_leg",
             "right_middle_hind_leg", "left_middle_hind_leg", "right_middle_front_leg", "left_middle_front_leg",
-            "right_leg", "left_leg", "right_hind_foot", "left_hind_foot", "right_front_foot", "left_front_foot"};
+            "right_leg", "left_leg", "right_hind_foot", "left_hind_foot", "right_front_foot", "left_front_foot",
+            "right_mid_leg", "left_mid_leg"};
     private static final Set<String> AQUATIC = Set.of("axolotl", "cod", "salmon", "pufferfish", "tropical_fish",
             "dolphin", "squid", "glow_squid", "guardian", "elder_guardian", "turtle", "frog", "tadpole",
             "nautilus", "zombie_nautilus");
