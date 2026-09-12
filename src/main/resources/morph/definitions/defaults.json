@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "policy": {
+    "mode": "CLASSIC",
+    "biomass_opt_in": false,
+    "duration_ticks": 100,
+    "morph_sounds": true,
+    "morph_players": {"allow": [], "deny": []},
+    "selector_players": {"allow": [], "deny": []},
+    "forms": {"allow": [], "deny": []},
+    "abilities": {"enabled": true, "terrain_harm": false, "disabled": []}
+  },
+  "mobs": [],
+  "traits": []
+}
