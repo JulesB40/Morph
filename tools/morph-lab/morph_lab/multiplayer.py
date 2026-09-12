@@ -37,7 +37,8 @@ class ClientChannel:
     the channel before launching its bridge, and use new directories on restart.
     """
 
-    OPERATIONS = frozenset({"input", "look", "command", "capture", "state", "release", "exit"})
+    OPERATIONS = frozenset({"input", "look", "command", "capture", "state", "release", "exit",
+                            "disconnect", "reconnect", "save", "stop"})
     MAX_RECORD_BYTES = 1024 * 1024
 
     def __init__(self, directory: str | Path, *, poll_interval: float = 0.02,
