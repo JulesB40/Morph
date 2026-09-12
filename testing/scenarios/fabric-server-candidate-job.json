@@ -1,0 +1,28 @@
+{
+  "scenario": "fabric-husk-native-candidate",
+  "loader": "fabric",
+  "role": "candidate",
+  "resources": {
+    "memory_mb": 2560,
+    "cpu": 2,
+    "gpu": 0
+  },
+  "timeout_seconds": 600,
+  "cwd": "{source}/fabric",
+  "argv": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "gradlew.bat",
+    "--no-daemon",
+    "--max-workers=2",
+    "-Dorg.gradle.jvmargs=-Xmx1G",
+    "-PmorphLab=true",
+    "-Pmorph.lab.events={run}/events.ndjson",
+    "runGameTest"
+  ],
+  "artifacts": [
+    "fabric/build/classes/**/*.class",
+    "fabric/build/resources/gametest/fabric.mod.json"
+  ]
+}

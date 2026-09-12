@@ -66,7 +66,7 @@ gradle.projectsEvaluated {
                 def argv = [executable, '@' + classpathFile.absolutePath,
                             '@' + vmFile.absolutePath, launch.modFolders.get().argument]
                 if (role == 'client') {
-                    argv.addAll(['-Xmx1024m', '-Dmorph.lab.hidden=true', '-Dmorph.lab.enabled=true',
+                    argv.addAll(['-Xmx768m', '-Dmorph.lab.hidden=true', '-Dmorph.lab.enabled=true',
                                  '-Dmorph.lab.runDir={control}', '-Dmorph.lab.server=127.0.0.1:{port}',
                                  '-Dmorph.lab.role={role}'])
                 } else {
