@@ -35,7 +35,7 @@ def prepare_fixture(run: Path, port: int) -> None:
         game = run / role / "game"
         game.mkdir(parents=True, exist_ok=False)
         (game / "options.txt").write_text(
-            "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:2\n"
+            "pauseOnLostFocus:false\nrenderDistance:2\nsimulationDistance:5\n"
             "maxFps:30\nenableVsync:false\nguiScale:2\n"
             "overrideWidth:854\noverrideHeight:480\n", encoding="utf-8")
 
