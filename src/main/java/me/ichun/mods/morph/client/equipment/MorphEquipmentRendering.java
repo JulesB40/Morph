@@ -43,6 +43,7 @@ public final class MorphEquipmentRendering {
     }
 
     public static void finish(Avatar avatar, AvatarRenderState player, LivingEntityRenderState target) {
+        me.ichun.mods.morph.client.animation.MorphPlayerPoses.apply(player, target);
         if (target instanceof ArmedEntityRenderState armed) {
             // Pull/charge item-model properties query the using entity, not just the arm pose.
             // Resolve against the real player during use without mutating or ticking the adapter.
@@ -60,22 +61,7 @@ public final class MorphEquipmentRendering {
             armed.leftArmPose = player.leftArmPose;
             armed.rightArmPose = player.rightArmPose;
         }
-        if (target instanceof IllagerRenderState illager) {
-            illager.mainArm = player.mainArm;
-            illager.attackAnim = player.attackTime;
-            illager.maxCrossbowChargeDuration = (int) player.maxCrossbowChargeDuration;
-            illager.ticksUsingItem = player.ticksUsingItem;
-            var pose = player.mainArm == HumanoidArm.RIGHT ? player.rightArmPose : player.leftArmPose;
-            if (pose == HumanoidModel.ArmPose.CROSSBOW_CHARGE) {
-                illager.armPose = AbstractIllager.IllagerArmPose.CROSSBOW_CHARGE;
-            } else if (pose == HumanoidModel.ArmPose.CROSSBOW_HOLD) {
-                illager.armPose = AbstractIllager.IllagerArmPose.CROSSBOW_HOLD;
-            } else if (pose == HumanoidModel.ArmPose.BOW_AND_ARROW) {
-                illager.armPose = AbstractIllager.IllagerArmPose.BOW_AND_ARROW;
-            } else if (player.attackTime > 0) {
-                illager.armPose = AbstractIllager.IllagerArmPose.ATTACKING;
-            }
-        }
+        if (target instanceof IllagerRenderState illager) applyIllagerPose(player, illager);
         if (target instanceof HumanoidRenderState humanoid) {
             // Use state directly: starting or ticking item use on adapters would trigger item hooks.
             humanoid.useItemHand = player.useItemHand;
@@ -87,6 +73,29 @@ public final class MorphEquipmentRendering {
             humanoid.elytraRotX = player.elytraRotX;
             humanoid.elytraRotY = player.elytraRotY;
             humanoid.elytraRotZ = player.elytraRotZ;
+        }
+    }
+
+    static void applyIllagerPose(AvatarRenderState player, IllagerRenderState illager) {
+        illager.mainArm = player.mainArm;
+        illager.attackAnim = player.attackTime;
+        illager.maxCrossbowChargeDuration = (int) player.maxCrossbowChargeDuration;
+        illager.ticksUsingItem = player.ticksUsingItem;
+        var activeArm = player.isUsingItem && player.useItemHand == net.minecraft.world.InteractionHand.OFF_HAND
+            ? player.mainArm.getOpposite() : player.mainArm;
+        var pose = activeArm == HumanoidArm.RIGHT ? player.rightArmPose : player.leftArmPose;
+        // Native vindicator layers require aggression. Only actual combat poses enable it.
+        // Evoker casting remains native state; holding food or gear cannot fabricate a spell.
+        illager.isAggressive = player.attackTime > 0 || pose == HumanoidModel.ArmPose.BOW_AND_ARROW
+            || pose == HumanoidModel.ArmPose.CROSSBOW_CHARGE || pose == HumanoidModel.ArmPose.CROSSBOW_HOLD;
+        if (pose == HumanoidModel.ArmPose.CROSSBOW_CHARGE) {
+            illager.armPose = AbstractIllager.IllagerArmPose.CROSSBOW_CHARGE;
+        } else if (pose == HumanoidModel.ArmPose.CROSSBOW_HOLD) {
+            illager.armPose = AbstractIllager.IllagerArmPose.CROSSBOW_HOLD;
+        } else if (pose == HumanoidModel.ArmPose.BOW_AND_ARROW) {
+            illager.armPose = AbstractIllager.IllagerArmPose.BOW_AND_ARROW;
+        } else if (player.attackTime > 0) {
+            illager.armPose = AbstractIllager.IllagerArmPose.ATTACKING;
         }
     }
 }

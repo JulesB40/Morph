@@ -10,7 +10,7 @@ import net.minecraft.client.model.QuadrupedModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.monster.illager.IllagerModel;
 import net.minecraft.client.model.npc.VillagerModel;
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.renderer.entity.state.*;
 import net.minecraft.core.registries.BuiltInRegistries;
 
 /** Anatomy-preserving paddles for vanilla families outside the shared biped/quadruped bases. */
@@ -44,12 +44,54 @@ public final class MorphOtherSwimming {
             float offset = paddle(state.ageInTicks, i, fast);
             limb.xRot += (limb.getInitialPose().xRot() + offset - limb.xRot) * blend;
         }
+        if (canPaddleArms(state)) {
+            paddleArms(lookup, state.ageInTicks, blend, fast);
+        }
+        if (state instanceof ChickenRenderState || state instanceof ParrotRenderState) {
+            // These birds hinge their wings on Z. Bat, bee, allay, vex and phantom
+            // keep their own native wing cycles and hinge axes.
+            paddleBirdWings(lookup, state.ageInTicks, blend, fast);
+        }
         // Tails remain in their own rig: a small lateral stroke never moves or reorients
         // the animal's skeleton, shell, body, wings, or attached equipment.
         ModelPart tail = lookup.apply("tail");
         if (tail != null) {
             float target = tail.getInitialPose().yRot() + paddle(state.ageInTicks, 0, fast) * 0.2F;
             tail.yRot += (target - tail.yRot) * blend;
+        }
+    }
+
+    static boolean canPaddleArms(LivingEntityRenderState state) {
+        if (state instanceof ArmedEntityRenderState armed
+                && (armed.attackTime > 0 || !idleArm(armed.leftArmPose) || !idleArm(armed.rightArmPose))) return false;
+        if (state instanceof AllayRenderState allay && (allay.isDancing || allay.isSpinning)) return false;
+        if (state instanceof VexRenderState vex && vex.isCharging) return false;
+        if (state instanceof IronGolemRenderState golem && (golem.attackTicksRemaining > 0 || golem.offerFlowerTick > 0)) return false;
+        if (state instanceof CreakingRenderState creaking && (creaking.attackAnimationState.isStarted()
+                || creaking.invulnerabilityAnimationState.isStarted() || creaking.deathAnimationState.isStarted())) return false;
+        if (state instanceof WardenRenderState warden && (warden.attackAnimationState.isStarted()
+                || warden.sonicBoomAnimationState.isStarted() || warden.roarAnimationState.isStarted()
+                || warden.sniffAnimationState.isStarted() || warden.emergeAnimationState.isStarted()
+                || warden.diggingAnimationState.isStarted())) return false;
+        return true;
+    }
+
+    private static boolean idleArm(HumanoidModel.ArmPose pose) {
+        return pose == HumanoidModel.ArmPose.EMPTY || pose == HumanoidModel.ArmPose.ITEM;
+    }
+
+    static void paddleArms(Function<String, ModelPart> lookup, float age, float blend, boolean fast) {
+        for (int side = 0; side < 2; side++) {
+            ModelPart arm = lookup.apply(side == 0 ? "right_arm" : "left_arm");
+            if (arm != null) arm.xRot += (arm.getInitialPose().xRot() - 0.8F + paddle(age, side, fast) - arm.xRot) * blend;
+        }
+    }
+
+    static void paddleBirdWings(Function<String, ModelPart> lookup, float age, float blend, boolean fast) {
+        float stroke = 0.35F + Math.abs(paddle(age, 0, fast));
+        for (int side = 0; side < 2; side++) {
+            ModelPart wing = lookup.apply(side == 0 ? "right_wing" : "left_wing");
+            if (wing != null) wing.zRot += (wing.getInitialPose().zRot() + (side == 0 ? stroke : -stroke) - wing.zRot) * blend;
         }
     }
 

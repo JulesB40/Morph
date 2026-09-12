@@ -7,6 +7,8 @@ public final class MorphSwimming {
     private MorphSwimming() {}
     public static void extract(Avatar avatar, AvatarRenderState source, LivingEntityRenderState target, String formId) {
         boolean sinkingUndead = !me.ichun.mods.morph.ability.MorphSwimmingRules.canSwim(formId);
+        if (sinkingUndead && target.pose == net.minecraft.world.entity.Pose.SWIMMING)
+            target.pose = net.minecraft.world.entity.Pose.STANDING;
         if (target instanceof HumanoidRenderState humanoid) {
             humanoid.swimAmount = sinkingUndead ? 0F : source.swimAmount;
             humanoid.isVisuallySwimming = !sinkingUndead && source.isVisuallySwimming;

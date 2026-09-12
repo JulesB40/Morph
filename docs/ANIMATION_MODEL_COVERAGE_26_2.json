@@ -1,0 +1,2659 @@
+{
+  "schema": 1,
+  "minecraft": "26.2",
+  "neoforge": "26.2.0.82",
+  "source_jar_sha256": "c5370e599be27666e1488655269bfe6e4014d59bd5a532934e332684198d1887",
+  "source_selection": "EntityTypes fields whose native entity inheritance reaches LivingEntity, excluding Avatar; armor_stand included. Matches prior 91-form count. This is a source inventory, not a runtime registry or model verification.",
+  "count": 91,
+  "forms": [
+    {
+      "form": "minecraft:allay",
+      "native_entity": "Allay",
+      "native_renderers": [
+        "AllayRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AllayModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "ItemInHandLayer"
+      ],
+      "swim_family": "named_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:armadillo",
+      "native_entity": "Armadillo",
+      "native_renderers": [
+        "ArmadilloRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultArmadilloModel",
+        "BabyArmadilloModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:armor_stand",
+      "native_entity": "ArmorStand",
+      "native_renderers": [
+        "ArmorStandRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "ArmorStandModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "HumanoidArmorLayer",
+        "ItemInHandLayer",
+        "WingsLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:axolotl",
+      "native_entity": "Axolotl",
+      "native_renderers": [
+        "AxolotlRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultAxolotlModel",
+        "BabyAxolotlModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:bat",
+      "native_entity": "Bat",
+      "native_renderers": [
+        "BatRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BatModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:bee",
+      "native_entity": "Bee",
+      "native_renderers": [
+        "BeeRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultBeeModel",
+        "BabyBeeModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:blaze",
+      "native_entity": "Blaze",
+      "native_renderers": [
+        "BlazeRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BlazeModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:bogged",
+      "native_entity": "Bogged",
+      "native_renderers": [
+        "BoggedRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BoggedModel",
+        "SkeletonModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer",
+        "SkeletonClothingLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:breeze",
+      "native_entity": "Breeze",
+      "native_renderers": [
+        "BreezeRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BreezeModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "BreezeEyesLayer",
+        "BreezeWindLayer"
+      ],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:camel",
+      "native_entity": "Camel",
+      "native_renderers": [
+        "CamelRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultCamelModel",
+        "BabyCamelModel",
+        "CamelSaddleModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:camel_husk",
+      "native_entity": "CamelHusk",
+      "native_renderers": [
+        "CamelHuskRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultCamelModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:cat",
+      "native_entity": "Cat",
+      "native_renderers": [
+        "CatRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultCatModel",
+        "BabyCatModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CatCollarLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:cave_spider",
+      "native_entity": "CaveSpider",
+      "native_renderers": [
+        "CaveSpiderRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SpiderModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SpiderEyesLayer"
+      ],
+      "swim_family": "named_eight_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:chicken",
+      "native_entity": "Chicken",
+      "native_renderers": [
+        "ChickenRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultChickenModel",
+        "BabyChickenModel",
+        "ColdChickenModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_two_legs_wings",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:cod",
+      "native_entity": "Cod",
+      "native_renderers": [
+        "CodRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "CodModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:copper_golem",
+      "native_entity": "CopperGolem",
+      "native_renderers": [
+        "CopperGolemRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "CopperGolemModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "BlockDecorationLayer",
+        "CustomHeadLayer",
+        "ItemInHandLayer",
+        "LivingEntityEmissiveLayer"
+      ],
+      "swim_family": "named_two_legs_and_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:cow",
+      "native_entity": "Cow",
+      "native_renderers": [
+        "CowRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "CowModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:creaking",
+      "native_entity": "Creaking",
+      "native_renderers": [
+        "CreakingRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "CreakingModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "LivingEntityEmissiveLayer"
+      ],
+      "swim_family": "named_two_legs_and_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:creeper",
+      "native_entity": "Creeper",
+      "native_renderers": [
+        "CreeperRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "CreeperModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CreeperPowerLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:dolphin",
+      "native_entity": "Dolphin",
+      "native_renderers": [
+        "DolphinRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "DolphinModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "DolphinCarryingItemLayer"
+      ],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:donkey",
+      "native_entity": "Donkey",
+      "native_renderers": [
+        "DonkeyRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyDonkeyModel",
+        "DonkeyModel",
+        "EquineSaddleModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:drowned",
+      "native_entity": "Drowned",
+      "native_renderers": [
+        "DrownedRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyDrownedModel",
+        "DrownedModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "DrownedOuterLayer",
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:elder_guardian",
+      "native_entity": "ElderGuardian",
+      "native_renderers": [
+        "ElderGuardianRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "GuardianModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:enderman",
+      "native_entity": "EnderMan",
+      "native_renderers": [
+        "EndermanRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "EndermanModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CarriedBlockLayer",
+        "EnderEyesLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:endermite",
+      "native_entity": "Endermite",
+      "native_renderers": [
+        "EndermiteRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "EndermiteModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:ender_dragon",
+      "native_entity": "EnderDragon",
+      "native_renderers": [
+        "EnderDragonRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "EnderDragonModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "dragon_special_renderer",
+      "normal_swim": "special_renderer_native_history; aquatic_animation_pending",
+      "fast_swim": "aquatic_animation_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:evoker",
+      "native_entity": "Evoker",
+      "native_renderers": [
+        "EvokerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "IllagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "ItemInHandLayer"
+      ],
+      "swim_family": "illager_split_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:fox",
+      "native_entity": "Fox",
+      "native_renderers": [
+        "FoxRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultFoxModel",
+        "BabyFoxModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "FoxHeldItemLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:frog",
+      "native_entity": "Frog",
+      "native_renderers": [
+        "FrogRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "FrogModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:ghast",
+      "native_entity": "Ghast",
+      "native_renderers": [
+        "GhastRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "GhastModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:happy_ghast",
+      "native_entity": "HappyGhast",
+      "native_renderers": [
+        "HappyGhastRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "HappyGhastHarnessModel",
+        "HappyGhastModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "RopesLayer",
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:giant",
+      "native_entity": "Giant",
+      "native_renderers": [
+        "GiantMobRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "GiantZombieModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer",
+        "ItemInHandLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:glow_squid",
+      "native_entity": "GlowSquid",
+      "native_renderers": [
+        "GlowSquidRenderer"
+      ],
+      "native_models_declared_or_inherited": [],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:goat",
+      "native_entity": "Goat",
+      "native_renderers": [
+        "GoatRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyGoatModel",
+        "GoatModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:guardian",
+      "native_entity": "Guardian",
+      "native_renderers": [
+        "GuardianRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "GuardianModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:hoglin",
+      "native_entity": "Hoglin",
+      "native_renderers": [
+        "HoglinRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyHoglinModel",
+        "HoglinModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:horse",
+      "native_entity": "Horse",
+      "native_renderers": [
+        "HorseRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyHorseModel",
+        "EquineSaddleModel",
+        "HorseModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HorseMarkingLayer",
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:husk",
+      "native_entity": "Husk",
+      "native_renderers": [
+        "HuskRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyZombieModel",
+        "ZombieModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "underwater_walking",
+      "normal_swim": "forbidden_underwater_walking",
+      "fast_swim": "forbidden_underwater_walking",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:illusioner",
+      "native_entity": "Illusioner",
+      "native_renderers": [
+        "IllusionerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "IllagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "ItemInHandLayer"
+      ],
+      "swim_family": "illager_split_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:iron_golem",
+      "native_entity": "IronGolem",
+      "native_renderers": [
+        "IronGolemRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "IronGolemModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "IronGolemCrackinessLayer",
+        "IronGolemFlowerLayer"
+      ],
+      "swim_family": "named_two_legs_and_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:llama",
+      "native_entity": "Llama",
+      "native_renderers": [
+        "LlamaRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyLlamaModel",
+        "LlamaModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "LlamaDecorLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:magma_cube",
+      "native_entity": "MagmaCube",
+      "native_renderers": [
+        "MagmaCubeRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "MagmaCubeModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:mooshroom",
+      "native_entity": "MushroomCow",
+      "native_renderers": [
+        "MushroomCowRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyCowModel",
+        "CowModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "MushroomCowMushroomLayer"
+      ],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:mule",
+      "native_entity": "Mule",
+      "native_renderers": [
+        "DonkeyRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyDonkeyModel",
+        "DonkeyModel",
+        "EquineSaddleModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:nautilus",
+      "native_entity": "Nautilus",
+      "native_renderers": [
+        "NautilusRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "NautilusArmorModel",
+        "NautilusModel",
+        "NautilusSaddleModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:ocelot",
+      "native_entity": "Ocelot",
+      "native_renderers": [
+        "OcelotRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultOcelotModel",
+        "BabyOcelotModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:panda",
+      "native_entity": "Panda",
+      "native_renderers": [
+        "PandaRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyPandaModel",
+        "PandaModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "PandaHoldsItemLayer"
+      ],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:parched",
+      "native_entity": "Parched",
+      "native_renderers": [
+        "ParchedRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SkeletonModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:parrot",
+      "native_entity": "Parrot",
+      "native_renderers": [
+        "ParrotRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "ParrotModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_two_legs_wings",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:phantom",
+      "native_entity": "Phantom",
+      "native_renderers": [
+        "PhantomRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "PhantomModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "PhantomEyesLayer"
+      ],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:pig",
+      "native_entity": "Pig",
+      "native_renderers": [
+        "PigRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyPigModel",
+        "ColdPigModel",
+        "PigModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:piglin",
+      "native_entity": "Piglin",
+      "native_renderers": [
+        "PiglinRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultPiglinModel",
+        "BabyPiglinModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:piglin_brute",
+      "native_entity": "PiglinBrute",
+      "native_renderers": [
+        "PiglinRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultPiglinModel",
+        "BabyPiglinModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:pillager",
+      "native_entity": "Pillager",
+      "native_renderers": [
+        "PillagerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "IllagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "ItemInHandLayer"
+      ],
+      "swim_family": "illager_split_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:polar_bear",
+      "native_entity": "PolarBear",
+      "native_renderers": [
+        "PolarBearRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "PolarBearModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:pufferfish",
+      "native_entity": "Pufferfish",
+      "native_renderers": [
+        "PufferfishRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "PufferfishBigModel",
+        "PufferfishMidModel",
+        "PufferfishSmallModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:rabbit",
+      "native_entity": "Rabbit",
+      "native_renderers": [
+        "RabbitRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultRabbitModel",
+        "BabyRabbitModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:ravager",
+      "native_entity": "Ravager",
+      "native_renderers": [
+        "RavagerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "RavagerModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:salmon",
+      "native_entity": "Salmon",
+      "native_renderers": [
+        "SalmonRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SalmonModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:sheep",
+      "native_entity": "Sheep",
+      "native_renderers": [
+        "SheepRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabySheepModel",
+        "SheepModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SheepWoolLayer",
+        "SheepWoolUndercoatLayer"
+      ],
+      "swim_family": "quadruped_clip",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:shulker",
+      "native_entity": "Shulker",
+      "native_renderers": [
+        "ShulkerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "ShulkerModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:silverfish",
+      "native_entity": "Silverfish",
+      "native_renderers": [
+        "SilverfishRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SilverfishModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:skeleton",
+      "native_entity": "Skeleton",
+      "native_renderers": [
+        "SkeletonRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SkeletonModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:skeleton_horse",
+      "native_entity": "SkeletonHorse",
+      "native_renderers": [
+        "UndeadHorseRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyHorseModel",
+        "EquineSaddleModel",
+        "HorseModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:slime",
+      "native_entity": "Slime",
+      "native_renderers": [
+        "SlimeRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SlimeModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SlimeOuterLayer"
+      ],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:sniffer",
+      "native_entity": "Sniffer",
+      "native_renderers": [
+        "SnifferRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SnifferModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_six_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:snow_golem",
+      "native_entity": "SnowGolem",
+      "native_renderers": [
+        "SnowGolemRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SnowGolemModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SnowGolemHeadLayer"
+      ],
+      "swim_family": "named_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:spider",
+      "native_entity": "Spider",
+      "native_renderers": [
+        "SpiderRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SpiderModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SpiderEyesLayer"
+      ],
+      "swim_family": "named_eight_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:squid",
+      "native_entity": "Squid",
+      "native_renderers": [
+        "SquidRenderer"
+      ],
+      "native_models_declared_or_inherited": [],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:stray",
+      "native_entity": "Stray",
+      "native_renderers": [
+        "StrayRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SkeletonModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer",
+        "SkeletonClothingLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:strider",
+      "native_entity": "Strider",
+      "native_renderers": [
+        "StriderRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultStriderModel",
+        "BabyStriderModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_two_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:sulfur_cube",
+      "native_entity": "SulfurCube",
+      "native_renderers": [
+        "SulfurCubeRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SmallSulfurCubeModel",
+        "SulfurCubeModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SulfurCubeInnerLayer"
+      ],
+      "swim_family": "native_limbless",
+      "normal_swim": "native_idle_or_action_motion_only; body_swim_adapter_pending",
+      "fast_swim": "distinct_body_swim_adapter_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:tadpole",
+      "native_entity": "Tadpole",
+      "native_renderers": [
+        "TadpoleRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "TadpoleModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:trader_llama",
+      "native_entity": "TraderLlama",
+      "native_renderers": [
+        "LlamaRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyLlamaModel",
+        "LlamaModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "LlamaDecorLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:tropical_fish",
+      "native_entity": "TropicalFish",
+      "native_renderers": [
+        "TropicalFishRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "TropicalFishLargeModel",
+        "TropicalFishSmallModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "TropicalFishPatternLayer"
+      ],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:turtle",
+      "native_entity": "Turtle",
+      "native_renderers": [
+        "TurtleRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultTurtleModel",
+        "BabyTurtleModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:vex",
+      "native_entity": "Vex",
+      "native_renderers": [
+        "VexRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "VexModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "ItemInHandLayer"
+      ],
+      "swim_family": "named_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:villager",
+      "native_entity": "Villager",
+      "native_renderers": [
+        "VillagerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyVillagerModel",
+        "VillagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CrossedArmsItemLayer",
+        "CustomHeadLayer",
+        "VillagerProfessionLayer"
+      ],
+      "swim_family": "villager_joined_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:vindicator",
+      "native_entity": "Vindicator",
+      "native_renderers": [
+        "VindicatorRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "IllagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CustomHeadLayer",
+        "ItemInHandLayer"
+      ],
+      "swim_family": "illager_split_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:wandering_trader",
+      "native_entity": "WanderingTrader",
+      "native_renderers": [
+        "WanderingTraderRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "VillagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "CrossedArmsItemLayer",
+        "CustomHeadLayer"
+      ],
+      "swim_family": "villager_joined_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:warden",
+      "native_entity": "Warden",
+      "native_renderers": [
+        "WardenRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "WardenModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "LivingEntityEmissiveLayer"
+      ],
+      "swim_family": "named_two_legs_and_arms",
+      "normal_swim": "adapter_authored_pending_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:witch",
+      "native_entity": "Witch",
+      "native_renderers": [
+        "WitchRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "WitchModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "WitchItemLayer"
+      ],
+      "swim_family": "villager_joined_arms",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:wither",
+      "native_entity": "WitherBoss",
+      "native_renderers": [
+        "WitherBossRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "WitherBossModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "WitherArmorLayer"
+      ],
+      "swim_family": "native_flight",
+      "normal_swim": "native_flight_motion_retained; water_specific_adapter_pending",
+      "fast_swim": "distinct_water_motion_pending",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:wither_skeleton",
+      "native_entity": "WitherSkeleton",
+      "native_renderers": [
+        "WitherSkeletonRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "SkeletonModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "native_humanoid_swim",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:wolf",
+      "native_entity": "Wolf",
+      "native_renderers": [
+        "WolfRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultWolfModel",
+        "BabyWolfModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "WolfArmorLayer",
+        "WolfCollarLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:zoglin",
+      "native_entity": "Zoglin",
+      "native_renderers": [
+        "ZoglinRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyHoglinModel",
+        "HoglinModel"
+      ],
+      "native_layers_declared_or_inherited": [],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:zombie",
+      "native_entity": "Zombie",
+      "native_renderers": [
+        "ZombieRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyZombieModel",
+        "ZombieModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "underwater_walking",
+      "normal_swim": "forbidden_underwater_walking",
+      "fast_swim": "forbidden_underwater_walking",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:zombie_horse",
+      "native_entity": "ZombieHorse",
+      "native_renderers": [
+        "UndeadHorseRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyHorseModel",
+        "EquineSaddleModel",
+        "HorseModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "named_four_legs",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:zombie_nautilus",
+      "native_entity": "ZombieNautilus",
+      "native_renderers": [
+        "ZombieNautilusRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "NautilusArmorModel",
+        "NautilusModel",
+        "NautilusSaddleModel",
+        "ZombieNautilusCoralModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "SimpleEquipmentLayer"
+      ],
+      "swim_family": "native_aquatic",
+      "normal_swim": "existing_adapter_or_native_pending_full_probe",
+      "fast_swim": "same_family_distinct_speed_pending_probe",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:zombie_villager",
+      "native_entity": "ZombieVillager",
+      "native_renderers": [
+        "ZombieVillagerRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "BabyZombieVillagerModel",
+        "ZombieVillagerModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer",
+        "VillagerProfessionLayer"
+      ],
+      "swim_family": "underwater_walking",
+      "normal_swim": "forbidden_underwater_walking",
+      "fast_swim": "forbidden_underwater_walking",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    },
+    {
+      "form": "minecraft:zombified_piglin",
+      "native_entity": "ZombifiedPiglin",
+      "native_renderers": [
+        "ZombifiedPiglinRenderer"
+      ],
+      "native_models_declared_or_inherited": [
+        "AdultZombifiedPiglinModel",
+        "BabyZombifiedPiglinModel"
+      ],
+      "native_layers_declared_or_inherited": [
+        "HumanoidArmorLayer"
+      ],
+      "swim_family": "underwater_walking",
+      "normal_swim": "forbidden_underwater_walking",
+      "fast_swim": "forbidden_underwater_walking",
+      "equipment_policy": "live_player_six_slots_only_where_native_layer_supports; captured_body_saddle_pending_capture",
+      "action_policy": "native_action_fields_preserved; explicit_controller_coverage_pending",
+      "required_probes": [
+        "registry-extract-visible",
+        "dry-walk-look",
+        "normal-water-motion",
+        "fast-water-motion",
+        "water-exit-reset",
+        "native-equipment-applicability",
+        "variant-model-parts",
+        "action-pose-preservation"
+      ],
+      "visual_status": "not_verified_by_this_inventory"
+    }
+  ]
+}
