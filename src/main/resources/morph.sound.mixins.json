@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "me.ichun.mods.morph.model.sound.mixin",
+  "compatibilityLevel": "JAVA_25",
+  "mixins": [
+    "EntitySoundAccess",
+    "LivingSoundAccess",
+    "EntitySoundCaptureMixin",
+    "PlayerSoundMixin",
+    "LivingSoundMixin",
+    "ConsumableSoundMixin"
+  ],
+  "injectors": { "defaultRequire": 1 }
+}

@@ -12,6 +12,8 @@ config="morph.mixins.json"
 config="morph.abilities.mixins.json"
 [[mixins]]
 config="morph.animation.mixins.json"
+[[mixins]]
+config="morph.sound.mixins.json"
 [[dependencies.morph]]
 modId="neoforge"
 type="required"

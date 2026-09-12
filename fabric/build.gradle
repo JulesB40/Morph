@@ -56,7 +56,7 @@ sourceSets.test.java {
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') { expand version: project.version }
-    from('../src/main/resources') { include 'assets/morph/**'; include 'morph.animation.mixins.json' }
+    from('../src/main/resources') { include 'assets/morph/**'; include 'morph.animation.mixins.json'; include 'morph.sound.mixins.json' }
 }
 test { useJUnitPlatform() }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
