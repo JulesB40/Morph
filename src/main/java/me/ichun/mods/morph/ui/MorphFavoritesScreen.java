@@ -22,6 +22,7 @@ public final class MorphFavoritesScreen extends Screen implements CollectionView
     private String hovered;
     private boolean keyboardSelection;
     private boolean loaded;
+    private boolean allowed = true;
     private boolean released;
     private boolean successful;
     private Component feedback;
@@ -50,8 +51,12 @@ public final class MorphFavoritesScreen extends Screen implements CollectionView
         else rebuildFavorites();
     }
     @Override public void snapshotResult(String resultCode) {
-        if (!resultCode.equals("UNCHANGED"))
+        if (resultCode.equals("UNCHANGED")) { allowed = true; feedback = null; }
+        else {
+            if (resultCode.equals("DENIED")) allowed = false;
             feedback = Component.translatable("morph.selector.result." + resultCode.toLowerCase(java.util.Locale.ROOT));
+        }
+        rebuildFavorites();
     }
     @Override protected void init() {
         int center = width / 2;
@@ -82,14 +87,14 @@ public final class MorphFavoritesScreen extends Screen implements CollectionView
             var button = addRenderableWidget(Button.builder(label, b -> choose(row.id()))
                     .bounds(slot.x(), slot.y(), slot.width(), slot.height()).build());
             button.setTooltip(Tooltip.create(Component.literal(row.name() + (row.details().isEmpty() ? "" : " · " + row.details()))));
-            button.active = loaded && !waiting.pending();
+            button.active = loaded && allowed && !waiting.pending();
             favorites.add(button);
         }
         previous.active = !waiting.pending() && model.page() > 0;
         next.active = !waiting.pending() && model.page() + 1 < model.pages();
     }
     private void choose(String id) {
-        if (!loaded || waiting.pending() || id == null) return;
+        if (!loaded || !allowed || waiting.pending() || id == null) return;
         waiting.start(actions.select(id));
         feedback = null;
         rebuildFavorites();

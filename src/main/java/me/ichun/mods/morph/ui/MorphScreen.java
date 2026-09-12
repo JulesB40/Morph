@@ -97,7 +97,7 @@ public final class MorphScreen extends Screen implements CollectionView {
     }
 
     @Override public void snapshotResult(String resultCode) {
-        if (resultCode.equals("UNCHANGED")) { access(true); return; }
+        if (resultCode.equals("UNCHANGED")) { feedback = null; access(true); return; }
         if (resultCode.equals("DENIED")) access(false);
         feedback = Component.translatable("morph.selector.result." + resultCode.toLowerCase(java.util.Locale.ROOT));
     }
@@ -230,6 +230,11 @@ public final class MorphScreen extends Screen implements CollectionView {
     public void refreshNametag() { if (nametagButton != null) nametagButton.setMessage(nametagLabel()); }
 
     @Override public boolean keyPressed(KeyEvent event) {
+        if (event.key() == GLFW.GLFW_KEY_ESCAPE && deleteConfirmation != null) {
+            deleteConfirmation = null;
+            refreshRows();
+            return true;
+        }
         if (search.isFocused() && event.key() != GLFW.GLFW_KEY_UP && event.key() != GLFW.GLFW_KEY_DOWN)
             return super.keyPressed(event);
         int delta = event.key() == GLFW.GLFW_KEY_UP ? -1 : event.key() == GLFW.GLFW_KEY_DOWN ? 1 : 0;
