@@ -87,12 +87,14 @@ required for absent custom name/profile UUID. `version=1`. Profile UUID is lower
 hyphenated text. Equipment uses its four snake-case-free field names exactly as
 specified above, omitting absent optionals. Identity includes captured gear.
 
-Canonical encoding: sort object keys by ASCII key order at every level; emit no
+Canonical output encoding: sort object keys by ASCII key order at every level; emit no
 whitespace, decimal integers without leading zeros, lowercase Boolean/null, and
 NFC string values as UTF-8. Escape only quote, backslash and U+0000–001F; controls
 use lowercase `\u00xx` escapes (not short escapes). Do not escape slash or other
-Unicode. Identity has no floating-point fields. Capture normalizes text to NFC;
-decoders reject noncanonical encodings when accepting precomputed IDs. Compute
+Unicode. Identity has no floating-point fields. Capture and descriptor decoding
+normalize text to NFC. Decoders accept equivalent field ordering and recompute
+the canonical identity before checking a supplied ID; byte-order differences
+alone do not invalidate an otherwise equal descriptor. Compute
 `EntryId = "v1:" + lowercaseHex(SHA256(identityBytes))`.
 
 Attributes, favorite, order, acquisition time, profile name/skin/model and entry
@@ -142,7 +144,12 @@ New root save shape is `{schema_version:2, players:{uuid:CollectionSnapshot},
 nametags:{uuid:boolean}}`. Do not duplicate the root schema marker inside the
 serialized per-player object: `CollectionSnapshot.schemaVersion` is its in-memory
 codec selector. Serialize each entry's `id`, `descriptor`, `revision`, `favorite`
-and `order`, plus collection `revision` and nullable `active_entry_id`.
+and `order`, plus collection `revision` and optional `active_entry_id` (absent for self).
+The saved `descriptor` field is a bounded canonical JSON **string**, decoded by
+`FormDescriptor.CODEC`, with the exact descriptor fields below. This preserves
+Boolean versus integer variant values across NBT's byte representation and avoids
+encoding JSON nulls as NBT tags. Other entry and collection fields use native typed
+codecs. The per-player byte bound includes escaping this descriptor string in JSON.
 
 Read schema 1 through its existing lexical validation and 256-form limit before
 migration. Deduplicate/sort the species exactly as the current TreeSet does.
@@ -297,7 +304,7 @@ empty gear, absent profile; then add `minecraft:max_health=8.0`: ID stays equal,
 decoded attributes must equal 8.0 exactly. Change color 14 to 0: ID differs.
 Change only favorite/order: descriptor revision and ID stay equal. Normalize
 decomposed `Rose` plus combining acute on the final e before capture: it produces
-the same NFC name/ID, while a noncanonical supplied identity packet is rejected.
+the same NFC name/ID. A supplied ID inconsistent with that recomputed identity is rejected.
 
 Migrate `{forms:["minecraft:pig","minecraft:pig"],active:"minecraft:pig"}` to one
 entry with the pig ID above, order/revisions 0 and favorite false. An active sheep
