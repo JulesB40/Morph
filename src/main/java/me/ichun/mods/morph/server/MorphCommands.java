@@ -20,6 +20,15 @@ public final class MorphCommands {
     }
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         me.ichun.mods.morph.config.MorphConfigCommands.register(dispatcher);
+        me.ichun.mods.morph.progression.BiomassCommands.register(dispatcher, new me.ichun.mods.morph.progression.BiomassCommands.Access() {
+            public boolean enabled(net.minecraft.server.level.ServerPlayer player) { return MorphAuthority.biomassEnabled(player); }
+            public me.ichun.mods.morph.progression.BiomassLedger ledger(net.minecraft.server.level.ServerPlayer player) { return MorphAuthority.data(player).biomass(player.getUUID()); }
+            public me.ichun.mods.morph.progression.BiomassRuntime.Outcome purchase(net.minecraft.server.level.ServerPlayer player, long revision,
+                    me.ichun.mods.morph.progression.BiomassDefinitions.Upgrade upgrade) {
+                boolean enabled = enabled(player) && player.isAlive() && !player.isRemoved() && !player.isSpectator();
+                return MorphAuthority.biomass(player).purchase(player.getUUID(), enabled, revision, upgrade);
+            }
+        });
         dispatcher.register(Commands.literal("morph")
             .then(Commands.literal("nametag").executes(c -> MorphAuthority.nametag(c.getSource().getPlayerOrException(), null))
                 .then(Commands.literal("toggle").executes(c -> MorphAuthority.nametag(c.getSource().getPlayerOrException(), null)))

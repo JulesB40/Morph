@@ -37,11 +37,14 @@ public final class MorphAuthority {
         var result = me.ichun.mods.morph.config.MorphConfiguration.start(server, directory);
         if (!result.accepted()) com.mojang.logging.LogUtils.getLogger().warn("Morph configuration rejected: {}", result.errors());
     }
-    public static void setTransport(Transport value) { transport = java.util.Objects.requireNonNull(value); }
+    public static void setTransport(Transport value) {
+        transport = java.util.Objects.requireNonNull(value);
+        MorphPolicies.registerMode(me.ichun.mods.morph.config.MorphPolicySnapshot.ServerMode.BIOMASS);
+    }
     private static Session session(ServerPlayer player) { return sessions.computeIfAbsent(player, ignored -> new Session()); }
     private static long tick(ServerPlayer player) { return player.level().getServer().overworld().getGameTime(); }
     public static MorphSavedData data(ServerPlayer player) {
-        return player.level().getServer().overworld().getDataStorage().computeIfAbsent(MorphSavedData.TYPE);
+        return MorphSavedData.load(player.level().getServer());
     }
     public static MorphCollection collection(ServerPlayer player) { return data(player).collection(player.getUUID()); }
     public static CollectionEntry active(ServerPlayer player) { return collection(player).entry(collection(player).activeEntryId()); }
@@ -99,8 +102,14 @@ public final class MorphAuthority {
         if (!ShapeHooks.canFit(player, entry.descriptor())) return Code.NO_SPACE;
         if (!allowed(MorphEvents.Action.SELECT, actor, player, entry.descriptor().species())) return Code.CANCELED;
         var previous = active(player);
+        var charge = data(player).biomass(player.getUUID()).charge(me.ichun.mods.morph.progression.BiomassRuntime.DEFAULTS,
+                biomassEnabled(player), me.ichun.mods.morph.progression.BiomassDefinitions.Action.MORPH);
+        if (!charge.accepted()) return Code.DENIED;
         var result = forms.select(id, tick(player));
         if (result == MorphCollection.SelectionResult.CHANGED) {
+            if (charge.status() == me.ichun.mods.morph.progression.BiomassLedger.Status.CHANGED
+                    && !data(player).commitBiomass(player.getUUID(), charge.before().revision(), charge.after()))
+                throw new IllegalStateException("Biomass revision changed inside server-thread selection commit");
             changedForm(player, previous); return Code.CHANGED;
         }
         return Code.valueOf(result.name());
@@ -142,7 +151,7 @@ public final class MorphAuthority {
     public static CollectionProtocol.Ack action(ServerPlayer player, CollectionProtocol.Action action) {
         var session = session(player); var forms = collection(player); long now = tick(player);
         Code code;
-        if (!MorphPolicies.current().canUseSelector(player.getUUID())) code = Code.DENIED;
+        if (action.opcode() != CollectionProtocol.Opcode.RESET && !MorphPolicies.current().canUseSelector(player.getUUID())) code = Code.DENIED;
         else if (action.sequence() <= session.lastSequence) code = Code.STALE;
         else {
             session.lastSequence = action.sequence();
@@ -207,7 +216,28 @@ public final class MorphAuthority {
         String species = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(source.getType()).toString();
         if (!MorphPolicies.current().canAcquireByKill(player.getUUID(), species)) return Code.DENIED;
         var result = FormCapture.capture(source);
-        return result.succeeded() ? grantDescriptor(player, result.descriptor()) : Code.UNSUPPORTED;
+        if (!result.succeeded()) return Code.UNSUPPORTED;
+        var code = grantDescriptor(player, result.descriptor());
+        if (code == Code.CHANGED || code == Code.UNCHANGED || code == Code.FULL) {
+            double width = source.getBbWidth();
+            biomass(player).gain(player.getUUID(), biomassEnabled(player), true,
+                    source.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH).getBaseValue(),
+                    width * width * source.getBbHeight(), player.distanceTo(source));
+        }
+        return code;
+    }
+    public static boolean biomassEnabled(ServerPlayer player) {
+        return MorphPolicies.current().mode() == me.ichun.mods.morph.config.MorphPolicySnapshot.ServerMode.BIOMASS
+                && MorphPolicies.current().morphPlayers().allows(player.getUUID());
+    }
+    public static me.ichun.mods.morph.progression.BiomassRuntime biomass(ServerPlayer player) {
+        var saved = data(player);
+        return new me.ichun.mods.morph.progression.BiomassRuntime(new me.ichun.mods.morph.progression.BiomassRuntime.Store() {
+            public me.ichun.mods.morph.progression.BiomassLedger read(UUID id) { return saved.biomass(id); }
+            public boolean commit(UUID id, long revision, me.ichun.mods.morph.progression.BiomassLedger ledger) {
+                return saved.commitBiomass(id, revision, ledger);
+            }
+        }, me.ichun.mods.morph.progression.BiomassRuntime.DEFAULTS);
     }
     public static boolean canAcquire(ServerPlayer player) {
         return canChange(player) && player.connection != null

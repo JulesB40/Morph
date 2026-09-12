@@ -75,7 +75,7 @@ public final class MorphFabricGameTests {
 
     @GameTest(maxTicks = 100)
     public void killAcquiresAndPersists(GameTestHelper helper) {
-        var player = player(helper);
+        var player = connectedPlayer(helper);
         var forms = MorphFabric.data(helper.getLevel().getServer()).collection(player.getUUID());
         var pig = helper.spawn(EntityTypes.PIG, 1, 1, 1);
         pig.hurtServer(helper.getLevel(), player.damageSources().playerAttack(player), 1000.0F);
@@ -375,6 +375,25 @@ public final class MorphFabricGameTests {
     private static int command(ServerPlayer player, String command) {
         try { return player.level().getServer().getCommands().getDispatcher().execute(command, player.createCommandSourceStack()); }
         catch (Exception failure) { throw new IllegalStateException("Command failed: " + command, failure); }
+    }
+
+    private static ServerPlayer connectedPlayer(GameTestHelper helper) {
+        var id = UUID.randomUUID();
+        var cookie = CommonListenerCookie.createInitial(new GameProfile(id, "morph-" + id.toString().substring(0, 8)), false);
+        var player = new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), cookie.gameProfile(), cookie.clientInformation());
+        var connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        // Test fixture advertises the descriptor channels before PlayerList constructs its play listener.
+        // This uses the loader's pending registration store; it is not a real client handshake test.
+        ((net.fabricmc.fabric.impl.networking.ChannelInfoHolder) connection)
+                .fabric_getPendingChannelsNames(net.minecraft.network.ConnectionProtocol.PLAY).addAll(java.util.List.of(
+                    MorphSnapshotPage.TYPE.id(), MorphActionAck.TYPE.id(), MorphDescriptorAppearance.TYPE.id(), MorphDescriptorTransition.TYPE.id()));
+        helper.getLevel().getServer().getPlayerList().placeNewPlayer(connection, player, cookie);
+        player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(0.5, 2.0, 0.5)));
+        player.setGameMode(GameType.SURVIVAL);
+        player.connection.handleAcceptPlayerLoad(new net.minecraft.network.protocol.game.ServerboundPlayerLoadedPacket());
+        helper.assertTrue(me.ichun.mods.morph.server.MorphAuthority.canAcquire(player), "Fixture is an online eligible killer");
+        return player;
     }
 
     private static ServerPlayer player(GameTestHelper helper) {

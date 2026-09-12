@@ -17,7 +17,7 @@ import net.minecraft.world.entity.Avatar;
 
 
 public final class MorphFabric implements ModInitializer {
-    public static MorphSavedData data(MinecraftServer server) { return server.overworld().getDataStorage().computeIfAbsent(MorphSavedData.TYPE); }
+    public static MorphSavedData data(MinecraftServer server) { return MorphSavedData.load(server); }
     private static MorphCollection forms(ServerPlayer player) { return data(player.level().getServer()).collection(player.getUUID()); }
     private static void sync(ServerPlayer player) { me.ichun.mods.morph.server.MorphAuthority.sync(player); }
     private static void owned(ServerPlayer player) {
