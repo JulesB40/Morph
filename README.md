@@ -6,7 +6,7 @@ Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraf
 
 ## Downloads and updates
 
-Download the **NeoForge or Fabric JAR** from [GitHub Releases](https://github.com/JulesB40/Morph/releases). Releases are development prereleases while the port remains unfinished. Requires Java 25 and the matching loader; Fabric also requires Fabric API. Use the same Morph version on client and server.
+Download the **NeoForge or Fabric JAR** from the [latest release](https://github.com/JulesB40/Morph/releases/latest). These are unfinished alpha development builds. GitHub's prerelease checkbox is disabled so the newest download appears as **Latest** in the repository sidebar; that label does not mean the port is stable or complete. Requires Java 25 and the matching loader; Fabric also requires Fabric API. Use the same Morph version on client and server.
 
 Each successful push to the default branch, `codex/port-26.2`, automatically publishes both loader JARs after their builds and tests pass. NeoForge also runs native server GameTests and checks startup with the optional lab mod; Fabric compiles its client test harness. These checks do not replace full client, visual, and multiplayer validation. Failed runs and pull requests do not publish releases.
 

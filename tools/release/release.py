@@ -95,13 +95,13 @@ def publish(output: Path, version: str, sha: str, repo: str) -> None:
     notes = ROOT / "build/release-notes.md"
     notes.write_text(f"Development build for Minecraft Java 26.2. Requires Java 25.\n\n"
         f"Download the JAR for your loader; Fabric also needs Fabric API. Install matching versions on client and server.\n\n"
-        f"Both loader CI jobs passed for commit `{sha}`. This is an unfinished prerelease; all-mob visual and full multiplayer validation remain incomplete.\n\n"
+        f"Both loader CI jobs passed for commit `{sha}`. This is an unfinished alpha development build; all-mob visual and full multiplayer validation remain incomplete.\n\n"
         f"[Current scope and known limitations](https://github.com/{repo}/blob/{sha}/docs/IMPLEMENTATION_TODO.md). "
         f"The attached manifest records the source commit, workflow run and JAR hashes.\n")
     view = gh("release", "view", tag, "--repo", repo, "--json", "targetCommitish,isDraft,assets", check=False)
     if view.returncode:
         gh("release", "create", tag, *(str(p) for p in files), "--repo", repo, "--target", sha,
-           "--title", f"Morph 26.2 — {version}", "--prerelease", "--draft", "--notes-file", str(notes))
+           "--title", f"Morph 26.2 — {version} (development)", "--draft", "--notes-file", str(notes))
     # Resume partial drafts without replacing any already-uploaded bytes.
     current = json.loads(gh("release", "view", tag, "--repo", repo,
                             "--json", "targetCommitish,isDraft,assets").stdout)
@@ -124,7 +124,7 @@ def publish(output: Path, version: str, sha: str, repo: str) -> None:
         if asset.get("digest") != f"sha256:{digest}":
             raise ValueError("Release asset differs from this tested build")
     if current["isDraft"]:
-        gh("release", "edit", tag, "--repo", repo, "--draft=false")
+        gh("release", "edit", tag, "--repo", repo, "--draft=false", "--prerelease=false", "--latest")
     print(gh("release", "view", tag, "--repo", repo, "--json", "url", "--jq", ".url").stdout.strip())
 
 

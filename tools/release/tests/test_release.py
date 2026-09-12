@@ -80,6 +80,14 @@ class ReleaseTests(unittest.TestCase):
                     self.assertFalse(any(call[1] in ("create", "upload", "edit") for call in calls))
                 if initial == "partial":
                     self.assertEqual(sum(call[:2] == ("release", "upload") for call in calls), 3)
+                if initial == "new":
+                    creation = next(call for call in calls if call[:2] == ("release", "create"))
+                    self.assertNotIn("--prerelease", creation)
+                if initial != "published":
+                    publication = next(call for call in calls if call[:2] == ("release", "edit"))
+                    self.assertIn("--prerelease=false", publication)
+                    self.assertIn("--latest", publication)
+                    self.assertIn("unfinished alpha development build", (root / "build/release-notes.md").read_text())
 
     def test_publish_refuses_conflicting_or_incomplete_release(self):
         for conflict in ("source", "digest", "missing", "extra"):

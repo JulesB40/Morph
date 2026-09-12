@@ -67,7 +67,7 @@ jobs:
           merge-multiple: true
       - name: Validate and package tested JARs
         run: python3 tools/release/release.py bundle
-      - name: Publish downloadable prerelease
+      - name: Publish latest development release
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 tools/release/release.py publish
