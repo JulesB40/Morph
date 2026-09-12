@@ -8,6 +8,7 @@ also kills its children. No cleanup operation selects processes by name.
 from __future__ import annotations
 
 import ctypes
+from collections.abc import Mapping, Sequence
 import datetime as dt
 import json
 import math
@@ -30,6 +31,8 @@ ENV_ALLOWLIST = frozenset({
 
 def isolated_environment(overrides=None):
     """Inherit only basic runtime paths; explicit job overrides are permitted."""
+    if overrides is not None and not isinstance(overrides, Mapping):
+        raise ValueError("env must be a mapping of strings")
     result = {k: v for k, v in os.environ.items() if k.upper() in ENV_ALLOWLIST}
     for key, value in (overrides or {}).items():
         if not isinstance(key, str) or not key or "=" in key or "\0" in key:
@@ -231,7 +234,17 @@ if os.name == "nt":
             return code.value
 
         def memory(self):
-            return _windows_memory(self.process)
+            limits = _ExtendedLimit()
+            _check(kernel.QueryInformationJobObject(self.job, 9, ctypes.byref(limits),
+                                                    ctypes.sizeof(limits), None))
+            # Job accounting covers descendants even when the root is a small
+            # launcher. This is committed memory, not resident working set.
+            result = {"job_peak_committed_bytes": limits.PeakJobMemoryUsed}
+            try:
+                result.update(_windows_memory(self.process))
+            except OSError:
+                pass  # Job accounting remains useful after the root exits.
+            return result
 
         def cleanup(self):
             _check(kernel.TerminateJobObject(self.job, 1))
@@ -345,11 +358,21 @@ def supervise(argv, cwd, logdir, timeout, env=None, cancelcallback=None):
     return promptly. A callback exception is an infrastructure failure. A zero
     root exit does not permit descendants to outlive the job: cleanup is always
     performed before returning. ``cleanup_confirmed`` is a resource-release gate.
+
+    Memory values are byte maxima across samples. ``working_set_bytes``,
+    ``peak_working_set_bytes`` and ``private_bytes`` describe only the root.
+    On Windows, ``job_peak_committed_bytes`` covers the entire owned Job Object;
+    committed memory includes paged-out allocations and is not total tree RSS.
+    See Microsoft's JOBOBJECT_EXTENDED_LIMIT_INFORMATION accounting contract:
+    https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-jobobject_extended_limit_information
     """
-    if isinstance(argv, (str, bytes)) or not argv or any(not isinstance(a, str) or "\0" in a for a in argv):
+    if (not isinstance(argv, Sequence) or isinstance(argv, (str, bytes)) or not argv
+            or any(not isinstance(a, str) or "\0" in a for a in argv) or not argv[0]):
         raise ValueError("argv must be a nonempty sequence of strings without NUL")
-    if not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not math.isfinite(timeout) or timeout <= 0:
         raise ValueError("timeout must be finite and positive")
+    if cancelcallback is not None and not callable(cancelcallback):
+        raise ValueError("cancelcallback must be callable")
     cwd = Path(cwd).resolve(strict=True)
     if not cwd.is_dir():
         raise ValueError("cwd must be a directory")
@@ -385,10 +408,6 @@ def supervise(argv, cwd, logdir, timeout, env=None, cancelcallback=None):
             process.start()
             while True:
                 code = process.poll()
-                if code is not None:
-                    result["returncode"] = code
-                    result["status"] = "passed" if code == 0 else "failed"
-                    break
                 try:
                     sample = process.memory()
                     for key, value in sample.items():
@@ -396,6 +415,10 @@ def supervise(argv, cwd, logdir, timeout, env=None, cancelcallback=None):
                             result["memory"][key] = max(value, result["memory"].get(key, 0))
                 except OSError:
                     pass  # The process may exit between poll and memory sampling.
+                if code is not None:
+                    result["returncode"] = code
+                    result["status"] = "passed" if code == 0 else "failed"
+                    break
                 if cancelcallback is not None and cancelcallback():
                     result.update(status="cancelled", cancelled=True)
                     break

@@ -149,6 +149,33 @@ class ProcessTests(unittest.TestCase):
         self.assertGreater(memory["working_set_bytes"], 0)
         self.assertGreaterEqual(memory["peak_working_set_bytes"], memory["working_set_bytes"])
 
+    @unittest.skipUnless(os.name == "nt", "Windows Job Object memory accounting")
+    def test_job_peak_includes_descendant_allocation(self):
+        allocation_bytes = 64 * 1024 * 1024
+        child_source = f"import time; allocation=bytearray({allocation_bytes}); time.sleep(0.3)"
+        result = self.run_child(
+            "import subprocess,sys; "
+            f"subprocess.run([sys.executable, '-c', {child_source!r}], check=True)")
+        self.assertEqual(result["status"], "passed")
+        self.assertGreaterEqual(result["memory"]["job_peak_committed_bytes"], allocation_bytes)
+        self.assertGreater(result["memory"]["job_peak_committed_bytes"], result["memory"]["private_bytes"])
+
+    def test_invalid_inputs_rejected_before_launch(self):
+        valid = dict(argv=[sys.executable, "-c", "pass"], cwd=self.root,
+                     logdir=self.root / "invalid", timeout=1)
+        invalid_values = [
+            {"argv": [""]}, {"argv": iter([sys.executable])},
+            {"argv": {sys.executable: "unused"}}, {"env": []},
+            {"env": {"INVALID=KEY": "value"}}, {"env": {"KEY": 42}},
+            {"cancelcallback": False}, {"timeout": True},
+        ]
+        for index, invalid in enumerate(invalid_values):
+            with self.subTest(invalid=invalid):
+                valid["logdir"] = self.root / f"invalid-{index}"
+                with self.assertRaises((ValueError, TypeError)):
+                    processes.supervise(**(valid | invalid))
+                self.assertFalse(valid["logdir"].exists())
+
     @unittest.skipUnless(os.name == "nt", "Windows suspended startup contract")
     def test_resume_failure_never_executes_child(self):
         with mock.patch.object(processes._WindowsProcess, "start", side_effect=OSError("resume rejected")):
