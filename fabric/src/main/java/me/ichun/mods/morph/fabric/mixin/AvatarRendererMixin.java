@@ -17,6 +17,6 @@ public abstract class AvatarRendererMixin {
         var holder = (MorphSnapshotHolder) state;
         var transition = me.ichun.mods.morph.client.MorphTransitions.extract(avatar, state, MorphFabricClient.FORMS.get(avatar.getUUID()));
         holder.morph$setTransition(transition);
-        holder.morph$setSnapshot(transition == null ? MorphRenderSnapshots.extract(avatar, state, MorphFabricClient.FORMS.get(avatar.getUUID())) : null);
+        holder.morph$setSnapshot(transition == null ? MorphRenderSnapshots.extractCurrent(avatar, state, MorphFabricClient.FORMS.get(avatar.getUUID())) : null);
     }
 }

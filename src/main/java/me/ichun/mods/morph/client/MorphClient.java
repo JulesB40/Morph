@@ -30,6 +30,9 @@ public final class MorphClient {
         me.ichun.mods.morph.ui.MorphUi.initialize(modBus);
         modBus.addListener(MorphClient::registerModifiers);
         modBus.addListener((net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) ->
+            event.addListener(Identifier.fromNamespaceAndPath(Morph.MOD_ID, "render_snapshots"),
+                (net.minecraft.server.packs.resources.ResourceManagerReloadListener) MorphRenderSnapshots::reload));
+        modBus.addListener((net.neoforged.neoforge.client.event.AddClientReloadListenersEvent event) ->
             event.addListener(Identifier.fromNamespaceAndPath(Morph.MOD_ID, "swim_animation"),
                 (net.minecraft.server.packs.resources.ResourceManagerReloadListener)
                     me.ichun.mods.morph.client.animation.MorphSwimAnimation::reload));
@@ -45,7 +48,7 @@ public final class MorphClient {
                 var transition = MorphTransitions.extract(avatar, state, ClientMorphState.lookup(avatar.getUUID()));
                 state.setRenderData(TRANSITION, transition);
                 state.setRenderData(MORPH_STATE,
-                        transition == null ? MorphRenderSnapshots.extract(avatar, state, ClientMorphState.lookup(avatar.getUUID())) : null);
+                        transition == null ? MorphRenderSnapshots.extractCurrent(avatar, state, ClientMorphState.lookup(avatar.getUUID())) : null);
             }
         });
     }
@@ -68,5 +71,7 @@ public final class MorphClient {
 
     private static void loggedOut(ClientPlayerNetworkEvent.LoggingOut event) {
         ClientMorphState.clear();
+        DescriptorState.clear();
+        ClientCollectionState.clear();
     }
 }

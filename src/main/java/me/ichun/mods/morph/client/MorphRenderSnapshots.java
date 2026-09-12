@@ -2,6 +2,8 @@ package me.ichun.mods.morph.client;
 
 import com.mojang.logging.LogUtils;
 import me.ichun.mods.morph.client.equipment.MorphEquipmentRendering;
+import me.ichun.mods.morph.model.CollectionEntry;
+import me.ichun.mods.morph.model.FormDescriptor;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -20,9 +22,11 @@ import net.minecraft.world.entity.LivingEntity;
 
 /** Vanilla-only extraction adapter. No live entities are retained in submitted render data. */
 public final class MorphRenderSnapshots {
-    private record AdapterKey(UUID player, String form) {}
+    private record RenderIdentity(String entryId, long revision, long resources) {}
+    private record AdapterKey(UUID player, RenderIdentity identity) {}
     private static final Map<AdapterKey, LivingEntity> ADAPTERS = new HashMap<>();
-    private static final Set<String> FAILED_FORMS = new HashSet<>();
+    private static final Set<RenderIdentity> FAILED_FORMS = new HashSet<>();
+    private static long resourceRevision;
 
     private MorphRenderSnapshots() {}
 
@@ -36,22 +40,44 @@ public final class MorphRenderSnapshots {
     }
 
     public static void clear() {
-        me.ichun.mods.morph.client.transition.MorphTransitionRenderer.clearFailures();
-        ADAPTERS.clear();
-        FAILED_FORMS.clear();
+        reload(null);
         MorphTransitions.clear();
     }
 
+    public static void reload(net.minecraft.server.packs.resources.ResourceManager manager) {
+        resourceRevision++;
+        me.ichun.mods.morph.client.transition.MorphTransitionRenderer.clearFailures();
+        ADAPTERS.clear();
+        FAILED_FORMS.clear();
+    }
+
     public static EntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId) {
+        return extract(avatar, source, formId, null, new RenderIdentity("species:" + formId, 0, resourceRevision));
+    }
+
+    public static EntityRenderState extract(Avatar avatar, AvatarRenderState source, CollectionEntry entry) {
+        if (entry == null) return null;
+        return extract(avatar, source, entry.descriptor().species(), entry.descriptor(),
+                new RenderIdentity(entry.id().value(), entry.revision(), resourceRevision));
+    }
+
+    public static EntityRenderState extractCurrent(Avatar avatar, AvatarRenderState source, String formId) {
+        var entry = DescriptorState.active(avatar.getUUID());
+        return entry != null && entry.descriptor().species().equals(formId)
+                ? extract(avatar, source, entry) : extract(avatar, source, formId);
+    }
+
+    private static EntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId,
+            FormDescriptor descriptor, RenderIdentity identity) {
         if (formId == null || formId.isEmpty()) return null;
         me.ichun.mods.morph.client.nametag.MorphNameTags.apply(avatar.getUUID(), source);
-        if (source.isSpectator || FAILED_FORMS.contains(formId)) return null;
+        if (source.isSpectator || FAILED_FORMS.contains(identity)) return null;
         var id = Identifier.tryParse(formId);
         if (id == null || !id.getNamespace().equals("minecraft")) return null;
         var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
         if (type == null) return null;
         try {
-            var key = new AdapterKey(avatar.getUUID(), formId);
+            var key = new AdapterKey(avatar.getUUID(), identity);
             var adapter = ADAPTERS.get(key);
             if (adapter == null || adapter.getType() != type || adapter.level() != avatar.level()) {
                 var entity = type.create(avatar.level(), EntitySpawnReason.LOAD);
@@ -60,6 +86,7 @@ public final class MorphRenderSnapshots {
                 // 26.2 does not assign IDs in constructors. Renderers use the ID for item seeds.
                 // This adapter is never inserted into a level; reuse its owner's stable render ID.
                 adapter.setId(avatar.getId());
+                if (descriptor != null && !me.ichun.mods.morph.server.FormCapture.applyVariant(adapter, descriptor)) return null;
                 ADAPTERS.put(key, adapter);
             }
             adapter.setPos(avatar.position());
@@ -76,7 +103,7 @@ public final class MorphRenderSnapshots {
             adapter.xRotO = avatar.xRotO;
             adapter.setInvisible(avatar.isInvisible());
             adapter.setDeltaMovement(avatar.getDeltaMovement());
-            MorphEquipmentRendering.prepare(avatar, adapter);
+            MorphEquipmentRendering.prepare(avatar, adapter, descriptor);
             float partialTick = source.ageInTicks - avatar.tickCount;
             EntityRenderState extracted = createState(adapter, partialTick);
             copyCommonState(source, extracted);
@@ -90,17 +117,18 @@ public final class MorphRenderSnapshots {
             }
             if (!(extracted instanceof LivingEntityRenderState target)) return extracted;
             copyPlayerMotion(source, target);
+            if (descriptor == null || descriptor.customName() == null) target.isUpsideDown = source.isUpsideDown;
             me.ichun.mods.morph.client.animation.MorphWitherHeads.apply(target);
             if (target instanceof net.minecraft.client.renderer.entity.state.WitherRenderState wither)
                 wither.isPowered = avatar.getHealth() <= avatar.getMaxHealth() * .5F;
-            me.ichun.mods.morph.client.animation.MorphFlyingAnimation.apply(target,
+            me.ichun.mods.morph.client.animation.MorphFlyingAnimation.apply(target, avatar.onGround(),
                     avatar.onGround() && avatar.getDeltaMovement().lengthSqr() < 1.0E-7);
             MorphEquipmentRendering.finish(avatar, source, target);
             me.ichun.mods.morph.client.animation.MorphSwimming.extract(avatar, source, target, formId);
             return target;
         } catch (RuntimeException failure) {
-            // Unsupported renderers should leave the real player visible and log only once per session.
-            FAILED_FORMS.add(formId);
+            // Suppress repeated failures for this descriptor until its revision or resources change.
+            FAILED_FORMS.add(identity);
             LogUtils.getLogger().warn("Morph cannot extract renderer for {}; using player appearance", formId, failure);
             return null;
         }
@@ -138,6 +166,5 @@ public final class MorphRenderSnapshots {
         target.hasRedOverlay = source.hasRedOverlay;
         target.isFullyFrozen = source.isFullyFrozen;
         target.isInWater = source.isInWater;
-        target.isUpsideDown = source.isUpsideDown;
     }
 }
