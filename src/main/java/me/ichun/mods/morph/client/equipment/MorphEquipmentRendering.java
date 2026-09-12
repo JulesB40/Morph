@@ -78,6 +78,7 @@ public final class MorphEquipmentRendering {
 
     public static void finish(Avatar avatar, AvatarRenderState player, LivingEntityRenderState target) {
         me.ichun.mods.morph.client.animation.MorphPlayerPoses.apply(player, target);
+        me.ichun.mods.morph.client.animation.MorphNativeMotion.apply(target);
         if (target instanceof ArmedEntityRenderState armed) {
             // Pull/charge item-model properties query the using entity, not just the arm pose.
             // Resolve against the real player during use without mutating or ticking the adapter.
