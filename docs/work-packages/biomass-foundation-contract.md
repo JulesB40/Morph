@@ -154,8 +154,16 @@ prerequisites/max levels, immutable state, revision exhaustion, exact wire bytes
 truncation and malformed payloads. Runtime scenarios also cover first-kill atomic
 unlock/credit, repeated purchase rejection, failed compare-and-commit,
 cross-player isolation, codec-reconstructed restart/replay and currency
-conservation. A Brigadier parse test verifies required nonnegative long revision
-arguments; it does not execute commands with a player. No test/build has been executed by this agent;
+conservation. Native command parsing moved out of JUnit because NeoForge-patched
+registry bootstrap requires a running loader. `NativeBiomassChecks` now checks
+the installed server dispatcher, duplicate purchase command execution, real
+authority selection charges and canceled/cramped/cooldown/reset conservation,
+and compressed-NBT ledger roundtrip. Its connected player is a test mock absent
+from the player list; acquisition authorization is explicitly expected to deny.
+Gains use the trusted runtime with measured native pig attributes, not a real
+death event. Disk roundtrip is not server-process restart evidence. The helper
+restores the exact configuration supplier in `finally`. These native cases need
+both-loader lab registration/execution by the integrator. No test/build has been executed by this agent;
 the integrator owns the frozen-source queue. Fabric currently needs its explicit
 source/test includes extended by the build owner to include `progression/**`.
 
