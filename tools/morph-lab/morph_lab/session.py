@@ -49,6 +49,9 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
     for value in (timeout, step_timeout):
         if not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
             raise ValueError("timeouts must be finite and positive")
+    memory_floor = spec.get("min_free_memory_mb")
+    if memory_floor is not None and (type(memory_floor) is not int or memory_floor < 0):
+        raise ValueError("min_free_memory_mb must be a nonnegative integer")
     port = spec.get("port")
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("spec.port must be an explicitly reserved port")
@@ -87,12 +90,19 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
         if value <= 0: raise BridgeTimeout("session wall-clock deadline expired")
         return min(value, limit) if limit is not None else value
 
+    def check_memory():
+        if memory_floor is not None:
+            from .cli import available_memory_mb
+            if available_memory_mb(0) < memory_floor:
+                raise BridgeError("Stopped owned session because physical memory headroom is too low")
+
     def healthy():
         for role, process in active.items():
             if process.result is not None:
                 raise BridgeError(f"{role} exited unexpectedly: {process.result}")
 
     def launch(role, generation=1):
+        check_memory()
         config = spec["roles"][role]
         control, game = run / role / f"control-{generation}", run / role / "game"
         game.mkdir(parents=True, exist_ok=True)
@@ -109,6 +119,7 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
     def await_event(role, request_id=None, end=None, *, allow_failed=False):
         end = end if end is not None else time.monotonic() + remaining(step_timeout)
         while True:
+            check_memory()
             budget = min(remaining(), end - time.monotonic())
             if budget <= 0: raise BridgeTimeout(f"{role} bridge barrier expired")
             try:

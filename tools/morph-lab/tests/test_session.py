@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
 import sys
+import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from morph_lab.session import run_session
@@ -163,6 +165,48 @@ class SessionTests(unittest.TestCase):
         spec['roles']['actor']['argv'] = 'not argv'
         with self.assertRaises(ValueError): run_session(spec,self.root/'run',self.root)
         self.assertFalse((self.root/'run').exists())
+
+    def test_invalid_memory_floor_never_launches(self):
+        for floor in (-1, True, 1.5, '512'):
+            with self.subTest(floor=floor), patch('morph_lab.session.supervise') as launch:
+                spec=self.spec()
+                spec['min_free_memory_mb']=floor
+                with self.assertRaises(ValueError): run_session(spec,self.root/'run',self.root)
+                launch.assert_not_called()
+                self.assertFalse((self.root/'run').exists())
+
+    def test_low_memory_before_launch_starts_no_process(self):
+        spec=self.spec()
+        spec['min_free_memory_mb']=512
+        with patch('morph_lab.cli.available_memory_mb',return_value=128), \
+                patch('morph_lab.session.supervise') as launch:
+            result=run_session(spec,self.root/'run',self.root)
+        launch.assert_not_called()
+        self.assertEqual(result['status'],'infrastructure_failure',result)
+        self.assertEqual(result['processes'],[])
+        self.assertTrue(result['cleanup_confirmed'])
+
+    def test_memory_drop_with_responsive_bridges_cleans_only_owned_processes(self):
+        flags = {'creationflags':subprocess.CREATE_NO_WINDOW} if sys.platform=='win32' else {}
+        sentinel=subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],**flags)
+        try:
+            spec=self.spec()
+            spec['min_free_memory_mb']=512
+            def available(fallback):
+                # Drop headroom after all three processes are running and their
+                # initial state handshake has advanced into setup commands.
+                requests=self.root/'run'/'server'/'control-1'/'requests'
+                return 128 if len(list(requests.glob('*.json'))) >= 3 else 4096
+            with patch('morph_lab.cli.available_memory_mb',side_effect=available):
+                result=run_session(spec,self.root/'run',self.root)
+            self.assertEqual(result['status'],'infrastructure_failure',result)
+            self.assertIn('memory headroom',result['error'])
+            self.assertEqual(len(result['processes']),3)
+            self.assertTrue(all(row['cleanup_confirmed'] for row in result['processes']))
+            self.assertIsNone(sentinel.poll(),'Unrelated sentinel was stopped')
+        finally:
+            if sentinel.poll() is None: sentinel.terminate()
+            sentinel.wait(timeout=5)
 
 
 if __name__ == '__main__': unittest.main()
