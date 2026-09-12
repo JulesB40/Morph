@@ -15,6 +15,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemDisplayContext;
+import me.ichun.mods.morph.model.FormDescriptor;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.component.DyedItemColor;
 
 /** Equipment belongs only to an unspawned client rendering adapter, never a game entity. */
 public final class MorphEquipmentRendering {
@@ -24,6 +30,34 @@ public final class MorphEquipmentRendering {
     };
 
     private MorphEquipmentRendering() {}
+
+    public static void prepare(Avatar player, LivingEntity adapter, FormDescriptor descriptor) {
+        prepare(player, adapter);
+        prepareCapturedSlot(adapter, EquipmentSlot.BODY, descriptor == null ? null : descriptor.equipment().get("body"));
+        prepareCapturedSlot(adapter, EquipmentSlot.SADDLE, descriptor == null ? null : descriptor.equipment().get("saddle"));
+    }
+
+    private static void prepareCapturedSlot(LivingEntity adapter, EquipmentSlot slot, FormDescriptor.CapturedEquipment captured) {
+        ItemStack stack = capturedStack(captured, slot, adapter.getType());
+        if (!ItemStack.matches(stack, adapter.getItemBySlot(slot))) adapter.setItemSlot(slot, stack);
+    }
+
+    /** Rebuilds only display components; captured gear is never added to player inventory. */
+    static ItemStack capturedStack(FormDescriptor.CapturedEquipment captured, EquipmentSlot slot, EntityType<?> type) {
+        if (captured == null || (slot != EquipmentSlot.BODY && slot != EquipmentSlot.SADDLE)) return ItemStack.EMPTY;
+        var id = Identifier.tryParse(captured.item());
+        var item = id == null ? null : BuiltInRegistries.ITEM.getOptional(id).orElse(null);
+        if (item == null) return ItemStack.EMPTY;
+        var stack = new ItemStack(item);
+        var equippable = stack.get(DataComponents.EQUIPPABLE);
+        if (equippable == null || equippable.slot() != slot || !equippable.canBeEquippedBy(type.builtInRegistryHolder()))
+            return ItemStack.EMPTY;
+        if (captured.damage() != null && stack.isDamageableItem())
+            stack.setDamageValue(Math.clamp(captured.damage(), 0, stack.getMaxDamage()));
+        if (captured.dyedRgb() != null) stack.set(DataComponents.DYED_COLOR, new DyedItemColor(captured.dyedRgb()));
+        if (captured.enchanted()) stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, true);
+        return stack;
+    }
 
     public static void prepare(Avatar player, LivingEntity adapter) {
         // Unchanged equipment needs no allocation. Empty replacements also clear cached equipment.
