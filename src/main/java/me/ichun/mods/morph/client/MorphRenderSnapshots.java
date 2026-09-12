@@ -155,6 +155,7 @@ public final class MorphRenderSnapshots {
             if (extracted instanceof net.minecraft.client.renderer.entity.state.EnderDragonRenderState dragon) {
                 dragon.deathTime = source.deathTime;
                 dragon.hasRedOverlay = source.hasRedOverlay;
+                me.ichun.mods.morph.client.animation.MorphDragonAnimation.apply(avatar, adapter, dragon, partialTick);
                 // Detached dragons never tick their flight history. Supply the player's heading
                 // without running dragon AI or borrowing the native boss's world state.
                 for (int i = 0; i < net.minecraft.world.entity.boss.enderdragon.DragonFlightHistory.LENGTH; i++)
