@@ -1,0 +1,29 @@
+{
+  "schema": 1,
+  "id": "multiplayer-smoke",
+  "status": "specification-awaiting-live-execution",
+  "loaders": ["fabric", "neoforge"],
+  "resources": {"renderedClients": 2, "externalDedicatedServers": 1, "atomicReservation": true},
+  "roles": ["actor", "observer"],
+  "requirements": [
+    "Create each ClientChannel before launching its bridge in a fresh non-nested run directory.",
+    "Use independent client JVMs with different player UUIDs and game directories.",
+    "Server process is externally supervised; record PID and creation time, logs, world path and source/artifact hashes.",
+    "Wait for server readiness and each client ready event; both state snapshots must identify the two connected players.",
+    "Provision actor with minecraft:bat through the server fixture or operator command before selection.",
+    "Do not interpret completed command events as successful server execution."
+  ],
+  "steps": [
+    {"id":"select", "role":"actor", "command":"morph select minecraft:bat", "oracle":"Actor and observer detail.players entries for actor UUID report form minecraft:bat."},
+    {"id":"hide-name", "role":"actor", "command":"morph nametag off", "oracle":"Both snapshots report actor form minecraft:bat and showNameTag false."},
+    {"id":"capture", "roles":["actor","observer"], "operation":"capture", "oracle":"Distinct framebuffer artifacts exist under each role directory; image contents require separate visual validation."},
+    {"id":"reconnect", "lifecycle":"Stop actor client, observe process exit, launch fresh actor client channel with same player UUID and game directory.", "oracle":"Both snapshots regain actor form minecraft:bat and showNameTag false."},
+    {"id":"restart", "lifecycle":"Stop clients and dedicated server cleanly; observe each process exit; start a new server process using the same world; launch fresh channels for both clients.", "oracle":"Different server process identity and observed old exit, then both snapshots show persisted actor form minecraft:bat and showNameTag false."}
+  ],
+  "limitations": [
+    "This specification is not a recorded gameplay pass.",
+    "Client appearance snapshots demonstrate received client state, not visible framebuffer replacement or authoritative server save contents.",
+    "The session runner must supply lifecycle callbacks, fixtures and server readiness evidence before reconnect or restart can execute.",
+    "Late tracking, dimension travel, death, visible nametag rendering and simultaneous background focus isolation require additional live scenarios."
+  ]
+}
