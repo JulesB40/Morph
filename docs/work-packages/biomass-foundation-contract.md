@@ -1,10 +1,10 @@
 # Biomass foundation — authored opt-in economy, revision 1
 
-This pure-domain package completes a foundation for a legacy system that was
-unfinished. It does not establish gameplay, save, network, advancement, reload,
-HUD or purchase-screen integration. Classic remains unchanged; no current service
-calls these classes. Numerical defaults below are newly authored, not recovered
-working legacy balance. Runtime validation has not been run for this patch.
+This package completes a foundation and command interface for a legacy system
+that was unfinished. Runtime/storage wiring belongs to the service/persistence
+owners; this branch alone does not establish a working mode. Numerical defaults
+below are newly authored, not recovered working legacy balance. Runtime
+validation has not been run for this patch.
 
 ## State and transactions
 
@@ -13,7 +13,11 @@ working legacy balance. Runtime validation has not been run for this patch.
 Missing upgrades mean level zero. A locked ledger must have zero balance and no
 upgrades. `locked()` supplies migration/default state; `unlock()` records an
 authoritatively checked advancement or configured bypass, but does not itself
-check Minecraft advancements or filters. Unlock gives no currency. Switching
+check Minecraft advancements or filters. Unlock alone gives no currency. The
+first runtime milestone is a policy-eligible nearby kill yielding at least one
+unit: `prepareGain` unlocks and credits it in one revision/commit. Zero-yield,
+out-of-range and oversized kills do not unlock. Minecraft advancement resource
+and progression-filter integration remain separate follow-up work. Switching
 server modes must preserve the ledger.
 
 `BiomassDefinitions` is an immutable validated snapshot. It has a starter
@@ -39,7 +43,40 @@ projectile, selected form, or native attribute mutation. Failed actions retain
 the old ledger; service integration must prevent or reverse partial game effects.
 Do not send a success response or save candidate state before commit. Revisions
 reject stale candidates; they do not provide persistent network replay tracking.
-No unbounded transaction-ID history is stored.
+No unbounded transaction-ID history is stored. `BiomassRuntime.purchase` requires
+an explicit expected revision; a repeated purchase request for an old revision
+rejects, even when enough funds remain to buy the next level. Since revision is
+persisted, this remains true after restart. `gain` is a trusted server kill-event
+entrypoint, not a network operation; each death event must be delivered once.
+
+## Runtime and command integration
+
+`BiomassRuntime.Store` reads a player's ledger and commits a replacement only
+against its expected revision. `MorphSavedData` integration must check sequential
+revision, validate the ledger and mark dirty only on actual changes. A runtime
+instance holds no mutable session state and can use the overworld's saved store.
+
+`BiomassCommands.register(dispatcher, Access)` provides `/morph biomass status`
+and `/morph biomass buy <upgrade> <revision>`. Status shows balance, normal/reserve
+capacity, unlock state, each upgrade's level/next cost/prerequisite and exact
+purchase command using the current revision. The command accepts no target,
+currency amount, fabricated ledger, or unlock request. This is the minimal usable
+spending interface; translated HUD/screens and automatic state packets remain
+follow-up work.
+
+Shared service owns Access callbacks and hooks. Biomass mode is
+`MorphPolicySnapshot.ServerMode.BIOMASS` and additionally requires
+`biomass_opt_in=true` in config. Register its availability only after persistence,
+kill gains, morph charges and commands are installed. Default CLASSIC remains
+unchanged. For selection, prepare the charge after all policy/fit/event checks,
+commit only on collection CHANGED in a callback-free server-thread gap, and then
+publish. Failed/unchanged selections spend nothing. Reset remains free. Eligible
+duplicate kills and collection-full kills still earn biomass; canceled,
+unsupported, filtered or otherwise denied captures do not.
+
+Only morph costs are wired in this slice. Basic/powerful/channel cost definitions
+are reserved for future concrete ability transactions, not claimed as active
+paid abilities.
 
 ## Concrete defaults
 
@@ -114,7 +151,11 @@ Added JUnit scenarios cover earning/purchase reachability, independent expected
 gain/cost/capacity numbers, duplicate eligible kills, spatial bounds, nonfinite
 measurements, failed/stale transaction handling, mode bypass/free reset,
 prerequisites/max levels, immutable state, revision exhaustion, exact wire bytes,
-truncation and malformed payloads. No test/build has been executed by this agent;
+truncation and malformed payloads. Runtime scenarios also cover first-kill atomic
+unlock/credit, repeated purchase rejection, failed compare-and-commit,
+cross-player isolation, codec-reconstructed restart/replay and currency
+conservation. A Brigadier parse test verifies required nonnegative long revision
+arguments; it does not execute commands with a player. No test/build has been executed by this agent;
 the integrator owns the frozen-source queue. Fabric currently needs its explicit
 source/test includes extended by the build owner to include `progression/**`.
 
