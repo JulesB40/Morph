@@ -35,4 +35,14 @@ class MorphAddonApiTest {
         events.register(value -> { throw new IllegalStateException("addon bug"); });
         assertFalse(events.before(event).allowed());
     }
+    @Test void listenerFailureIsNotStickyOrSharedAcrossBuses() throws Exception {
+        var first = new MorphEvents();
+        var second = new MorphEvents();
+        var event = new MorphEvents.BeforeAction(MorphEvents.Action.SELECT, UUID.randomUUID(), UUID.randomUUID(), "minecraft:pig", 0);
+        var broken = first.register(value -> { throw new IllegalArgumentException("broken fixture"); });
+        assertFalse(first.before(event).allowed());
+        assertTrue(second.before(event).allowed());
+        broken.close();
+        assertTrue(first.before(event).allowed());
+    }
 }
