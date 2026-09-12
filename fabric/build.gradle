@@ -23,6 +23,8 @@ sourceSets.main.java {
     include 'me/ichun/mods/morph/shape/**'
     include 'me/ichun/mods/morph/ability/**'
     include 'me/ichun/mods/morph/server/MorphSavedData.java'
+    include 'me/ichun/mods/morph/server/MorphAuthority.java'
+    include 'me/ichun/mods/morph/server/MorphCommands.java'
     include 'me/ichun/mods/morph/client/MorphRenderSnapshots.java'
     include 'me/ichun/mods/morph/client/MorphTransitions.java'
     include 'me/ichun/mods/morph/client/transition/**'
