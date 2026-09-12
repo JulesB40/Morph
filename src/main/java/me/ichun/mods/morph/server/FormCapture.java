@@ -72,7 +72,8 @@ public final class FormCapture {
             case "morph:slime" -> {
                 if (!(target instanceof Slime slime)) return false;
                 int size = (Integer) descriptor.variant().get("size");
-                if (slime.getSize() != size) slime.setSize(size, false);
+                // LOAD constructors report size one before initializing its health/speed/damage.
+                slime.setSize(size, false);
             }
             default -> { return false; }
         }
