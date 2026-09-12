@@ -56,6 +56,10 @@ tasks.withType(Jar).configureEach {
 
 // Opt-in developer client bridge; lab classes are never part of the main JAR.
 if (providers.gradleProperty('morphLab').map { it.toBoolean() }.getOrElse(false)) {
+    tasks.named('test', Test) {
+        workingDir = layout.buildDirectory.dir('morph-lab/unit-tests').get().asFile
+        doFirst { workingDir.mkdirs() }
+    }
     sourceSets {
         lab {
             java.srcDir 'testing/harness-neoforge/src/main/java'
