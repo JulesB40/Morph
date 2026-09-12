@@ -34,3 +34,13 @@ this work package.
 Dependencies are the variants DTO/FormCapture stage, service DescriptorState,
 the animation descriptor equipment overload and three-argument flying helper,
 plus the UI owner's Fabric resource-listener/descriptor-packet wiring.
+
+The `preview(graphics, entry, left, top, right, bottom, mouseX, mouseY)` method
+extracts a native model using the 26.2 inventory picture-in-picture path. It
+retains only the most recent detached preview adapter, keyed by the same
+descriptor/reload identity, and clears it with the render caches. The native GUI
+path accepts general EntityRenderState including dragon render state. A failed
+or unsupported extraction returns false for the UI's fallback text. Native
+bounding dimensions determine scale; unusual model extents such as dragon wings
+still require framebuffer framing checks. NativeRenderDescriptorChecks includes
+the actual submitted red-sheep picture state and GUI bounds, not a pixel assertion.

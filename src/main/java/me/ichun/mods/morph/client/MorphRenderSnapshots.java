@@ -24,8 +24,11 @@ import net.minecraft.world.entity.LivingEntity;
 public final class MorphRenderSnapshots {
     private record RenderIdentity(String entryId, long revision, long resources) {}
     private record AdapterKey(UUID player, RenderIdentity identity) {}
+    private record PreviewAdapter(RenderIdentity identity, LivingEntity entity) {}
     private static final Map<AdapterKey, LivingEntity> ADAPTERS = new HashMap<>();
     private static final Set<RenderIdentity> FAILED_FORMS = new HashSet<>();
+    private static final Set<RenderIdentity> FAILED_PREVIEWS = new HashSet<>();
+    private static PreviewAdapter preview;
     private static long resourceRevision;
 
     private MorphRenderSnapshots() {}
@@ -49,6 +52,48 @@ public final class MorphRenderSnapshots {
         me.ichun.mods.morph.client.transition.MorphTransitionRenderer.clearFailures();
         ADAPTERS.clear();
         FAILED_FORMS.clear();
+        FAILED_PREVIEWS.clear();
+        preview = null;
+    }
+
+    /** Adds the native model to a clipped GUI region; false leaves room for the UI's fallback text. */
+    public static boolean preview(net.minecraft.client.gui.GuiGraphicsExtractor graphics, CollectionEntry entry,
+            int left, int top, int right, int bottom, int mouseX, int mouseY) {
+        var minecraft = Minecraft.getInstance();
+        if (entry == null || minecraft.level == null || right - left < 16 || bottom - top < 16) return false;
+        var identity = new RenderIdentity(entry.id().value(), entry.revision(), resourceRevision);
+        if (FAILED_PREVIEWS.contains(identity)) return false;
+        try {
+            if (preview == null || !preview.identity.equals(identity) || preview.entity.level() != minecraft.level) {
+                var id = Identifier.tryParse(entry.descriptor().species());
+                if (id == null || !id.getNamespace().equals("minecraft")) return false;
+                var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
+                if (type == null) return false;
+                var entity = type.create(minecraft.level, EntitySpawnReason.LOAD);
+                if (!(entity instanceof LivingEntity living) || living instanceof Avatar
+                        || !me.ichun.mods.morph.server.FormCapture.applyVariant(living, entry.descriptor())) {
+                    FAILED_PREVIEWS.add(identity);
+                    return false;
+                }
+                living.setId(0);
+                preview = new PreviewAdapter(identity, living);
+            }
+            var entity = preview.entity;
+            if (minecraft.player != null) MorphEquipmentRendering.prepare(minecraft.player, entity, entry.descriptor());
+            // Inventory extraction removes the entity scale, so size the viewport using its native base dimensions.
+            float scale = entity.getScale();
+            float width = entity.getBbWidth() / scale;
+            float height = entity.getBbHeight() / scale;
+            int pixelsPerBlock = Math.max(1, (int) Math.min((right - left - 12) / Math.max(.5F, width * 1.5F),
+                    (bottom - top - 12) / Math.max(.5F, height)));
+            net.minecraft.client.gui.screens.inventory.InventoryScreen.extractEntityInInventoryFollowsMouse(
+                    graphics, left, top, right, bottom, pixelsPerBlock, 0F, mouseX, mouseY, entity);
+            return true;
+        } catch (RuntimeException failure) {
+            FAILED_PREVIEWS.add(identity);
+            LogUtils.getLogger().warn("Morph cannot extract preview for {}; using text", entry.descriptor().species(), failure);
+            return false;
+        }
     }
 
     public static EntityRenderState extract(Avatar avatar, AvatarRenderState source, String formId) {

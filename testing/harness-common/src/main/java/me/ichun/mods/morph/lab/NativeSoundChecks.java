@@ -5,6 +5,8 @@ import com.mojang.authlib.GameProfile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import me.ichun.mods.morph.model.FormDescriptor;
+import me.ichun.mods.morph.model.MorphCollection;
 import me.ichun.mods.morph.model.sound.mixin.EntitySoundAccess;
 import me.ichun.mods.morph.model.sound.mixin.LivingSoundAccess;
 import me.ichun.mods.morph.server.MorphSavedData;
@@ -58,6 +60,20 @@ public final class NativeSoundChecks {
             consume(helper, player, emitted, Items.MILK_BUCKET.getDefaultInstance(), "minecraft:entity.wandering_trader.drink_milk");
             consume(helper, player, emitted, Items.POTION.getDefaultInstance(), "minecraft:entity.wandering_trader.drink_potion");
             consume(helper, player, emitted, Items.APPLE.getDefaultInstance(), "minecraft:entity.wandering_trader.drink_potion");
+
+            long selectionTick = 40;
+            for (boolean baby : new boolean[] {false, true, false}) {
+                var sheep = new FormDescriptor(1, "minecraft:sheep", "morph:sheep", 1,
+                        Map.of("baby", baby, "color", 14), null, Map.of(), Map.of(), null);
+                forms.acquire(sheep, MorphCollection.AttributeMergePolicy.KEEP_EXISTING);
+                forms.select(sheep.entryId(), selectionTick);
+                selectionTick += 20;
+                float pitch = player.getVoicePitch();
+                float lower = baby ? 1.3F : .8F;
+                float upper = baby ? 1.7F : 1.2F;
+                helper.assertTrue(pitch >= lower && pitch <= upper, "Native sheep voice range for baby=" + baby);
+                emit("sheep_voice_baby_" + baby, lower + ".." + upper, Float.toString(pitch));
+            }
 
             forms.reset();
             check(helper, "self_hurt", "minecraft:entity.player.hurt", sounds.morph$getHurtSound(player.damageSources().generic()));

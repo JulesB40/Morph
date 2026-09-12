@@ -6,7 +6,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.function.Function;
+import me.ichun.mods.morph.model.FormDescriptor;
 import me.ichun.mods.morph.model.sound.mixin.EntitySoundAccess;
+import me.ichun.mods.morph.server.FormCapture;
 import me.ichun.mods.morph.shape.ShapeHooks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -24,7 +26,7 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Native sound queries on detached entities. No entity is spawned or ticked. */
 public final class MorphSoundForwarding {
     public record Answer<T>(boolean replaced, T value) {}
-    private record Cached(String form, WeakReference<LivingEntity> entity) {}
+    private record Cached(String form, FormDescriptor descriptor, WeakReference<LivingEntity> entity) {}
     private record Emission(SoundEvent sound, float volume, float pitch) {}
     private record Capture(Entity entity, ArrayList<Emission> sounds) {}
     private static final Map<Player, Cached> ADAPTERS = java.util.Collections.synchronizedMap(new WeakHashMap<>());
@@ -45,17 +47,21 @@ public final class MorphSoundForwarding {
     private static LivingEntity adapter(Player player) {
         String form = ShapeHooks.form(player);
         if (form == null || form.isEmpty()) return null;
+        var descriptor = ShapeHooks.descriptor(player);
+        if (descriptor != null && !descriptor.species().equals(form)) return null;
         var id = Identifier.tryParse(form);
         if (id == null || !id.getNamespace().equals("minecraft")) return null;
         var cached = ADAPTERS.get(player);
-        var entity = cached == null || !cached.form.equals(form) ? null : cached.entity.get();
+        var entity = cached == null || !cached.form.equals(form)
+                || !java.util.Objects.equals(cached.descriptor, descriptor) ? null : cached.entity.get();
         if (entity == null || entity.level() != player.level()) {
             var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
             if (type == null) return null;
             var created = type.create(player.level(), EntitySpawnReason.LOAD);
             if (!(created instanceof LivingEntity living) || living instanceof Avatar) return null;
             entity = living;
-            ADAPTERS.put(player, new Cached(form, new WeakReference<>(entity)));
+            if (descriptor != null && !FormCapture.applyVariant(entity, descriptor)) return null;
+            ADAPTERS.put(player, new Cached(form, descriptor, new WeakReference<>(entity)));
         }
         entity.setPos(player.position());
         entity.setDeltaMovement(player.getDeltaMovement());

@@ -42,7 +42,28 @@ public final class NativeRenderDescriptorChecks {
         }
         MorphRenderSnapshots.reload(null);
         checkSheep(results, avatar, source, red, false, DyeColor.RED);
+        results.add(verifyPreview(red));
         return List.copyOf(results);
+    }
+
+    private static Map<String, Object> verifyPreview(FormDescriptor descriptor) {
+        var state = new net.minecraft.client.renderer.state.gui.GuiRenderState();
+        var graphics = new net.minecraft.client.gui.GuiGraphicsExtractor(
+                net.minecraft.client.Minecraft.getInstance(), state, 50, 50);
+        if (!MorphRenderSnapshots.preview(graphics, entry(descriptor), 10, 10, 110, 130, 50, 50))
+            throw new IllegalStateException("Red sheep preview must extract");
+        var pictures = new ArrayList<net.minecraft.client.renderer.state.gui.pip.PictureInPictureRenderState>();
+        state.forEachPictureInPicture(pictures::add);
+        if (pictures.size() != 1 || !(pictures.getFirst() instanceof
+                net.minecraft.client.renderer.state.gui.pip.GuiEntityRenderState picture)
+                || !(picture.renderState() instanceof SheepRenderState sheep) || sheep.woolColor != DyeColor.RED)
+            throw new IllegalStateException("Preview must contain one native red sheep state");
+        if (picture.x0() != 10 || picture.y0() != 10 || picture.x1() != 110 || picture.y1() != 130)
+            throw new IllegalStateException("Preview must retain its requested GUI bounds");
+        if (MorphRenderSnapshots.preview(graphics, null, 10, 10, 110, 130, 50, 50))
+            throw new IllegalStateException("Missing descriptor must use UI fallback");
+        return Map.of("scenario", "preview_red_sheep", "expected_color", "red", "actual_color", sheep.woolColor.getName(),
+                "scope", "submitted GUI picture state; not framebuffer output");
     }
 
     private static FormDescriptor sheep(boolean baby, int color) {
