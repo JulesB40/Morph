@@ -8,7 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 
-/** Server-only timing: center the original three-second samples within the five-second morph. */
+/** Server-only timing for the original three-second transformation samples. */
 public final class MorphSounds {
     public static final Identifier ID = Identifier.fromNamespaceAndPath("morph", "morph");
     public static final SoundEvent EVENT = SoundEvent.createVariableRangeEvent(ID);
@@ -17,7 +17,17 @@ public final class MorphSounds {
     private MorphSounds() {}
 
     public static void schedule(ServerPlayer player) {
-        PENDING.put(player.getUUID(), player.level().getServer().overworld().getGameTime() + 20);
+        schedule(player, DURATION_TICKS);
+    }
+
+    public static void schedule(ServerPlayer player, int durationTicks) {
+        PENDING.put(player.getUUID(), player.level().getServer().overworld().getGameTime() + startDelayTicks(durationTicks));
+    }
+
+    /** Short transformations begin the full sample immediately, without changing its pitch. */
+    public static int startDelayTicks(int durationTicks) {
+        if (durationTicks < 1 || durationTicks > 1200) throw new IllegalArgumentException("Invalid morph duration");
+        return Math.max(0, (durationTicks - 60) / 2);
     }
 
     public static void cancel(ServerPlayer player) { PENDING.remove(player.getUUID()); }

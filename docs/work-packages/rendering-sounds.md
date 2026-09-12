@@ -3,6 +3,10 @@
 The shared `model.sound` hooks cover player step, swim/splash, hurt, death,
 small/big fall, voice pitch/volume, and consumable sounds on both loaders.
 Transformation sound scheduling remains the existing `MorphSounds` path.
+Its duration overload centers the original 60-tick sample in the configured
+transition; durations shorter than the sample begin playback immediately and
+retain its full duration and original pitch. The old 100-tick default still
+delays playback by exactly 20 ticks. Timing-bound tests are included.
 No ambient schedule or flying/flapping sound schedule is implemented here.
 
 The native lookup entity is never added to a level or ticked. The cache holds
