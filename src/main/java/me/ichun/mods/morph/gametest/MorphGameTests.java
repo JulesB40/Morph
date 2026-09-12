@@ -58,7 +58,7 @@ public final class MorphGameTests {
             helper.register(id("saved_data_round_trip"), MorphGameTests::savedDataRoundTrip);
             helper.register(id("pig_geometry_and_reset"), MorphGameTests::pigGeometryAndReset);
             helper.register(id("ceiling_rejects_tall_form"), MorphGameTests::ceilingRejectsTallForm);
-            helper.register(id("crouch_cannot_stand_through_ceiling"), MorphGameTests::crouchCannotStandThroughCeiling);
+            helper.register(id("native_crouch_and_cramped_reset"), MorphGameTests::nativeCrouchAndCrampedReset);
             helper.register(id("flight_cleanup_and_player_save"), MorphGameTests::flightCleanupAndPlayerSave);
             helper.register(id("external_flight_preserved"), MorphGameTests::externalFlightPreserved);
             helper.register(id("aquatic_air_on_actual_tick"), MorphGameTests::aquaticAirOnActualTick);
@@ -72,7 +72,7 @@ public final class MorphGameTests {
         if (!Boolean.getBoolean("morph.enableGameTests")) return;
         var environment = event.registerEnvironment(id("smoke"));
         for (String name : new String[] {"intimidation_moves_creeper", "hostility_and_riding_hooks", "passive_trait_hooks", "attribute_defaults_and_persistence", "external_attributes_survive_morph", "animated_health_selection_and_reset", "selection_rules", "transformation_sound_lifecycle", "kill_acquires_pig", "saved_data_round_trip",
-                "pig_geometry_and_reset", "ceiling_rejects_tall_form", "crouch_cannot_stand_through_ceiling",
+                "pig_geometry_and_reset", "ceiling_rejects_tall_form", "native_crouch_and_cramped_reset",
                 "flight_cleanup_and_player_save", "external_flight_preserved", "aquatic_air_on_actual_tick",
                 "fall_event_immunity_and_cleanup", "flight_survives_game_mode_change"}) {
             ResourceKey<Consumer<GameTestHelper>> function = ResourceKey.create(Registries.TEST_FUNCTION, id(name));
@@ -215,29 +215,30 @@ public final class MorphGameTests {
         });
     }
 
-    private static void crouchCannotStandThroughCeiling(GameTestHelper helper) {
+    private static void nativeCrouchAndCrampedReset(GameTestHelper helper) {
         var player = connectedPlayer(helper);
         player.setGameMode(GameType.SURVIVAL);
         MorphService.collection(player).unlock("minecraft:pig");
         helper.assertTrue(MorphService.select(player, "minecraft:pig"), "Initial pig selection");
-        float standingHeight = player.getBbHeight();
+        var pig = EntityTypes.PIG.create(helper.getLevel(), EntitySpawnReason.LOAD);
+        helper.assertTrue(pig != null, "Native pig reference must exist");
+        var expected = pig.getDimensions(Pose.CROUCHING);
+        near(helper, expected.height(), pig.getDimensions(Pose.STANDING).height(), "Native pig does not shrink when crouching");
         player.setPose(Pose.CROUCHING);
         player.refreshDimensions();
-        helper.assertTrue(player.getBbHeight() < standingHeight, "Crouching must shrink morph geometry");
-        // Pig standing height is 0.9 and crouched height is 0.75: leave 0.8 blocks of clearance.
-        player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(0.5, 2.2, 0.5)));
+        near(helper, player.getBbHeight(), expected.height(), "Crouching retains native pig height");
+        near(helper, player.getBbWidth(), expected.width(), "Crouching retains native pig width");
+        near(helper, player.getEyeHeight(), expected.eyeHeight(), "Crouching retains native pig eye height");
+        player.setPos(helper.absoluteVec(new net.minecraft.world.phys.Vec3(0.5, 2.0, 0.5)));
         helper.setBlock(0, 3, 0, Blocks.STONE);
         player.setShiftKeyDown(false);
         player.updatePoseForTest();
-        helper.assertValueEqual(player.getPose(), Pose.CROUCHING, "Releasing crouch must not stand through ceiling");
-        helper.assertTrue(helper.getLevel().noCollision(player), "Crouched shape must remain clear of ceiling");
+        helper.assertValueEqual(player.getPose(), Pose.STANDING, "Pig standing shape fits the same one-block clearance");
+        helper.assertTrue(helper.getLevel().noCollision(player), "Native pig shape remains clear of ceiling");
         helper.assertFalse(MorphService.reset(player), "Reset to taller player must be rejected under ceiling");
         helper.assertValueEqual(MorphService.collection(player).activeForm(), "minecraft:pig", "Rejected reset preserves pig form");
         helper.setBlock(0, 3, 0, Blocks.AIR);
-        player.updatePoseForTest();
-        player.refreshDimensions();
-        helper.assertValueEqual(player.getPose(), Pose.STANDING, "Removing ceiling permits normal standing");
-        near(helper, player.getBbHeight(), standingHeight, "Standing restores morph height");
+        helper.assertTrue(MorphService.reset(player), "Removing ceiling permits reset to player");
         helper.succeed();
     }
 

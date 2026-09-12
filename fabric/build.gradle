@@ -2,7 +2,9 @@ plugins {
     id 'net.fabricmc.fabric-loom' version '1.17.20'
     id 'maven-publish'
 }
-version = '11.0.0-alpha.8'
+def sharedProperties = new Properties()
+file('../gradle.properties').withInputStream { sharedProperties.load(it) }
+version = providers.gradleProperty('mod_version').getOrElse(sharedProperties.getProperty('mod_version'))
 group = 'me.ichun.mods.morph'
 base { archivesName = 'Morph-Fabric-26.2' }
 java { toolchain.languageVersion = JavaLanguageVersion.of(25); withSourcesJar() }
@@ -88,7 +90,6 @@ sourceSets.gametest.java {
     srcDir '../testing/harness-common/src/main/java'
     include 'me/ichun/mods/morph/fabric/**'
     include 'me/ichun/mods/morph/lab/**'
-    include 'me/ichun/mods/morph/client/equipment/MorphCapturedEquipmentProbes.java'
     include 'me/ichun/mods/morph/gametest/NativeAttributeChecks.java'
 }
 loom.runs.client { programArgs '--username', 'MorphTester' }

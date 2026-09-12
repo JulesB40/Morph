@@ -133,7 +133,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
             context.runOnClient(client -> {
                 Object checks;
                 if (scenario.equals("captured-equipment")) {
-                    var result = me.ichun.mods.morph.client.equipment.MorphCapturedEquipmentProbes.run(client.player);
+                    var result = me.ichun.mods.morph.lab.MorphCapturedEquipmentProbes.run(client.player);
                     if (!Boolean.TRUE.equals(result.get("passed"))) throw new AssertionError(result.toString());
                     checks = result;
                 } else {

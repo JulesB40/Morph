@@ -26,7 +26,7 @@ final class LabComponentProbes {
 
     static Map<String, Object> run(Minecraft client, String name) {
         Map<String, Object> result = new LinkedHashMap<>(switch (name) {
-            case "captured-equipment" -> me.ichun.mods.morph.client.equipment.MorphCapturedEquipmentProbes.run(client.player);
+            case "captured-equipment" -> me.ichun.mods.morph.lab.MorphCapturedEquipmentProbes.run(client.player);
             case "descriptor-rendering" -> Map.of("passed", true, "checks", NativeRenderDescriptorChecks.verify(client.player,
                     (AvatarRenderState) client.getEntityRenderDispatcher().getRenderer(client.player).createRenderState(client.player, .5F)));
             case "wither-heads" -> wither();

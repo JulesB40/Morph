@@ -1,0 +1,29 @@
+{
+  "scenario": "neoforge-ci-server",
+  "loader": "neoforge",
+  "role": "candidate",
+  "resources": {
+    "memory_mb": 2560,
+    "cpu": 2,
+    "gpu": 0
+  },
+  "timeout_seconds": 600,
+  "cwd": "{source}",
+  "argv": [
+    "cmd.exe",
+    "/d",
+    "/c",
+    "gradlew.bat",
+    "--no-daemon",
+    "--max-workers=2",
+    "-Dorg.gradle.jvmargs=-Xmx1G",
+    "-PmorphLab=true",
+    "-Pmorph.ciGameDir={run}/game",
+    "-Pmod_version=11.0.0-alpha.8.dev.local",
+    "runGameTestServer"
+  ],
+  "artifacts": [
+    "build/classes/**/*.class",
+    "build/resources/lab/META-INF/neoforge.mods.toml"
+  ]
+}

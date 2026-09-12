@@ -4,6 +4,14 @@ Community port of [iChun's Morph](https://github.com/iChun/Morph) for **Minecraf
 
 **Status — 2026-09-12:** the current branch is a work-in-progress checkpoint. Feature implementation is paused, and the latest integrated changes have not completed both-loader runtime validation. See the [Done / In progress / To do list](docs/IMPLEMENTATION_TODO.md) for the current status and test blockers.
 
+## Downloads and updates
+
+Download the **NeoForge or Fabric JAR** from [GitHub Releases](https://github.com/JulesB40/Morph/releases). Releases are development prereleases while the port remains unfinished. Requires Java 25 and the matching loader; Fabric also requires Fabric API. Use the same Morph version on client and server.
+
+Each successful push to the default branch, `codex/port-26.2`, automatically publishes both loader JARs after their builds and tests pass. NeoForge also runs native server GameTests and checks startup with the optional lab mod; Fabric compiles its client test harness. These checks do not replace full client, visual, and multiplayer validation. Failed runs and pull requests do not publish releases.
+
+Both loaders read the base version from `gradle.properties` (`mod_version`). CI appends `.dev.<run number>.<short commit>` to the current alpha version, so every update has a distinct version inside its JAR. Each release includes `manifest.json` and `SHA256SUMS.txt` recording the source commit, workflow run, and download hashes. Maintainers can also run **Build 26.2** manually on the default branch.
+
 ## Current implementation
 
 The source includes the following features. New collection, UI, sound, configuration and progression paths still need the runtime checks described below.
@@ -62,7 +70,7 @@ On Linux/macOS use `./gradlew` in the corresponding directory. The configured to
 
 Selected frozen snapshots have passed native Husk checks on both loaders, Fabric flight/nametag checks, NeoForge renderer recovery probes, and a real NeoForge server/two-client save-and-restart scenario. A native geometry candidate passed 1,638 pose comparisons across 91 mobs after reproducing 1,604 baseline mismatches. These results establish their stated scenarios, not correctness of every feature in the current branch.
 
-The latest NeoForge lab launch is blocked by a duplicate package exported by the production and test mods. A Fabric snapshot compiled and passed its unit tests, but its harness result was invalidated by a log written outside the expected build directory; a working-directory correction is committed and awaits rerun. Neither result certifies the latest integrated build. Full details are in the [current TODO list](docs/IMPLEMENTATION_TODO.md) and [retained pilot results](docs/MORPH_LAB_RESULTS_2026-09-12.md).
+The NeoForge lab's duplicate-package conflict has a source fix: the equipment probe now lives in the lab package. The CI crouching test now compares against a native pig instead of expecting player-style shrinking. The build workflow verifies those server startup paths. A previous Fabric harness result was invalidated by a log written outside the expected build directory; the working-directory correction still needs a frozen lab rerun. Full details are in the [current TODO list](docs/IMPLEMENTATION_TODO.md) and [retained pilot results](docs/MORPH_LAB_RESULTS_2026-09-12.md).
 
 Major remaining work includes broader variants, player and modded forms, acquisition tendrils, first-person mob hands, stateful mob/boss abilities, native movement and riding parity, Disguise mode, the complete biomass UI/economy, legacy editors and addon compatibility. Model-by-model visual checks, current-protocol multiplayer tests, performance tests and final artifact validation are still required.
 

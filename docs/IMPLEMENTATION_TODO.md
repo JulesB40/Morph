@@ -1,6 +1,6 @@
 # Morph 26.2 implementation TODO
 
-Status reviewed 2026-09-12 at `3aae1cb` on `codex/port-26.2`. Feature implementation is paused. Only this inventory was updated; implementation and verification remain paused. “In progress” below means that source work exists but the required evidence is incomplete; it does not mean active work is running.
+Feature inventory reviewed 2026-09-12 at `3aae1cb` on `codex/port-26.2`. Feature implementation remains paused; CI repair and automatic downloadable releases have resumed separately. “In progress” below means that source work exists but the required evidence is incomplete; it does not mean all feature work is actively running.
 
 This is an evidence-backed inventory, not a completion percentage. The project has no claim of correctness for every mob, renderer, addon, resource pack, or multiplayer combination. NeoForge and Fabric share most gameplay source, but a result on one loader does not certify the other loader’s client hooks, rendering, networking, or startup.
 
@@ -35,7 +35,8 @@ The following source exists on the current branch, but the required independent 
 
 ### Current test blockers
 
-- Fix the NeoForge Morph Lab startup conflict where `morph` and `morph_lab` export the same `me.ichun.mods.morph.client.equipment` package (latest run `5f105b...`).
+- Verify the NeoForge equipment probe's relocation to the lab package against the duplicate-package startup failure (`5f105b...`). CI now runs the server GameTests both with and without the lab mod; client equipment assertions still require a loaded client world.
+- Verify the corrected native-pig crouch test against failing CI run `34719851105`. Native pigs retain their dimensions when crouching; the replacement compares native height, width, and eye height and preserves cramped-reset rejection. Download publication is gated on both loader jobs passing.
 - Verify the already-written Fabric test working-directory correction in `fabric/build.gradle`: the previous run created unexpected `fabric/logs/latest.log`. Rerun from a frozen snapshot and require source verification.
 
 ### 1. Collection and selector
@@ -94,10 +95,10 @@ The following source exists on the current branch, but the required independent 
 
 ## Loader and evidence limits
 
-The source layout is shared (`src/main`) with separate Fabric and NeoForge adapters. A source-level implementation or a unit test does not certify both loaders. The retained evidence includes Fabric client probes, NeoForge client/server probes, and one NeoForge real two-client session; it does not yet provide equivalent full client/render/multiplayer matrices for both loaders. The Fabric build snapshot had a stray root `logs/latest.log` infrastructure failure, and the latest NeoForge lab attempt was blocked by duplicate `me.ichun.mods.morph.client.equipment` package exports between `morph` and `morph_lab`; these are next blockers rather than feature passes.
+The source layout is shared (`src/main`) with separate Fabric and NeoForge adapters. A source-level implementation or a unit test does not certify both loaders. The retained evidence includes Fabric client probes, NeoForge client/server probes, and one NeoForge real two-client session; it does not yet provide equivalent full client/render/multiplayer matrices for both loaders. The historical Fabric stray-log and NeoForge duplicate-package failures now have source corrections. Their scope and remaining verification are listed under Current test blockers; they do not establish feature passes.
 
 Material validation remains limited: the 91-form/native-model inventory is source metadata and authored probe contracts; screenshots prove only the exercised scene; MP4s are tick-sampled; sound events do not prove audible output; committed memory is not process RSS; and no result guarantees every mob, variant, renderer, addon, resource pack, or multiplayer combination.
 
 ## Pause and ownership note
 
-All nine work areas above remain accounted for. The implementation wave used seven Astra workers plus the root agent covering two retained areas because of available slots; there are no active implementation workers now. Resume by clearing the duplicate-package NeoForge lab blocker, fixing the Fabric dirty-working-directory/log fixture issue, then rerunning frozen baseline/candidate scenarios before broadening the matrix.
+All nine work areas above remain accounted for. The implementation wave used seven Astra workers plus the root agent covering two retained areas because of available slots; there are no active feature implementation workers now. CI repairs and release automation are proceeding separately. Before broadening feature work, rerun frozen baseline/candidate scenarios with the harness startup corrections.

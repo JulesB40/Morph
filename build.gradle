@@ -23,6 +23,7 @@ neoForge {
         }
         gameTestServer {
             type = 'gameTestServer'
+            gameDirectory = file(providers.gradleProperty('morph.ciGameDir').getOrElse('build/morph-ci/server'))
             systemProperty 'morph.enableGameTests', 'true'
         }
         configureEach {

@@ -1,4 +1,6 @@
-package me.ichun.mods.morph.client.equipment;
+package me.ichun.mods.morph.lab;
+
+import me.ichun.mods.morph.client.equipment.MorphEquipmentRendering;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -21,7 +23,7 @@ public final class MorphCapturedEquipmentProbes {
     public static Map<String, Object> run(Avatar player) {
         List<Map<String, Object>> checks = new ArrayList<>();
         var captured = new CapturedEquipment("minecraft:wolf_armor", 10, 0x123456, true);
-        var stack = MorphEquipmentRendering.capturedStack(captured, EquipmentSlot.BODY, EntityTypes.WOLF);
+        var stack = capturedStack(captured, EquipmentSlot.BODY, EntityTypes.WOLF);
         check(checks, "wolf_body_item", stack.is(Items.WOLF_ARMOR), stack.getItem().toString());
         check(checks, "captured_count_one", stack.getCount() == 1, stack.getCount());
         check(checks, "captured_damage", stack.getDamageValue() == 10, stack.getDamageValue());
@@ -29,28 +31,28 @@ public final class MorphCapturedEquipmentProbes {
         check(checks, "captured_dye", dye != null && dye.rgb() == 0x123456, String.valueOf(dye));
         check(checks, "captured_glint", Boolean.TRUE.equals(stack.get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)),
             String.valueOf(stack.get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE)));
-        check(checks, "wrong_species_empty", MorphEquipmentRendering.capturedStack(captured, EquipmentSlot.BODY, EntityTypes.PIG).isEmpty(), "wolf armor on pig");
-        check(checks, "wrong_slot_empty", MorphEquipmentRendering.capturedStack(captured, EquipmentSlot.SADDLE, EntityTypes.WOLF).isEmpty(), "body armor in saddle slot");
-        check(checks, "live_slot_rejected", MorphEquipmentRendering.capturedStack(captured, EquipmentSlot.MAINHAND, EntityTypes.WOLF).isEmpty(), "captured main hand");
-        check(checks, "missing_gear_empty", MorphEquipmentRendering.capturedStack(null, EquipmentSlot.BODY, EntityTypes.WOLF).isEmpty(), "null capture");
+        check(checks, "wrong_species_empty", capturedStack(captured, EquipmentSlot.BODY, EntityTypes.PIG).isEmpty(), "wolf armor on pig");
+        check(checks, "wrong_slot_empty", capturedStack(captured, EquipmentSlot.SADDLE, EntityTypes.WOLF).isEmpty(), "body armor in saddle slot");
+        check(checks, "live_slot_rejected", capturedStack(captured, EquipmentSlot.MAINHAND, EntityTypes.WOLF).isEmpty(), "captured main hand");
+        check(checks, "missing_gear_empty", capturedStack(null, EquipmentSlot.BODY, EntityTypes.WOLF).isEmpty(), "null capture");
         for (var id : List.of("minecraft:missing_item", "minecraft:air", "minecraft:diamond")) {
-            var invalid = MorphEquipmentRendering.capturedStack(new CapturedEquipment(id, null, null, false), EquipmentSlot.BODY, EntityTypes.WOLF);
+            var invalid = capturedStack(new CapturedEquipment(id, null, null, false), EquipmentSlot.BODY, EntityTypes.WOLF);
             check(checks, "invalid_gear_" + id, invalid.isEmpty(), invalid.toString());
         }
-        var damaged = MorphEquipmentRendering.capturedStack(new CapturedEquipment("minecraft:wolf_armor", 1_000_000, null, false),
+        var damaged = capturedStack(new CapturedEquipment("minecraft:wolf_armor", 1_000_000, null, false),
             EquipmentSlot.BODY, EntityTypes.WOLF);
         check(checks, "native_damage_bound", damaged.getDamageValue() == damaged.getMaxDamage(), damaged.getDamageValue());
         check(checks, "absent_dye_and_glint", damaged.get(DataComponents.DYED_COLOR) == null
             && damaged.get(DataComponents.ENCHANTMENT_GLINT_OVERRIDE) == null, damaged.toString());
 
         var saddle = new CapturedEquipment("minecraft:saddle", null, null, false);
-        var pigSaddle = MorphEquipmentRendering.capturedStack(saddle, EquipmentSlot.SADDLE, EntityTypes.PIG);
+        var pigSaddle = capturedStack(saddle, EquipmentSlot.SADDLE, EntityTypes.PIG);
         check(checks, "tag_allows_pig_saddle", pigSaddle.is(Items.SADDLE), pigSaddle.toString());
-        check(checks, "tag_rejects_wolf_saddle", MorphEquipmentRendering.capturedStack(saddle, EquipmentSlot.SADDLE, EntityTypes.WOLF).isEmpty(), "wolf saddle");
+        check(checks, "tag_rejects_wolf_saddle", capturedStack(saddle, EquipmentSlot.SADDLE, EntityTypes.WOLF).isEmpty(), "wolf saddle");
         var horseArmor = new CapturedEquipment("minecraft:diamond_horse_armor", null, null, false);
-        check(checks, "tag_allows_horse_armor", MorphEquipmentRendering.capturedStack(horseArmor, EquipmentSlot.BODY, EntityTypes.HORSE)
+        check(checks, "tag_allows_horse_armor", capturedStack(horseArmor, EquipmentSlot.BODY, EntityTypes.HORSE)
             .is(Items.DIAMOND_HORSE_ARMOR), "horse body armor");
-        check(checks, "tag_rejects_pig_horse_armor", MorphEquipmentRendering.capturedStack(horseArmor, EquipmentSlot.BODY, EntityTypes.PIG).isEmpty(), "pig horse armor");
+        check(checks, "tag_rejects_pig_horse_armor", capturedStack(horseArmor, EquipmentSlot.BODY, EntityTypes.PIG).isEmpty(), "pig horse armor");
 
         // A direct equipment fixture, not a claim that this adapter supports acquisition.
         var descriptor = new FormDescriptor(FormDescriptor.VERSION, "minecraft:wolf", "morph:equipment_fixture", 1,
@@ -71,6 +73,19 @@ public final class MorphCapturedEquipmentProbes {
             .allMatch(entry -> ItemStack.matches(entry.getValue(), player.getItemBySlot(entry.getKey()))), "all player equipment slots compared");
         return Map.of("passed", checks.stream().allMatch(check -> Boolean.TRUE.equals(check.get("passed"))), "checks", checks,
             "scope", "native client component with loaded registries/tags; not a framebuffer or acquisition oracle");
+    }
+
+    // Keep the lab in its own Java module/package while exercising the actual package-private helper.
+    private static ItemStack capturedStack(CapturedEquipment captured, EquipmentSlot slot,
+            net.minecraft.world.entity.EntityType<?> type) {
+        try {
+            var method = MorphEquipmentRendering.class.getDeclaredMethod("capturedStack", CapturedEquipment.class,
+                    EquipmentSlot.class, net.minecraft.world.entity.EntityType.class);
+            method.setAccessible(true);
+            return (ItemStack) method.invoke(null, captured, slot, type);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException("Native captured equipment probe failed", failure);
+        }
     }
 
     private static void check(List<Map<String, Object>> checks, String name, boolean passed, Object observed) {
