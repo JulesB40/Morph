@@ -31,7 +31,7 @@ import net.minecraft.world.phys.Vec3;
 /** Test-only real-server damage probes; the native Husk supplies the effect oracle. */
 public final class HuskDamageProbes {
     public enum Case {
-        EMPTY_HAND_DURATION, HELD_ITEM, OFFHAND_ITEM, REJECTED_DAMAGE
+        EMPTY_HAND_DURATION, HELD_ITEM, OFFHAND_ITEM, REJECTED_DAMAGE, EASY_ZERO_DURATION
     }
 
     /** Loader adapters supply authoritative form state, without replacing the global resolver. */
@@ -70,8 +70,15 @@ public final class HuskDamageProbes {
         var nativeHusk = helper.spawn(EntityTypes.HUSK, 1, 2, 1);
         var nativeVictim = helper.spawn(EntityTypes.COW, 2, 2, 1);
         var morphVictim = helper.spawn(EntityTypes.COW, 2, 2, 2);
+        Difficulty originalDifficulty = helper.getLevel().getDifficulty();
         boolean recorded = false;
         try {
+            if (scenario == Case.EASY_ZERO_DURATION) {
+                helper.getLevel().getServer().setDifficulty(Difficulty.EASY, true);
+                event.put("original_difficulty", originalDifficulty.name());
+                event.put("difficulty", helper.getLevel().getDifficulty().name());
+                require(helper.getLevel().getDifficulty() == Difficulty.EASY, "Zero-duration fixture needs EASY difficulty");
+            }
             nativeHusk.setNoAi(true);
             nativeVictim.setNoAi(true);
             morphVictim.setNoAi(true);
@@ -96,6 +103,9 @@ public final class HuskDamageProbes {
             event.put("effective_local_difficulty", localDifficulty);
             event.put("attacker_block", player.blockPosition().toShortString());
             require(player.blockPosition().equals(nativeHusk.blockPosition()), "Attackers must share local difficulty");
+            if (scenario == Case.EASY_ZERO_DURATION) {
+                require(localDifficulty > 0 && localDifficulty < 1, "Zero-duration fixture needs effective difficulty between 0 and 1; use a fresh world");
+            }
             // An integer difficulty cannot distinguish truncation before versus after multiplication.
             if (scenario == Case.EMPTY_HAND_DURATION || scenario == Case.OFFHAND_ITEM) {
                 require(localDifficulty != (int) localDifficulty, "Duration fixture needs fractional effective local difficulty");
@@ -125,6 +135,9 @@ public final class HuskDamageProbes {
                 require(nativeEffect == null, "Native control unexpectedly applied Hunger");
             } else {
                 require(nativeEffect != null, "Native empty-hand reference did not produce a Hunger instance");
+                if (scenario == Case.EASY_ZERO_DURATION) {
+                    require(nativeEffect.getDuration() == 0, "Native EASY reference did not produce a zero-duration Hunger instance");
+                }
             }
             var failures = new ArrayList<String>();
             if ((nativeEffect == null) != (morphEffect == null)) failures.add("Hunger presence differs from native Husk");
@@ -147,13 +160,19 @@ public final class HuskDamageProbes {
             throw failure;
         } finally {
             try {
-                adapter.resetForm(player);
+                if (scenario == Case.EASY_ZERO_DURATION) {
+                    helper.getLevel().getServer().setDifficulty(originalDifficulty, true);
+                }
             } finally {
-                nativeHusk.discard();
-                nativeVictim.discard();
-                morphVictim.discard();
-                player.discard();
-                channel.finishAndReleaseAll();
+                try {
+                    adapter.resetForm(player);
+                } finally {
+                    nativeHusk.discard();
+                    nativeVictim.discard();
+                    morphVictim.discard();
+                    player.discard();
+                    channel.finishAndReleaseAll();
+                }
             }
         }
     }

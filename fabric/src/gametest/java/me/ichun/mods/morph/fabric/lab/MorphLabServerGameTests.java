@@ -19,4 +19,5 @@ public final class MorphLabServerGameTests {
     @GameTest(maxTicks = 100) public void huskHeldItem(GameTestHelper helper) { HuskDamageProbes.run(helper, HuskDamageProbes.Case.HELD_ITEM, ADAPTER); }
     @GameTest(maxTicks = 100) public void huskOffhandItem(GameTestHelper helper) { HuskDamageProbes.run(helper, HuskDamageProbes.Case.OFFHAND_ITEM, ADAPTER); }
     @GameTest(maxTicks = 100) public void huskRejectedDamage(GameTestHelper helper) { HuskDamageProbes.run(helper, HuskDamageProbes.Case.REJECTED_DAMAGE, ADAPTER); }
+    @GameTest(maxTicks = 100) public void huskEasyZeroDuration(GameTestHelper helper) { HuskDamageProbes.run(helper, HuskDamageProbes.Case.EASY_ZERO_DURATION, ADAPTER); }
 }
