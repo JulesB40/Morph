@@ -6,6 +6,7 @@ import net.minecraft.world.entity.Avatar;
 public final class MorphSwimming {
     private MorphSwimming() {}
     public static void extract(Avatar avatar, AvatarRenderState source, LivingEntityRenderState target, String formId) {
+        ((MorphSwimState) target).morph$setMorphAdapter(true);
         boolean sinkingUndead = !me.ichun.mods.morph.ability.MorphSwimmingRules.canSwim(formId);
         if (sinkingUndead && target.pose == net.minecraft.world.entity.Pose.SWIMMING)
             target.pose = net.minecraft.world.entity.Pose.STANDING;

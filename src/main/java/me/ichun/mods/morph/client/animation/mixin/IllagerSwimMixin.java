@@ -26,6 +26,8 @@ public abstract class IllagerSwimMixin {
     @Inject(method = "setupAnim(Lnet/minecraft/client/renderer/entity/state/IllagerRenderState;)V", at = @At("TAIL"))
     private void morph$swim(IllagerRenderState state, CallbackInfo ci) {
         MorphSwimState swim = (MorphSwimState) state;
+        if (swim.morph$isMorphAdapter())
+            me.ichun.mods.morph.client.animation.MorphIllagerAnimation.applyWeaponHand(state, rightArm, leftArm, head);
         float blend = swim.morph$swimBlend();
         if (blend <= 0 || state.isRiding) return;
         float phase = state.ageInTicks * (swim.morph$fastSwimming() ? .55F : .3F);

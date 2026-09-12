@@ -44,6 +44,15 @@ public final class MorphOtherSwimming {
             float offset = paddle(state.ageInTicks, i, fast);
             limb.xRot += (limb.getInitialPose().xRot() + offset - limb.xRot) * blend;
         }
+        if (state instanceof BeeRenderState) {
+            // Native bees join each left/right leg pair into one mesh.
+            String[] pairs = {"front_legs", "middle_legs", "back_legs"};
+            for (int pair = 0; pair < pairs.length; pair++) {
+                ModelPart legs = lookup.apply(pairs[pair]);
+                if (legs != null) legs.xRot += (legs.getInitialPose().xRot()
+                    + paddle(state.ageInTicks, pair * 2, fast) - legs.xRot) * blend;
+            }
+        }
         if (canPaddleArms(state)) {
             paddleArms(lookup, state.ageInTicks, blend, fast);
         }
@@ -64,7 +73,12 @@ public final class MorphOtherSwimming {
     static boolean canPaddleArms(LivingEntityRenderState state) {
         if (state instanceof ArmedEntityRenderState armed
                 && (armed.attackTime > 0 || !idleArm(armed.leftArmPose) || !idleArm(armed.rightArmPose))) return false;
-        if (state instanceof AllayRenderState allay && (allay.isDancing || allay.isSpinning)) return false;
+        if (state instanceof AllayRenderState allay
+                && (allay.isDancing || allay.isSpinning || allay.holdingAnimationProgress > 0)) return false;
+        if (state instanceof CopperGolemRenderState copper && (copper.interactionGetItem.isStarted()
+                || copper.interactionGetNoItem.isStarted() || copper.interactionDropItem.isStarted()
+                || copper.interactionDropNoItem.isStarted() || !copper.leftHandItemState.isEmpty()
+                || !copper.rightHandItemState.isEmpty())) return false;
         if (state instanceof VexRenderState vex && vex.isCharging) return false;
         if (state instanceof IronGolemRenderState golem && (golem.attackTicksRemaining > 0 || golem.offerFlowerTick > 0)) return false;
         if (state instanceof CreakingRenderState creaking && (creaking.attackAnimationState.isStarted()
