@@ -25,7 +25,9 @@ sourceSets.main.java {
     include 'me/ichun/mods/morph/server/MorphSavedData.java'
     include 'me/ichun/mods/morph/server/MorphAuthority.java'
     include 'me/ichun/mods/morph/config/**'
-    include 'me/ichun/mods/morph/api/MorphEvents.java'
+    include 'me/ichun/mods/morph/api/**'
+    include 'me/ichun/mods/morph/definition/**'
+    include 'me/ichun/mods/morph/progression/**'
     include 'me/ichun/mods/morph/server/FormCapture.java'
     include 'me/ichun/mods/morph/server/MorphCommands.java'
     include 'me/ichun/mods/morph/network/CollectionProtocol.java'
@@ -47,6 +49,11 @@ sourceSets.test.java {
     include 'me/ichun/mods/morph/model/**'
     include 'me/ichun/mods/morph/ui/**'
     include 'me/ichun/mods/morph/client/ClientCollectionStateTest.java'
+    include 'me/ichun/mods/morph/config/**'
+    include 'me/ichun/mods/morph/definition/**'
+    include 'me/ichun/mods/morph/api/**'
+    include 'me/ichun/mods/morph/progression/**'
+    include 'me/ichun/mods/morph/client/equipment/**'
     include 'me/ichun/mods/morph/network/CollectionProtocolTest.java'
     include 'me/ichun/mods/morph/server/**'
     include 'me/ichun/mods/morph/ability/**'
@@ -56,7 +63,7 @@ sourceSets.test.java {
 processResources {
     inputs.property 'version', project.version
     filesMatching('fabric.mod.json') { expand version: project.version }
-    from('../src/main/resources') { include 'assets/morph/**'; include 'morph.animation.mixins.json'; include 'morph.sound.mixins.json' }
+    from('../src/main/resources') { include 'assets/morph/**'; include 'morph/definitions/**'; include 'morph.animation.mixins.json'; include 'morph.sound.mixins.json' }
 }
 test { useJUnitPlatform() }
 tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }

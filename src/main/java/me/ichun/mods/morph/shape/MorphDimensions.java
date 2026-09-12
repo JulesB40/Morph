@@ -1,9 +1,10 @@
 package me.ichun.mods.morph.shape;
 
-import java.util.HashMap;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.WeakHashMap;
+import me.ichun.mods.morph.model.FormDescriptor;
+import me.ichun.mods.morph.server.FormCapture;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Avatar;
@@ -21,29 +22,38 @@ public final class MorphDimensions {
     private MorphDimensions() {}
 
     public static boolean supports(Level level, String form) {
-        return form != null && !form.isEmpty() && poseDimensions(level, form).containsKey(Pose.STANDING);
+        return me.ichun.mods.morph.model.MorphCollection.isFormId(form)
+                && poseDimensions(level, FormDescriptor.species(form)).containsKey(Pose.STANDING);
     }
 
     public static EntityDimensions forPose(Level level, String form, Pose pose, EntityDimensions vanilla) {
-        if (form == null || form.isEmpty()) return vanilla;
-        return poseDimensions(level, form).getOrDefault(pose, vanilla);
+        if (!me.ichun.mods.morph.model.MorphCollection.isFormId(form)) return vanilla;
+        return forPose(level, FormDescriptor.species(form), pose, vanilla);
     }
 
-    private static synchronized Map<Pose, EntityDimensions> poseDimensions(Level level, String form) {
+    public static EntityDimensions forPose(Level level, FormDescriptor descriptor, Pose pose, EntityDimensions vanilla) {
+        if (descriptor == null) return vanilla;
+        return poseDimensions(level, descriptor).getOrDefault(pose, vanilla);
+    }
+
+    private static synchronized Map<Pose, EntityDimensions> poseDimensions(Level level, FormDescriptor descriptor) {
+        String form = descriptor.species();
+        String cacheKey = descriptor.entryId().value();
         var shapes = CACHE.get(level);
-        if (shapes != null && shapes.containsKey(form)) return shapes.get(form);
+        if (shapes != null && shapes.containsKey(cacheKey)) return shapes.get(cacheKey);
         Identifier id = Identifier.tryParse(form);
         if (id == null || !id.getNamespace().equals("minecraft")) return Map.of();
         var type = BuiltInRegistries.ENTITY_TYPE.getOptional(id).orElse(null);
         if (type == null) return Map.of();
         if (shapes == null) {
-            shapes = new HashMap<>();
+            shapes = new java.util.LinkedHashMap<>(128, 0.75F, true);
             CACHE.put(level, shapes);
         }
         Map<Pose, EntityDimensions> dimensions = new EnumMap<>(Pose.class);
         try {
             // Match the renderer's LOAD adapter, including default slime/pufferfish dimensions.
             if (type.create(level, EntitySpawnReason.LOAD) instanceof LivingEntity entity && !(entity instanceof Avatar)) {
+                if (!FormCapture.applyVariant(entity, descriptor)) return Map.of();
                 for (Pose pose : Pose.values()) {
                     var nativeShape = entity.getDimensions(pose);
                     if (Float.isFinite(nativeShape.width()) && Float.isFinite(nativeShape.height())
@@ -57,7 +67,8 @@ public final class MorphDimensions {
             // A failed vanilla adapter retains player geometry rather than breaking a tick.
         }
         Map<Pose, EntityDimensions> result = Map.copyOf(dimensions);
-        shapes.put(form, result);
+        if (shapes.size() >= 1024) shapes.remove(shapes.keySet().iterator().next());
+        shapes.put(cacheKey, result);
         return result;
     }
 }
