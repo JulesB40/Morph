@@ -30,7 +30,12 @@ if mode == 'no-ready' and role == 'observer':
     time.sleep(30)
 emit('ready')
 seen=set()
+pending_movement=None
 while True:
+    if pending_movement is not None and time.monotonic() >= pending_movement:
+        db.execute('UPDATE players SET z=z+1 WHERE role=?',(role,))
+        db.commit()
+        pending_movement=None
     for path in sorted((control/'requests').glob('*.json')):
         if path.name in seen: continue
         seen.add(path.name)
@@ -42,7 +47,9 @@ while True:
                 db.execute('UPDATE players SET shown=0 WHERE role=?',(role,))
         if op in ('disconnect','reconnect'):
             db.execute('UPDATE players SET connected=? WHERE role=?',(int(op=='reconnect'),role))
-        if op=='input': db.execute('UPDATE players SET z=z+1 WHERE role=?',(role,))
+        if op=='input':
+            if mode=='delayed-movement': pending_movement=time.monotonic()+.25
+            elif mode!='lost-input': db.execute('UPDATE players SET z=z+1 WHERE role=?',(role,))
         if op=='capture':
             folder=control/'captures'; folder.mkdir(exist_ok=True)
             (folder/(req['id']+'.png')).write_bytes(b'\x89PNG\r\n\x1a\n'+b'0'*32)
@@ -85,6 +92,19 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(result['status'],'timeout',result)
         self.assertTrue(result['cleanup_confirmed'])
         self.assertNotIn('authoritative_and_two_client_appearance',result['checks'])
+
+    def test_input_ack_can_precede_authoritative_movement(self):
+        result = run_session(self.spec('delayed-movement'), self.root/'run', self.root)
+        self.assertEqual(result['status'],'passed',result)
+        self.assertEqual(result['movement']['horizontal_distance'],{'actor':1.0,'observer':0.0})
+
+    def test_input_ack_without_movement_never_passes(self):
+        spec = self.spec('lost-input')
+        spec['step_timeout'] = .4
+        result = run_session(spec,self.root/'run',self.root)
+        self.assertEqual(result['status'],'timeout',result)
+        self.assertTrue(result['cleanup_confirmed'])
+        self.assertNotIn('actor_input_observer_stationary',result['checks'])
 
     def test_timeout_cleans_all_owned_processes(self):
         spec = self.spec('no-ready')

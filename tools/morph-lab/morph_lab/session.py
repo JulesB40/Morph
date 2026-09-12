@@ -173,13 +173,18 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
         request("observer", "look", yaw=90, pitch=0)
         before = states()
         request("actor", "input", keys=["forward"], ticks=20)
-        after = states()
         def horizontal(rows, role):
             position = player(rows["server"], uuids[role])["position"]
             return position[0], position[2]
+        def movement_received(rows):
+            distances = {role: math.dist(horizontal(before, role), horizontal(rows, role)) for role in names}
+            if distances["observer"] > .1:
+                raise AssertionError(f"observer moved during actor input: {distances}")
+            return distances["actor"] >= .1
+        # The input acknowledgement releases client keys. It does not establish
+        # that the dedicated server has processed that client's movement packets.
+        after = barrier(movement_received)
         moved = {role: math.dist(horizontal(before, role), horizontal(after, role)) for role in names}
-        if moved["actor"] < .1 or moved["observer"] > .1:
-            raise AssertionError(f"input isolation expectation failed: {moved}")
         result["movement"] = {"before":before, "after":after, "horizontal_distance":moved}
         result["checks"].append("actor_input_observer_stationary")
         for role in names:
