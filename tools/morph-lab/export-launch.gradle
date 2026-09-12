@@ -1,0 +1,108 @@
+import groovy.json.JsonOutput
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
+
+// Developer-only init script, reviewed against ModDev 2.0.146 / DevLaunch 1.0.2.
+// Usage: gradlew -PmorphLab=true -I tools/morph-lab/export-launch.gradle exportMorphLabLaunch
+// Preparation may compile lab classes and download missing dependencies. It never
+// schedules RunGameTask. Keep the prepared snapshot and its argfiles immutable
+// for the lifetime of every process launched from the exported JSON.
+gradle.projectsEvaluated {
+    def p = gradle.rootProject
+    if (!p.plugins.hasPlugin('net.neoforged.moddev')) {
+        throw new GradleException('Morph Lab launch export requires the NeoForge ModDev plugin')
+    }
+    def runs = p.extensions.getByName('neoForge').runs
+    def launchTasks = [:]
+    def preparationTasks = []
+    ['client': 'LabClient', 'server': 'LabServer'].each { role, suffix ->
+        def runName = suffix[0].toLowerCase() + suffix.substring(1)
+        def model = runs.findByName(runName)
+        if (model == null) {
+            throw new GradleException("Missing ${runName}; enable -PmorphLab=true and define both lab runs")
+        }
+        // Session-specific options are appended as literal argv elements below.
+        // Removing the configured occurrences prevents jopt-simple duplicate values.
+        def args = model.programArguments.get().collect { it.toString() }
+        def dynamicOptions = role == 'client' ? ['--username', '--gameDir'] : ['--port']
+        def retained = []
+        for (int index = 0; index < args.size(); index++) {
+            def arg = args[index]
+            if (dynamicOptions.contains(arg)) {
+                if (++index >= args.size()) {
+                    throw new GradleException("${runName}: missing value for ${arg}")
+                }
+            } else if (!dynamicOptions.any { arg.startsWith(it + '=') }) {
+                retained.add(arg)
+            }
+        }
+        model.programArguments.set(retained)
+        launchTasks[role] = p.tasks.named("create${suffix}LaunchScript")
+        preparationTasks.add(p.tasks.named("prepare${suffix}Run"))
+    }
+
+    def destination = p.layout.buildDirectory.file('morph-lab/launch.json')
+    p.tasks.register('exportMorphLabLaunch') {
+        group = 'Morph Lab'
+        description = 'Prepare direct Java client/server argv without launching Minecraft'
+        dependsOn(preparationTasks, launchTasks.values(), p.tasks.named('labClasses'))
+        outputs.file(destination)
+        outputs.upToDateWhen { false }
+        notCompatibleWithConfigurationCache('Exports resolved ModDev launch task properties')
+        doLast {
+            def roles = [:]
+            launchTasks.each { role, provider ->
+                def launch = provider.get()
+                def run = p.tasks.named(role == 'client' ? 'runLabClient' : 'runLabServer').get()
+                // CreateLaunchScriptTask's exact direct-launch order is classpath
+                // argfile, VM argfile, mod folders, DevLaunch, program argfile.
+                def classpathFile = launch.classpathArgsFile.get().asFile
+                def vmFile = p.file(launch.vmArgsFile.get())
+                def programFile = p.file(launch.programArgsFile.get())
+                [classpathFile, vmFile, programFile].each { file ->
+                    if (!file.isFile()) throw new GradleException("Missing prepared argument file: ${file}")
+                }
+                def executable = run.javaLauncher.get().executablePath.asFile.absolutePath
+                def argv = [executable, '@' + classpathFile.absolutePath,
+                            '@' + vmFile.absolutePath, launch.modFolders.get().argument]
+                if (role == 'client') {
+                    argv.addAll(['-Xmx1024m', '-Dmorph.lab.hidden=true', '-Dmorph.lab.enabled=true',
+                                 '-Dmorph.lab.runDir={control}', '-Dmorph.lab.server=127.0.0.1:{port}',
+                                 '-Dmorph.lab.role={role}'])
+                } else {
+                    argv.addAll(['-Xmx768m', '-Dmorph.lab.controlDir={control}'])
+                }
+                argv.addAll(['net.neoforged.devlaunch.Main', '@' + programFile.absolutePath])
+                argv.addAll(role == 'client' ? ['--username', '{username}', '--gameDir', '{game}']
+                                             : ['--port', '{port}'])
+
+                // JavaExec.environment includes the entire parent environment.
+                // ModDev.environmentProperty contains explicit run additions only;
+                // MOD_CLASSES is the only required environment key for these runs.
+                def environment = [:]
+                run.environmentProperty.get().each { key, value ->
+                    if (key == 'MOD_CLASSES') environment[key] = value.toString()
+                    else throw new GradleException("Unreviewed launch environment key: ${key}")
+                }
+                roles[role] = [executable: executable, argv: argv, cwd: '{game}', env: environment]
+            }
+            def output = destination.get().asFile
+            output.parentFile.mkdirs()
+            def temporary = new File(output.parentFile, output.name + '.tmp')
+            temporary.setText(JsonOutput.prettyPrint(JsonOutput.toJson([schema: 1, roles: roles])) + '\n', 'UTF-8')
+            Files.move(temporary.toPath(), output.toPath(), StandardCopyOption.REPLACE_EXISTING)
+            logger.lifecycle("Exported Morph Lab direct launches to ${output}")
+        }
+    }
+
+    gradle.taskGraph.whenReady { graph ->
+        if (graph.hasTask(p.tasks.named('exportMorphLabLaunch').get())) {
+            def games = graph.allTasks.findAll { task ->
+                task.class.name.contains('RunGameTask')
+            }
+            if (!games.isEmpty()) {
+                throw new GradleException('Launch export cannot run together with game tasks: ' + games*.path)
+            }
+        }
+    }
+}
