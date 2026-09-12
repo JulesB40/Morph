@@ -1,6 +1,6 @@
 # Morph 26.2: harness-first parallel implementation plan
 
-Date: 2026-09-12. Baseline: `8955f881295ef95b42976602ca0e646449573fe1` (alpha.8). Scope: all items in `PORT_GAP_AUDIT_2026-09-12.md`, both NeoForge and Fabric, including explicitly identified new native abilities and completion of unfinished biomass. Prepared with nine GPT-6 Astra planning subagents and primary-agent integration review. This document is a plan: no harness implementation, game launch or gameplay change was performed for this turn.
+Date: 2026-09-12. Baseline: `8955f881295ef95b42976602ca0e646449573fe1` (alpha.8). Scope: all items in `PORT_GAP_AUDIT_2026-09-12.md`, both NeoForge and Fabric, including explicitly identified new native abilities and completion of unfinished biomass. Prepared with nine GPT-6 Astra planning subagents and primary-agent integration review. The initial planning turn made no implementation or gameplay changes. Implementation status updated 2026-09-12: the lab runner, queue, snapshots, process supervisor, reports and opt-in loader probes now exist. Real Fabric baseline execution produced hidden-window framebuffer captures and a transformation MP4, with dragon/Sniffer/deliberate-assertion failures and passing bat/bee and nametag controls. Real NeoForge Husk probes recorded three native mismatches and a passing rejected-damage control. Two real clients, true server restart persistence and the remaining acceptance gates are still pending; fake-process session tests are not Minecraft evidence. See `tools/morph-lab/README.md` for commands, run IDs and evidence limits. The architecture and waves below remain the target plan, not a completion claim.
 
 ## Outcome and sequencing
 
@@ -27,9 +27,9 @@ Proposed developer-only tooling:
 - `testing/harness-common/`: scenario contracts, event schema, fixtures, assertions and bounded fault injection.
 - `testing/harness-fabric/` and `testing/harness-neoforge/`: loader-specific startup, synthetic input, render capture, server/client events and shutdown adapters.
 - `testing/scenarios/`: versioned acceptance definitions and mapping to audit IDs.
-- `build/morph-lab/runs/<run-id>/`: disposable run worlds, process logs and evidence. Export retained release/baseline bundles to a separate explicit archive.
+- The implemented default is external `Morph-lab-runs/runs/<run-id>/`, beside the checkout containing the CLI, for disposable run worlds, process logs and evidence. Use `--root` to select a shared external root explicitly. Export retained release/baseline bundles to a separate explicit archive.
 
-Paths are proposed, not existing implementations. Establish source-set/build configuration once with one owner. Test controllers and fault injection must not ship in release jars.
+The runner and opt-in harness source sets now exist; the remaining architecture is still a target. Keep source-set/build configuration under one owner. Test controllers and fault injection must not ship in release jars.
 
 Each job owns its source snapshot/worktree, build outputs, game directory, options, world, ports, player identities, resources, controller channel and evidence directory. Two clients in a multiplayer job share only that job's server, not game directories. Use process-owned synthetic input and framebuffer capture; never global SendInput, desktop screenshots or system-wide hotkeys.
 
