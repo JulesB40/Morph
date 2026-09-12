@@ -2,11 +2,19 @@ package me.ichun.mods.morph.progression;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import net.minecraft.server.level.ServerPlayer;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class BiomassCommandsTest {
+    @BeforeAll static void bootstrapNativeCommands() {
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
+    }
+
     private CommandDispatcher<CommandSourceStack> dispatcher() {
         var dispatcher = new CommandDispatcher<CommandSourceStack>();
         BiomassCommands.register(dispatcher, new BiomassCommands.Access() {
