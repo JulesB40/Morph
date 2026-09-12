@@ -1,0 +1,6 @@
+license="LGPL-3.0-only"
+[[mods]]
+modId="morph_lab"
+version="1.0.0"
+displayName="Morph Lab (test only)"
+description='''Opt-in local client automation bridge. Never include in release artifacts.'''
