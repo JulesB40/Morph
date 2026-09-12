@@ -27,7 +27,7 @@ def emit(event, ident=None, detail=None):
 def state():
     players = [dict(uuid=r, name='Morph'+r.title(), form=f, showNameTag=bool(s),position=[0,80,z])
                for r,f,s,c,z in db.execute('SELECT * FROM players') if c]
-    return dict(players=players, uuid=role, eyePosition=[6,81.62,0],
+    return dict(players=players, uuid=role, name='Morph'+role.title(), eyePosition=[6,81.62,0],
                 connected=any(p['uuid']==role for p in players))
 if mode == 'no-ready' and role == 'observer':
     time.sleep(30)
