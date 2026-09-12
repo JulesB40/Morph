@@ -95,6 +95,12 @@ loom.runs.client { programArgs '--username', 'MorphTester' }
 
 // Opt-in harness routing; these classes remain in the test source set.
 def morphLab = providers.gradleProperty('morphLab').map { it.toBoolean() }.getOrElse(false)
+if (morphLab) {
+    tasks.named('test') {
+        workingDir = layout.buildDirectory.dir('morph-lab/unit-tests').get().asFile
+        doFirst { workingDir.mkdirs() }
+    }
+}
 tasks.named('processGametestResources') {
     inputs.property('morphLab', morphLab)
     doLast {
