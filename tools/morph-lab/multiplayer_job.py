@@ -115,7 +115,7 @@ def execute(source: Path, run: Path) -> dict:
             result.update(phase="session", cleanup_confirmed=False)
             result = run_session({"roles": roles, "port": port, "timeout": 480,
                                   "step_timeout": 90, "min_free_memory_mb": 384,
-                                  "component_probes": ["wither-heads", "sniffer-middle-legs"],
+                                  "component_probes": ["wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery"],
                                   "capture_recovery": True, "frame_scene": True}, run, source)
             result["port_reservation"] = "Loopback availability probe; a successful owned-server ready event is also required."
     except Exception as error:

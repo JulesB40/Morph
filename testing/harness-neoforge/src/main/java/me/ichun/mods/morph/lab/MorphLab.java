@@ -189,7 +189,7 @@ public final class MorphLab {
                         default -> throw new IllegalArgumentException("Unknown perspective");
                     };
                     client.options.setCameraType(perspective);
-                    client.options.hideGui = request.get("hideGui").getAsBoolean();
+                    if (client.gui.hud.isHidden() != request.get("hideGui").getAsBoolean()) client.gui.hud.toggle();
                 }
                 case "look" -> {
                     float yaw = request.get("yaw").getAsFloat();
