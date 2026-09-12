@@ -35,4 +35,13 @@ class CollectionActionWaitTest {
         state.start(0);
         assertThrows(IllegalStateException.class, () -> state.start(1));
     }
+    @Test void rejectedRequestDoesNotWaitForASnapshotTheServerMayNotSend() {
+        var state = new CollectionActionWait();
+        state.snapshot(1);
+        state.start(3);
+        assertFalse(state.reject(2));
+        assertTrue(state.pending());
+        assertTrue(state.reject(3));
+        assertFalse(state.pending());
+    }
 }

@@ -6,7 +6,7 @@
   "morph.selector.next": "Next",
   "morph.selector.reset": "Return to player",
   "morph.selector.loading": "Loading your collection…",
-  "morph.selector.empty": "Kill a mob to acquire your first form.",
+  "morph.selector.empty": "Your collection is empty.",
   "morph.selector.count": "%s forms · Page %s / %s",
   "morph.nametag.button.shown": "Morphed nametag: Shown",
   "morph.nametag.button.hidden": "Morphed nametag: Hidden",

@@ -17,6 +17,11 @@ public final class CollectionActionWait {
         finish();
         return true;
     }
+    public boolean reject(long sequence) {
+        if (this.sequence != sequence || sequence < 0) return false;
+        this.sequence = -1;
+        return true;
+    }
     public void snapshot(long revision) { snapshotRevision = Math.max(snapshotRevision, revision); finish(); }
     public boolean pending() { return sequence >= 0; }
     private void finish() {

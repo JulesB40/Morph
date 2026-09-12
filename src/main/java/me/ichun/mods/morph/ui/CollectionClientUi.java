@@ -8,6 +8,7 @@ import net.minecraft.client.Minecraft;
 
 /** Shared loader-neutral UI transport; loaders only supply the packet sender. */
 public final class CollectionClientUi {
+    private static long snapshotRequest = -1;
     private CollectionClientUi() {}
 
     public static MorphScreen.Actions actions(Consumer<CollectionProtocol.Action> send) {
@@ -21,7 +22,7 @@ public final class CollectionClientUi {
             public long favorite(String id, boolean value) { return request(CollectionProtocol.Opcode.FAVORITE, id, value); }
             public long delete(String id) { return request(CollectionProtocol.Opcode.DELETE, id, false); }
             public long reset() { return request(CollectionProtocol.Opcode.RESET, null, false); }
-            public void refresh() { request(CollectionProtocol.Opcode.REQUEST_SNAPSHOT, null, false); }
+            public void refresh() { snapshotRequest = request(CollectionProtocol.Opcode.REQUEST_SNAPSHOT, null, false); }
         };
     }
 
@@ -39,8 +40,10 @@ public final class CollectionClientUi {
     }
     public static void receive(CollectionProtocol.Ack ack) {
         ClientCollectionState.acknowledge(ack);
-        if (Minecraft.getInstance().gui.screen() instanceof CollectionView view)
-            view.acknowledge(ack.sequence(), ack.revision(), ack.code().name());
+        if (Minecraft.getInstance().gui.screen() instanceof CollectionView view) {
+            if (ack.sequence() == snapshotRequest) view.snapshotResult(ack.code().name());
+            else view.acknowledge(ack.sequence(), ack.revision(), ack.code().name());
+        }
     }
 }
 

@@ -86,9 +86,16 @@ public final class MorphScreen extends Screen implements CollectionView {
     }
 
     public void acknowledge(long sequence, long revision, String resultCode) {
-        if (!waiting.acknowledge(sequence, revision)) return;
+        boolean accepted = resultCode.equals("CHANGED") || resultCode.equals("UNCHANGED");
+        if (!(accepted ? waiting.acknowledge(sequence, revision) : waiting.reject(sequence))) return;
         feedback = Component.translatable("morph.selector.result." + resultCode.toLowerCase(java.util.Locale.ROOT));
         refreshRows();
+    }
+
+    @Override public void snapshotResult(String resultCode) {
+        if (resultCode.equals("UNCHANGED")) { access(true); return; }
+        if (resultCode.equals("DENIED")) access(false);
+        feedback = Component.translatable("morph.selector.result." + resultCode.toLowerCase(java.util.Locale.ROOT));
     }
 
     /** Call only with server-advertised selector policy. */
@@ -231,8 +238,8 @@ public final class MorphScreen extends Screen implements CollectionView {
     @Override public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
         super.extractRenderState(graphics, mouseX, mouseY, partialTick);
         graphics.centeredText(font, title, width / 2, 13, 0xFFFFFFFF);
-        Component status = !loaded ? Component.translatable("morph.selector.loading")
-                : !allowed ? Component.translatable("morph.selector.denied")
+        Component status = !allowed ? Component.translatable("morph.selector.denied")
+                : !loaded ? (feedback != null ? feedback : Component.translatable("morph.selector.loading"))
                 : waiting.pending() ? Component.translatable("morph.selector.pending")
                 : deleteConfirmation != null ? Component.translatable("morph.selector.delete.question", model.selected().name())
                 : feedback != null ? feedback

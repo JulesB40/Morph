@@ -6,7 +6,7 @@
   "morph.selector.next": "Suivant",
   "morph.selector.reset": "Redevenir joueur",
   "morph.selector.loading": "Chargement de votre collection…",
-  "morph.selector.empty": "Tuez une créature pour obtenir votre première forme.",
+  "morph.selector.empty": "Votre collection est vide.",
   "morph.selector.count": "%s formes · Page %s / %s",
   "morph.nametag.button.shown": "Nom transformé : visible",
   "morph.nametag.button.hidden": "Nom transformé : masqué",

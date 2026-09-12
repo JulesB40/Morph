@@ -42,11 +42,16 @@ public final class MorphFavoritesScreen extends Screen implements CollectionView
         else if (width > 0) rebuildFavorites();
     }
     @Override public void acknowledge(long sequence, long revision, String resultCode) {
-        if (!waiting.acknowledge(sequence, revision)) return;
+        boolean accepted = resultCode.equals("CHANGED") || resultCode.equals("UNCHANGED");
+        if (!(accepted ? waiting.acknowledge(sequence, revision) : waiting.reject(sequence))) return;
         successful = resultCode.equals("CHANGED") || resultCode.equals("UNCHANGED");
         feedback = Component.translatable("morph.selector.result." + resultCode.toLowerCase(java.util.Locale.ROOT));
         if (successful && !waiting.pending()) onClose();
         else rebuildFavorites();
+    }
+    @Override public void snapshotResult(String resultCode) {
+        if (!resultCode.equals("UNCHANGED"))
+            feedback = Component.translatable("morph.selector.result." + resultCode.toLowerCase(java.util.Locale.ROOT));
     }
     @Override protected void init() {
         int center = width / 2;
@@ -68,18 +73,14 @@ public final class MorphFavoritesScreen extends Screen implements CollectionView
         favorites.forEach(this::removeWidget);
         favorites.clear();
         hovered = null;
-        int cardWidth = Math.min(110, Math.max(64, width / 4));
-        int radiusX = Math.max(48, Math.min(140, (width - cardWidth - 16) / 2));
-        int radiusY = Math.max(24, Math.min(86, (height - 144) / 2));
-        int centerY = (height - 32) / 2;
         var rows = model.pageRows();
+        var slots = FavoriteWheelLayout.slots(width, height, rows.size());
         for (int index = 0; index < rows.size(); index++) {
             var row = rows.get(index);
-            double angle = -Math.PI / 2 + index * Math.PI / 4;
-            int x = width / 2 + (int) Math.round(Math.cos(angle) * radiusX) - cardWidth / 2;
-            int y = centerY + (int) Math.round(Math.sin(angle) * radiusY) - 10;
+            var slot = slots.get(index);
             var label = Component.literal(row.name() + (row.details().isEmpty() ? "" : " · " + row.details()));
-            var button = addRenderableWidget(Button.builder(label, b -> choose(row.id())).bounds(x, y, cardWidth, 20).build());
+            var button = addRenderableWidget(Button.builder(label, b -> choose(row.id()))
+                    .bounds(slot.x(), slot.y(), slot.width(), slot.height()).build());
             button.setTooltip(Tooltip.create(Component.literal(row.name() + (row.details().isEmpty() ? "" : " · " + row.details()))));
             button.active = loaded && !waiting.pending();
             favorites.add(button);

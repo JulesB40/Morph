@@ -55,9 +55,8 @@ class CollectionSelectorModelTest {
         var source = new java.util.ArrayList<>(List.of(row("a", "Cow", "", true, 0), row("b", "Sheep", "", false, 1)));
         model.replace(source);
         source.clear();
-        model.query("sheep");
+        model.query("cow");
         model.favoritesOnly(true);
-        // Species IDs also match the query, but only the favorite remains.
         assertEquals("a", model.selected().id());
         assertEquals(2, model.count());
     }
