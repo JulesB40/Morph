@@ -162,8 +162,14 @@ public final class NativeVariantAttributeChecks {
         near(expectedHealth / 2, player.getHealth(), "variant preserves half health");
         near(expectedSpeed, player.getAttribute(Attributes.MOVEMENT_SPEED).getValue(), "native/captured speed attribute");
         var nativeAttack = reference.getAttribute(Attributes.ATTACK_DAMAGE);
-        if (nativeAttack != null)
-            near(nativeAttack.getBaseValue(), player.getAttribute(Attributes.ATTACK_DAMAGE).getValue(), "native variant attack attribute");
+        if (nativeAttack != null) {
+            var actualAttack = player.getAttribute(Attributes.ATTACK_DAMAGE);
+            var attackOracle = new net.minecraft.world.entity.ai.attributes.AttributeInstance(actualAttack.getAttribute(), ignored -> {});
+            attackOracle.replaceFrom(actualAttack);
+            attackOracle.removeModifier(MorphAttributes.MODIFIER);
+            attackOracle.setBaseValue(nativeAttack.getBaseValue());
+            near(attackOracle.getValue(), actualAttack.getValue(), "native variant attack with retained non-Morph modifiers");
+        }
         near(24, player.getAttribute(Attributes.MAX_HEALTH).getBaseValue(), "variant does not rewrite player base");
         for (var pose : List.of(Pose.STANDING, Pose.CROUCHING, Pose.SWIMMING)) {
             var expected = reference.getDimensions(pose);

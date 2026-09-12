@@ -38,7 +38,7 @@ import net.minecraft.world.phys.Vec3;
 
 /** Native service/physics checks with a mock connection; explicitly not live-client authorization evidence. */
 public final class NativeAuthorityChecks {
-    public enum Case { STALE_ACTIONS, CRAMPED_ACTIVE_DELETE, CANCELED_ACTIONS, REQUEST_RATE, MOCK_ACQUISITION_DENIED }
+    public enum Case { STALE_ACTIONS, CRAMPED_ACTIVE_DELETE, CANCELED_ACTIONS, REQUEST_RATE, MOCK_ACQUISITION_DENIED, UNAVAILABLE_ATTRIBUTES }
     private NativeAuthorityChecks() {}
     private record State(CollectionSnapshot collection, float health, float maximum,
             OptionalLong soundTick, List<Double> attributes, String bounds) {}
@@ -85,6 +85,37 @@ public final class NativeAuthorityChecks {
                     equal(Code.DENIED, MorphAuthority.capture(player, pig), "mock acquisition", checks);
                     unchanged(before, player, "mock acquisition", checks);
                 } finally { pig.discard(); }
+            } else if (scenario == Case.UNAVAILABLE_ATTRIBUTES) {
+                require(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH.value().sanitizeValue(-1) != -1,
+                        "Negative max health fixture must be outside native range");
+                require(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH.value().sanitizeValue(1_000_000) != 1_000_000,
+                        "Million-point max health fixture must be outside native range");
+                long selectionTick = 0;
+                for (var attributes : List.of(Map.of("fixture:missing_attribute", 1.0),
+                        Map.of("minecraft:max_health", -1.0), Map.of("minecraft:max_health", 1_000_000.0))) {
+                    var descriptor = new FormDescriptor(1, "minecraft:sheep", "morph:sheep", 1,
+                            Map.of("baby", false, "color", 14), "unavailable-" + selectionTick,
+                            Map.of(), attributes, null);
+                    var beforeGrant = state(player);
+                    equal(Code.UNSUPPORTED, MorphAuthority.grantDescriptor(player, descriptor), "unavailable attribute grant", checks);
+                    unchanged(beforeGrant, player, "unavailable attribute grant", checks);
+                    // Model insertion represents a structurally valid persisted descriptor, not an authorized grant.
+                    var forms = MorphAuthority.collection(player);
+                    forms.acquire(descriptor, me.ichun.mods.morph.model.MorphCollection.AttributeMergePolicy.KEEP_EXISTING);
+                    var stored = state(player);
+                    equal(Code.UNSUPPORTED, MorphAuthority.selectEntry(player, descriptor.entryId()), "unavailable saved attribute selection", checks);
+                    unchanged(stored, player, "unavailable saved attribute selection", checks);
+                    require(forms.select(descriptor.entryId(), selectionTick += 20)
+                            == me.ichun.mods.morph.model.MorphCollection.SelectionResult.CHANGED, "Fixture active restore failed");
+                    MorphAuthority.sync(player);
+                    require(forms.activeEntryId() == null, "Sync must reset unavailable active attributes");
+                    require(forms.entry(descriptor.entryId()) != null, "Sync discarded unavailable saved ownership");
+                }
+                var allowed = new FormDescriptor(1, "minecraft:sheep", "morph:sheep", 1,
+                        Map.of("baby", false, "color", 14), "permitted-control", Map.of(),
+                        Map.of("minecraft:max_health", 16.0), null);
+                equal(Code.CHANGED, MorphAuthority.grantDescriptor(player, allowed), "in-range attribute grant control", checks);
+                // Model-only selection ticks above are in a synthetic future; test grant support here without claiming selection cooldown elapsed.
             } else {
                 var bat = FormDescriptor.species("minecraft:bat");
                 var pig = FormDescriptor.species("minecraft:pig");
