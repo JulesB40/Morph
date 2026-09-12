@@ -56,7 +56,7 @@ def run_session(spec: dict, run: str | Path, source: str | Path) -> dict:
     if type(port) is not int or not 1 <= port <= 65535:
         raise ValueError("spec.port must be an explicitly reserved port")
     probes = spec.get("component_probes", [])
-    if not isinstance(probes, list) or any(name not in {"wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery"}
+    if not isinstance(probes, list) or any(name not in {"wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery", "descriptor-rendering", "captured-equipment"}
                                            for name in probes) or len(probes) != len(set(probes)):
         raise ValueError("component_probes must list distinct supported probe names")
     if type(spec.get("capture_recovery", False)) is not bool:

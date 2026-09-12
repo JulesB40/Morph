@@ -81,6 +81,7 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
         try {
             configureOwnWindow(context);
             switch (scenario) {
+                case "descriptor-rendering", "captured-equipment" -> featureComponents(context, scenario);
                 case "dragon-renderer" -> dragon(context);
                 case "sniffer-middle-legs" -> sniffer(context);
                 case "bat-bee-flight" -> new MorphFlyingClientGameTest().runTest(context);
@@ -124,6 +125,25 @@ public final class MorphLabClientGameTest implements FabricClientGameTest {
         event(scenario, "result", result);
         write(directory.resolve("result.json"), result);
         results.add(result);
+    }
+
+    private void featureComponents(ClientGameTestContext context, String scenario) throws Exception {
+        try (var world = context.worldBuilder().create()) {
+            world.getConnection().waitForChunksDownload();
+            context.runOnClient(client -> {
+                Object checks;
+                if (scenario.equals("captured-equipment")) {
+                    var result = me.ichun.mods.morph.client.equipment.MorphCapturedEquipmentProbes.run(client.player);
+                    if (!Boolean.TRUE.equals(result.get("passed"))) throw new AssertionError(result.toString());
+                    checks = result;
+                } else {
+                    var source = (AvatarRenderState) client.getEntityRenderDispatcher().getRenderer(client.player).createRenderState(client.player, .5F);
+                    checks = me.ichun.mods.morph.lab.NativeRenderDescriptorChecks.verify(client.player, source);
+                }
+                event(scenario, "native_components", Map.of("checks", checks));
+            });
+            checkpoint(context, scenario, "completed-components");
+        }
     }
 
     private void dragon(ClientGameTestContext context) throws Exception {

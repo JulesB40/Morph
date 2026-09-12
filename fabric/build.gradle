@@ -88,6 +88,7 @@ sourceSets.gametest.java {
     srcDir '../testing/harness-common/src/main/java'
     include 'me/ichun/mods/morph/fabric/**'
     include 'me/ichun/mods/morph/lab/**'
+    include 'me/ichun/mods/morph/client/equipment/MorphCapturedEquipmentProbes.java'
     include 'me/ichun/mods/morph/gametest/NativeAttributeChecks.java'
 }
 loom.runs.client { programArgs '--username', 'MorphTester' }

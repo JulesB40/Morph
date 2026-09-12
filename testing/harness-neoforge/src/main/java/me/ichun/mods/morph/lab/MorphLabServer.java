@@ -34,9 +34,13 @@ public final class MorphLabServer {
         if (!Boolean.getBoolean("morph.lab.serverTests")) return;
         event.register(Registries.TEST_FUNCTION, registry -> {
             registry.register(Identifier.fromNamespaceAndPath("morph_lab", "native_pose_dimensions"), NativePoseProbes::verify);
+            registry.register(Identifier.fromNamespaceAndPath("morph_lab", "native_variant_attributes"), NativeVariantAttributeChecks::verify);
             registry.register(Identifier.fromNamespaceAndPath("morph_lab", "native_sounds"), helper -> {
-                NativeSoundChecks.verify(helper, helper.makeMockServerPlayerInLevel()); helper.succeed();
+                NativeSoundChecks.verify(helper, new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "lab-sounds"), net.minecraft.server.level.ClientInformation.createDefault())); helper.succeed();
             });
+            for (var scenario : NativeBiomassChecks.Case.values()) registry.register(
+                    Identifier.fromNamespaceAndPath("morph_lab", "biomass_" + scenario.name().toLowerCase(java.util.Locale.ROOT)),
+                    helper -> NativeBiomassChecks.run(helper, scenario));
             for (var scenario : NativeAuthorityChecks.Case.values()) registry.register(
                     Identifier.fromNamespaceAndPath("morph_lab", "authority_" + scenario.name().toLowerCase(java.util.Locale.ROOT)),
                     helper -> NativeAuthorityChecks.run(helper, scenario));
@@ -51,6 +55,8 @@ public final class MorphLabServer {
                 new TestData<>(environment, Identifier.withDefaultNamespace("empty"), 100, 0, true)));
         var extra = new java.util.ArrayList<String>();
         extra.add("native_sounds");
+        extra.add("native_variant_attributes");
+        for (var scenario : NativeBiomassChecks.Case.values()) extra.add("biomass_" + scenario.name().toLowerCase(java.util.Locale.ROOT));
         for (var scenario : NativeAuthorityChecks.Case.values()) extra.add("authority_" + scenario.name().toLowerCase(java.util.Locale.ROOT));
         for (String name : extra) {
             var testId = Identifier.fromNamespaceAndPath("morph_lab", name);

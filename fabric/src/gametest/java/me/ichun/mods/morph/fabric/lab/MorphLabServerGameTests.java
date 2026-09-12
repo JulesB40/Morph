@@ -7,6 +7,7 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.server.level.ServerPlayer;
 
 public final class MorphLabServerGameTests {
+    @GameTest(maxTicks = 100) public void nativeVariantAttributes(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeVariantAttributeChecks.verify(helper); }
     @GameTest(maxTicks = 100) public void nativePoseDimensions(GameTestHelper helper) { me.ichun.mods.morph.lab.NativePoseProbes.verify(helper); }
     private static final HuskDamageProbes.Adapter ADAPTER = new HuskDamageProbes.Adapter() {
         private me.ichun.mods.morph.model.MorphCollection forms(ServerPlayer player) {
@@ -26,5 +27,10 @@ public final class MorphLabServerGameTests {
     @GameTest(maxTicks = 100) public void authorityCanceledActions(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeAuthorityChecks.run(helper, me.ichun.mods.morph.lab.NativeAuthorityChecks.Case.CANCELED_ACTIONS); }
     @GameTest(maxTicks = 100) public void authorityRequestRate(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeAuthorityChecks.run(helper, me.ichun.mods.morph.lab.NativeAuthorityChecks.Case.REQUEST_RATE); }
     @GameTest(maxTicks = 100) public void authorityMockAcquisitionDenied(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeAuthorityChecks.run(helper, me.ichun.mods.morph.lab.NativeAuthorityChecks.Case.MOCK_ACQUISITION_DENIED); }
-    @GameTest(maxTicks = 100) public void nativeSounds(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeSoundChecks.verify(helper, helper.makeMockServerPlayerInLevel()); helper.succeed(); }
+    @GameTest(maxTicks = 100) public void nativeSounds(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeSoundChecks.verify(helper, new ServerPlayer(helper.getLevel().getServer(), helper.getLevel(), new com.mojang.authlib.GameProfile(java.util.UUID.randomUUID(), "lab-sounds"), net.minecraft.server.level.ClientInformation.createDefault())); helper.succeed(); }
+    @GameTest(maxTicks = 100) public void authorityUnavailableAttributes(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeAuthorityChecks.run(helper, me.ichun.mods.morph.lab.NativeAuthorityChecks.Case.UNAVAILABLE_ATTRIBUTES); }
+    @GameTest(maxTicks = 100) public void biomassClassicBypass(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeBiomassChecks.run(helper, me.ichun.mods.morph.lab.NativeBiomassChecks.Case.CLASSIC_BYPASS); }
+    @GameTest(maxTicks = 100) public void biomassGainPurchasePersistence(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeBiomassChecks.run(helper, me.ichun.mods.morph.lab.NativeBiomassChecks.Case.GAIN_PURCHASE_PERSISTENCE); }
+    @GameTest(maxTicks = 100) public void biomassSelectionConservation(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeBiomassChecks.run(helper, me.ichun.mods.morph.lab.NativeBiomassChecks.Case.SELECTION_CONSERVATION); }
+    @GameTest(maxTicks = 100) public void biomassCommandParse(GameTestHelper helper) { me.ichun.mods.morph.lab.NativeBiomassChecks.run(helper, me.ichun.mods.morph.lab.NativeBiomassChecks.Case.COMMAND_PARSE); }
 }

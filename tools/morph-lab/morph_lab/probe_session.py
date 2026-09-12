@@ -12,7 +12,7 @@ from .multiplayer import BridgeError, BridgeTimeout, ClientChannel
 from .session import _Owned
 
 
-PROBES = ("wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery")
+PROBES = ("wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery", "descriptor-rendering", "captured-equipment")
 
 
 def run_probe_session(spec: dict, run: str | Path, source: str | Path) -> dict:

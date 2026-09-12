@@ -117,7 +117,7 @@ def execute(source: Path, run: Path, *, single_client: bool = False) -> dict:
             runner = run_probe_session if single_client else run_session
             result = runner({"roles": roles, "port": port, "timeout": 480,
                                   "step_timeout": 90, "min_free_memory_mb": 384,
-                                  "component_probes": ["wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery"],
+                                  "component_probes": ["wither-heads", "sniffer-middle-legs", "dragon-renderer", "renderer-fault-recovery", "descriptor-rendering", "captured-equipment"],
                                   "capture_recovery": True, "frame_scene": True,
                                   "fixture_form": "minecraft:bat"}, run, source)
             result["port_reservation"] = "Loopback availability probe; a successful owned-server ready event is also required."

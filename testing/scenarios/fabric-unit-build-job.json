@@ -1,0 +1,10 @@
+{
+  "scenario": "fabric-unit-and-build",
+  "loader": "fabric",
+  "role": "candidate",
+  "resources": {"memory_mb": 2560, "cpu": 2, "gpu": 0},
+  "timeout_seconds": 600,
+  "cwd": "{source}/fabric",
+  "argv": ["cmd.exe", "/d", "/c", "gradlew.bat", "--no-daemon", "--max-workers=2", "-Dorg.gradle.jvmargs=-Xmx1G", "-PmorphLab=true", "test", "jar", "compileGametestJava"],
+  "artifacts": ["fabric/build/classes/**/*.class", "fabric/build/libs/*.jar"]
+}
