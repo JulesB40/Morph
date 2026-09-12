@@ -1,8 +1,10 @@
 package me.ichun.mods.morph.server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import me.ichun.mods.morph.ability.MorphAttributes;
 import me.ichun.mods.morph.model.FormDescriptor;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -48,12 +50,26 @@ public final class FormCapture {
                 omitted.add("individual_variant");
                 if (name != null) omitted.add("custom_name");
             }
+            descriptor = descriptor.withAttributes(baseAttributes(entity));
             // Hands and ordinary armor remain the player's live equipment; this slice captures no gear.
             if (EquipmentSlot.VALUES.stream().anyMatch(slot -> !entity.getItemBySlot(slot).isEmpty())) omitted.add("equipment");
             return new CaptureResult(descriptor, null, omitted);
         } catch (IllegalArgumentException invalid) {
             return new CaptureResult(null, Rejection.INVALID_STATE, List.of());
         }
+    }
+
+    private static Map<String, Double> baseAttributes(LivingEntity entity) {
+        var values = new HashMap<String, Double>();
+        for (var attribute : MorphAttributes.copiedAttributes()) {
+            var instance = entity.getAttribute(attribute);
+            if (instance == null) continue;
+            double base = instance.getBaseValue();
+            if (!Double.isFinite(base) || Double.compare(attribute.value().sanitizeValue(base), base) != 0)
+                throw new IllegalArgumentException("Captured base attribute is outside its registered range");
+            values.put(BuiltInRegistries.ATTRIBUTE.getKey(attribute.value()).toString(), base);
+        }
+        return Map.copyOf(values);
     }
 
     /** Returns false without applying state if the descriptor/target adapter is unavailable. */
