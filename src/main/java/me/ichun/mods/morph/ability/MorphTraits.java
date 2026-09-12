@@ -93,7 +93,7 @@ public final class MorphTraits {
         else if ("minecraft:pufferfish".equals(form)) target.addEffect(new MobEffectInstance(MobEffects.POISON, 60), attacker);
         else if ("minecraft:husk".equals(form) && attacker.getMainHandItem().isEmpty()) {
             int duration = 140 * (int)attacker.level().getCurrentDifficultyAt(attacker.blockPosition()).getEffectiveDifficulty();
-            if (duration > 0) target.addEffect(new MobEffectInstance(MobEffects.HUNGER, duration), attacker);
+            target.addEffect(new MobEffectInstance(MobEffects.HUNGER, duration), attacker);
         }
         else if ("minecraft:wither_skeleton".equals(form)) target.addEffect(new MobEffectInstance(MobEffects.WITHER, 200), attacker);
     }
