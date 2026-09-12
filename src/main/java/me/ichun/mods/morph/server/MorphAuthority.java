@@ -27,7 +27,7 @@ public final class MorphAuthority {
     private static boolean allowed(MorphEvents.Action action, UUID actor, ServerPlayer target, String species) {
         return events.before(new MorphEvents.BeforeAction(action, actor, target.getUUID(), species, MorphPolicies.current().revision())).allowed();
     }
-    private static final Map<ServerPlayer, Session> sessions = new WeakHashMap<>();
+    private static final Map<Object, Session> sessions = new WeakHashMap<>();
     private static final class Session {
         final UUID epoch = UUID.randomUUID();
         long appearance, generation, lastSequence = -1, window = Long.MIN_VALUE, lastSnapshot = Long.MIN_VALUE;
@@ -41,7 +41,8 @@ public final class MorphAuthority {
         transport = java.util.Objects.requireNonNull(value);
         MorphPolicies.registerMode(me.ichun.mods.morph.config.MorphPolicySnapshot.ServerMode.BIOMASS);
     }
-    private static Session session(ServerPlayer player) { return sessions.computeIfAbsent(player, ignored -> new Session()); }
+    private static Object sessionKey(ServerPlayer player) { return player.connection == null ? player : player.connection; }
+    private static Session session(ServerPlayer player) { return sessions.computeIfAbsent(sessionKey(player), ignored -> new Session()); }
     private static long tick(ServerPlayer player) { return player.level().getServer().overworld().getGameTime(); }
     public static MorphSavedData data(ServerPlayer player) {
         return MorphSavedData.load(player.level().getServer());
@@ -62,7 +63,7 @@ public final class MorphAuthority {
         return new AppearanceProtocol.Transition(player.getUUID(), session.epoch, session.generation++, tick(player),
                 MorphPolicies.current().durationTicks(), from, to);
     }
-    public static void disconnected(ServerPlayer player) { sessions.remove(player); }
+    public static void disconnected(ServerPlayer player) { sessions.remove(sessionKey(player)); }
     public static int nametag(ServerPlayer player, Boolean visible) {
         data(player).setShowNametag(player.getUUID(), visible == null ? !showNametag(player) : visible);
         publish(() -> transport.appearance(player));
